@@ -20,15 +20,20 @@ enum CompositionRoot {
     static func makeChatService() -> ChatService {
         let service = ChatService()
         let logger = ConsoleLogger()
+        // ONE store instance shared by Kernel (state/reuse) and Gateway
+        // (context retrieval, AD-24) — a second instance would be a second
+        // source of truth.
+        let store = makeStore()
         let gateway = DefaultAIGateway(
             provider: selectedProvider.provider,
             configuration: makeGatewayConfiguration(defaultModelID: selectedProvider.modelID),
+            store: store,
             logger: logger
         )
         let kernel = Kernel(
             skills: InMemorySkillRegistry(registering: GenericSkills.all),
             engine: DefaultExecutionEngine(gateway: gateway),
-            store: makeStore(),
+            store: store,
             approvalGate: RequireUserApprovalGate(),
             publish: { [weak service] event in service?.relay(event) }
         )
@@ -85,6 +90,8 @@ enum CompositionRoot {
         let maxTokensPerRequest: Int
         let maxCostPerRequestUSD: Double
         let perRequestMaxOutputTokens: Int
+        let contextBudgetTokens: Int
+        let maxContextSnippets: Int
     }
 
     private struct FeaturesFile: Decodable {
@@ -124,7 +131,9 @@ enum CompositionRoot {
                 defaultModelID: defaultModelID,
                 budget: BudgetPolicy(
                     maxTokensPerRequest: budgets.maxTokensPerRequest,
-                    maxCostPerRequestUSD: budgets.maxCostPerRequestUSD
+                    maxCostPerRequestUSD: budgets.maxCostPerRequestUSD,
+                    contextBudgetTokens: budgets.contextBudgetTokens,
+                    maxContextSnippets: budgets.maxContextSnippets
                 ),
                 retry: RetryPolicy(maxAttempts: policies.aiRetry.maxAttempts),
                 preamble: try config.loadText(file: "preamble.md"),

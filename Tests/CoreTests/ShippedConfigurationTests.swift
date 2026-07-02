@@ -19,6 +19,8 @@ final class ShippedConfigurationTests: XCTestCase {
         let maxTokensPerRequest: Int
         let maxCostPerRequestUSD: Double
         let perRequestMaxOutputTokens: Int
+        let contextBudgetTokens: Int
+        let maxContextSnippets: Int
     }
     private struct FeaturesFile: Decodable { let aiDryRun: Bool }
     private struct PoliciesFile: Decodable {
@@ -49,7 +51,9 @@ final class ShippedConfigurationTests: XCTestCase {
                 defaultModelID: modelID,
                 budget: BudgetPolicy(
                     maxTokensPerRequest: budgets.maxTokensPerRequest,
-                    maxCostPerRequestUSD: budgets.maxCostPerRequestUSD
+                    maxCostPerRequestUSD: budgets.maxCostPerRequestUSD,
+                    contextBudgetTokens: budgets.contextBudgetTokens,
+                    maxContextSnippets: budgets.maxContextSnippets
                 ),
                 retry: RetryPolicy(maxAttempts: policies.aiRetry.maxAttempts),
                 preamble: preamble,

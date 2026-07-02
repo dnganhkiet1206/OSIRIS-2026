@@ -10,10 +10,10 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M1 — Core Runtime, đang triển khai** (M0 nghiệm thu: tag `M0` local tại `dc54059`; push tag khi merge) |
-| Task hiện tại | M1-1 (Skill Registry v1) ✅ hoàn thành · kế tiếp: M1-2 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ chạy** |
+| Task hiện tại | M1-2 (Gateway Retrieval & Assembly) ✅ hoàn thành · kế tiếp: M1-3 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ chạy** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
-| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **13 Architecture Test chống drift (AD-34)** |
-| Trạng thái codebase | ✅ **0 error / 0 warning, 53/53 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
+| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **13 Architecture Test chống drift (AD-34)** · chuỗi AD-24 đầy đủ: retrieve → assemble → budget → cache → route → đo |
+| Trạng thái codebase | ✅ **0 error / 0 warning, 58/58 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -38,12 +38,13 @@ M1 — Core Runtime: Kernel đầy đủ, hệ điều hành AI thực sự vậ
 - [x] **M1-0 (phần code) — Settings & API key entry**: `ProviderSettings` port dạng closure-struct trong Application (giải ràng buộc: arch rule cấm cả Presentation lẫn Application chạm Infrastructure → composition root bọc Keychain vào closures); `SettingsView` tối giản (SecureField, không bao giờ hiển thị lại key, trạng thái Connected/Offline, ghi rõ cần restart); sidebar thêm mục Settings; `Docs/RUNBOOK_M1-0.md` — hướng dẫn từng bước cho user tự chạy Mac verification + smoke test + thu baseline thật.
 - [x] **M1-1 — Skill Registry v1**: 3 skill tổng quát thuần dữ liệu (`core.summarize`, `core.draft`, `core.research-outline` — version 1.0.0, promptTemplate với `{goal}`, tier khai báo); `triggerKeywords` = field optional mới trên SkillDefinition (AD-28, có lập luận: matching data-driven để **thêm skill không cần sửa Kernel** — đúng mục tiêu milestone); Kernel Decide: reuse → skill-match (nhiều hit thắng, tie theo id, không hit = fallback nguyên trạng) → plain AI; strategy `.ai(skill:)` payload — skill chỉ tồn tại trên đường AI; Execution assemble template máy móc; **trả nợ `Kernel.skills` chưa tiêu thụ**; 4 test mới chứng minh bằng captured prompt (template vào prompt, không khớp giữ prompt trần, registry rỗng an toàn, tie-break deterministic).
 
+- [x] **M1-2 — Gateway Retrieval & Assembly** (AD-24): Gateway retrieve context qua `Store.search` (`.anyWord` mới — rank theo word-hit; `.exact` default giữ nguyên cho reuse của Kernel); assembly theo section có cấu trúc (`## Relevant context` → Working Context/Knowledge/Previous results → `## Task`) với ưu tiên Critical(preamble+task, không bao giờ cắt) > Important(WC) > Helpful(Knowledge, lấy body đầy đủ) > Optional(deliverable history); trim nguyên-snippet từ ưu tiên thấp theo `contextBudgetTokens`; snippet cap 600 chars, N≤3 (`maxContextSnippets`); **retrieval trước cache lookup → cache key phản ánh đúng context (test: context đổi = cache miss)**; metrics thêm `contextSnippetCount`; một Store instance chia sẻ Kernel+Gateway (không nguồn sự thật thứ hai); không context → prompt y hệt trước M1-2 (zero regression, có test); ContextPriority hết là dead contract; 5 test mới.
+
 ## 4. Việc đang chờ (Next Tasks)
 
 1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — Mac build, kiểm tra bằng mắt, nhập key, thu 3–4 dòng log `ai.request` → dán lại để điền baseline vào §4b.
-2. **M1-2 — Store search relevance + Gateway retrieval/assembly** (chi tiết: `NEXT_TASK.md`): Gateway thực hiện retrieve → assemble thật theo AD-24; ContextPriority được tiêu thụ.
-3. M1-3 — Execution: parallel + composition + resume sau suspend.
-4. M1-4 — Kernel resource-order đầy đủ + Tool Layer on-device đầu tiên.
+2. **M1-3 — Composition Execution v1** (chi tiết: `NEXT_TASK.md`): chạy `SkillComposition` tuần tự qua Gateway. *Lưu ý scope:* parallel + resume-sau-suspend hoãn có lập luận (chưa tồn tại nguồn sinh task độc lập; resume cần thiết kế state riêng) — quyết định cuối ở M1 review.
+3. M1-4 — Kernel resource-order đầy đủ + Tool Layer on-device đầu tiên.
 
 ## 4b. M0 Closeout & Final Verification (nghiệm thu 2026-07-02, tag `M0`)
 

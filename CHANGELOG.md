@@ -2,6 +2,16 @@
 
 ## [Unreleased — M1]
 
+### 2026-07-02 — M1-2: Gateway Retrieval & Assembly (AD-24 hoàn chỉnh)
+
+- Pipeline Gateway đủ chuỗi AD-24: validate → **retrieve → trim → assemble** → budget → cache → (dry-run | retry) → metrics → log. Retrieval đứng TRƯỚC cache lookup nên cache key (model + prompt đã assemble) luôn phản ánh đúng context — test chứng minh: context đổi = cache miss, context giữ = cache hit.
+- `StoreQuery.matchMode`: `.exact` (default — bảo toàn strict reuse của Kernel, zero regression) | `.anyWord` (retrieval: tokenize ≥3 ký tự, rank theo hit count, tie theo thứ tự duyệt). FileBackedStore search hợp nhất một lượt duyệt cho cả hai mode.
+- Assembly có cấu trúc section (không ghép chuỗi tự do): preamble → `## Relevant context` (`### Current working context` / `### Knowledge` / `### Previous results`) → `## Task`. Ưu tiên: Critical (preamble+task, không bao giờ cắt) > Important (WC) > Helpful (Knowledge — lấy body đầy đủ thay vì topic) > Optional (deliverable history). Trim nguyên-snippet từ ưu tiên thấp, deterministic, không phá cấu trúc. Không context → prompt y hệt trước M1-2 (test).
+- Token efficiency: N≤3 snippet (`maxContextSnippets`), mỗi snippet cap 600 chars, `contextBudgetTokens` = 4000 (budgets.json); search lỗi không bao giờ chặn AI call.
+- Metrics thêm `contextSnippetCount` (đo được mới tối ưu được); ContextPriority hết là contract chết.
+- CompositionRoot: MỘT Store instance chia sẻ Kernel + Gateway (tránh nguồn sự thật thứ hai).
+- 5 test mới (knowledge vào đúng section với body đầy đủ; project khác không rò context; trim đúng thứ tự ưu tiên, critical bất khả xâm; cache an toàn khi context đổi; không context giữ prompt shape cũ). Tổng 58/58 pass, 0 warning, offline.
+
 ### 2026-07-02 — M1-1: Skill Registry v1 — thêm khả năng bằng cách thêm Skill
 
 - 3 skill tổng quát **thuần dữ liệu** (`Core/Skills/BuiltIn/GenericSkills.swift`): summarize / draft / research-outline — version 1.0.0, promptTemplate với điểm chèn `{goal}` duy nhất, preferredModelTier khai báo. Không reflection, không plugin system, không dynamic loading.

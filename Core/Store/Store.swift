@@ -33,14 +33,26 @@ public protocol Store: Sendable {
 }
 
 public struct StoreQuery: Sendable {
+    /// How records match the query text (M1-2). `.exact` is the default and
+    /// keeps the strict behavior the Kernel's reuse depends on (the full
+    /// text must appear — prefer a miss over a wrong match). `.anyWord` is
+    /// relevance retrieval for the Gateway's context assembly: any word
+    /// (≥3 chars) may match; results rank by hit count.
+    public enum MatchMode: Sendable {
+        case exact
+        case anyWord
+    }
+
     public let text: String
     public let projectID: ProjectID?
     public let limit: Int
+    public let matchMode: MatchMode
 
-    public init(text: String, projectID: ProjectID? = nil, limit: Int = 10) {
+    public init(text: String, projectID: ProjectID? = nil, limit: Int = 10, matchMode: MatchMode = .exact) {
         self.text = text
         self.projectID = projectID
         self.limit = limit
+        self.matchMode = matchMode
     }
 }
 

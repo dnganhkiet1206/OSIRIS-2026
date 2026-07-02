@@ -16,6 +16,9 @@ public struct AIRequestMetrics: Codable, Sendable {
     public let cacheHit: Bool
     public let retryCount: Int
     public let dryRun: Bool
+    /// How many retrieved context snippets made it into the prompt after
+    /// trimming (M1-2) — retrieval quality is tunable only if measured.
+    public let contextSnippetCount: Int
     public let succeeded: Bool
     public let failureReason: String?
 
@@ -31,6 +34,7 @@ public struct AIRequestMetrics: Codable, Sendable {
         cacheHit: Bool,
         retryCount: Int,
         dryRun: Bool,
+        contextSnippetCount: Int = 0,
         succeeded: Bool,
         failureReason: String? = nil
     ) {
@@ -45,6 +49,7 @@ public struct AIRequestMetrics: Codable, Sendable {
         self.cacheHit = cacheHit
         self.retryCount = retryCount
         self.dryRun = dryRun
+        self.contextSnippetCount = contextSnippetCount
         self.succeeded = succeeded
         self.failureReason = failureReason
     }

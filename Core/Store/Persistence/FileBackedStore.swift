@@ -87,30 +87,39 @@ public actor FileBackedStore: Store {
         return Self.strippingFrontMatter(from: text)
     }
 
-    // MARK: Search (naive substring match; relevance ranking arrives in M1)
+    // MARK: Search
 
+    /// One walk over all record types. `.exact` keeps the original early-exit
+    /// behavior; `.anyWord` gathers hit counts and ranks by relevance
+    /// (stores are small — measured optimization belongs to M3/M7).
     public func search(_ query: StoreQuery) throws -> [StoreSearchResult] {
-        let needle = query.text.lowercased()
-        var results: [StoreSearchResult] = []
+        let matcher = Matcher(query: query)
+        var candidates: [(result: StoreSearchResult, hits: Int, order: Int)] = []
+
+        func collect(_ hits: Int, _ result: @autoclosure () -> StoreSearchResult) -> Bool {
+            guard hits > 0 else { return false }
+            candidates.append((result(), hits, candidates.count))
+            return query.matchMode == .exact && candidates.count >= query.limit
+        }
 
         for record in try loadAll(KnowledgeRecord.self, prefix: Prefix.knowledge)
             .sorted(by: { $0.id < $1.id }) {
-            guard results.count < query.limit else { return results }
-            if record.topic.lowercased().contains(needle) || record.body.lowercased().contains(needle) {
-                results.append(StoreSearchResult(kind: .knowledge, id: record.id, snippet: record.topic))
-            }
+            if collect(
+                matcher.hits(in: record.topic + " " + record.body),
+                StoreSearchResult(kind: .knowledge, id: record.id, snippet: record.topic)
+            ) { return finalize(candidates, for: query) }
         }
         for record in try loadAll(WorkingContextRecord.self, prefix: Prefix.workingContext)
             .sorted(by: { $0.id < $1.id }) {
-            guard results.count < query.limit else { return results }
             guard !record.isExpired() else { continue }
             if let projectID = query.projectID, record.projectID != projectID { continue }
-            if record.content.lowercased().contains(needle) {
-                results.append(StoreSearchResult(kind: .workingContext, id: record.id, snippet: record.content))
-            }
+            if collect(
+                matcher.hits(in: record.content),
+                StoreSearchResult(kind: .workingContext, id: record.id, snippet: record.content)
+            ) { return finalize(candidates, for: query) }
         }
         // Deliverables are found through their index (ProjectState.deliverablePaths,
-        // AD-10) — no directory walking, reads stop as soon as the limit is hit.
+        // AD-10) — no directory walking.
         let states: [ProjectState]
         if let projectID = query.projectID {
             states = try projectState(for: projectID).map { [$0] } ?? []
@@ -119,15 +128,59 @@ public actor FileBackedStore: Store {
         }
         for state in states {
             for path in state.deliverablePaths {
-                guard results.count < query.limit else { return results }
                 guard let data = try storage.read(key: path),
-                      let text = String(data: data, encoding: .utf8),
-                      text.lowercased().contains(needle) else { continue }
+                      let text = String(data: data, encoding: .utf8) else { continue }
                 let body = Self.strippingFrontMatter(from: text)
-                results.append(StoreSearchResult(kind: .deliverable, id: path, snippet: String(body.prefix(120))))
+                if collect(
+                    matcher.hits(in: text),
+                    StoreSearchResult(kind: .deliverable, id: path, snippet: String(body.prefix(120)))
+                ) { return finalize(candidates, for: query) }
             }
         }
-        return results
+        return finalize(candidates, for: query)
+    }
+
+    private func finalize(
+        _ candidates: [(result: StoreSearchResult, hits: Int, order: Int)],
+        for query: StoreQuery
+    ) -> [StoreSearchResult] {
+        switch query.matchMode {
+        case .exact:
+            return Array(candidates.map(\.result).prefix(query.limit))
+        case .anyWord:
+            return Array(
+                candidates
+                    .sorted { $0.hits != $1.hits ? $0.hits > $1.hits : $0.order < $1.order }
+                    .map(\.result)
+                    .prefix(query.limit)
+            )
+        }
+    }
+
+    private struct Matcher {
+        private let mode: StoreQuery.MatchMode
+        private let needle: String
+        private let words: [String]
+
+        init(query: StoreQuery) {
+            mode = query.matchMode
+            needle = query.text.lowercased()
+            words = mode == .anyWord
+                ? needle.split(whereSeparator: { !$0.isLetter && !$0.isNumber })
+                    .map(String.init)
+                    .filter { $0.count >= 3 }
+                : []
+        }
+
+        func hits(in text: String) -> Int {
+            let lowered = text.lowercased()
+            switch mode {
+            case .exact:
+                return lowered.contains(needle) ? 1 : 0
+            case .anyWord:
+                return words.filter { lowered.contains($0) }.count
+            }
+        }
     }
 
     // MARK: Private
