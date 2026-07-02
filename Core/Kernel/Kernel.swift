@@ -45,18 +45,20 @@ public final class Kernel: Sendable {
             throw KernelError.needsClarification("Describe what you want to accomplish.")
         }
 
-        // 2. DECIDE — cheapest sufficient path: reuse before AI (AD-12).
+        // 2. DECIDE — cheapest sufficient path: reuse, then a matching
+        // skill, then plain AI (AD-12). Tool execution joins the order in
+        // M1-4.
         await publish(.planning)
         let strategy: ExecutionStrategy
+        var tier: ModelTier = .light
         if let existing = try await reusableResult(for: objective, in: goal.projectID) {
             strategy = .reuse(existing: existing)
         } else {
-            // Resource order continues (logic → tool → composition) as
-            // skills and tools land in M1; AI is the last tool that
-            // currently exists.
-            strategy = .ai
+            let skill = await matchedSkill(for: objective)
+            tier = skill?.preferredModelTier ?? .light
+            strategy = .ai(skill: skill)
         }
-        let plan = ExecutionPlan(goal: goal, strategy: strategy, preferredTier: .light)
+        let plan = ExecutionPlan(goal: goal, strategy: strategy, preferredTier: tier)
 
         // 3. EXECUTE — the engine does the work; the Kernel never does.
         await publish(.executing)
@@ -97,6 +99,22 @@ public final class Kernel: Sendable {
     /// Richer signals (ambiguity, missing inputs) arrive with real skills.
     private func confidence(in objective: String) -> ConfidenceTier {
         objective.isEmpty ? .low : .high
+    }
+
+    /// Skill selection is data-driven (M1-1): each skill declares its
+    /// trigger keywords, so adding a skill never changes this algorithm.
+    /// Most keyword hits wins; ties break deterministically by id; no hits
+    /// means no skill — the plain AI path is always a correct fallback.
+    private func matchedSkill(for objective: String) async -> SkillDefinition? {
+        let lowered = objective.lowercased()
+        let candidates = await skills.allSkills().compactMap { skill -> (skill: SkillDefinition, hits: Int)? in
+            guard let keywords = skill.triggerKeywords else { return nil }
+            let hits = keywords.filter { lowered.contains($0.lowercased()) }.count
+            return hits > 0 ? (skill, hits) : nil
+        }
+        return candidates
+            .sorted { ($0.hits, $1.skill.id.rawValue) > ($1.hits, $0.skill.id.rawValue) }
+            .first?.skill
     }
 
     /// Reuse Before Create: strict match only — the full goal text must

@@ -16,10 +16,16 @@ public struct DefaultExecutionEngine: ExecutionEngine {
             // Mechanical materialization of the Kernel's reuse decision —
             // zero AI cost, no Store access (AD-25).
             return ExecutionResult(deliverable: Deliverable(content: existing))
-        case .ai:
+        case .ai(let skill):
+            // Mechanical assembly of declared data (AD-25): the template is
+            // the skill's, the goal is the plan's — nothing is decided or
+            // rewritten here.
+            let task = skill?.promptTemplate.map {
+                $0.replacingOccurrences(of: "{goal}", with: plan.goal.text)
+            } ?? plan.goal.text
             let response = try await gateway.complete(
                 AIRequest(
-                    task: plan.goal.text,
+                    task: task,
                     projectID: plan.goal.projectID,
                     preferredTier: plan.preferredTier
                 )

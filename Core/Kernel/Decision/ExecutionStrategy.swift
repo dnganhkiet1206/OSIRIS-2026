@@ -11,7 +11,10 @@ public enum ExecutionStrategy: Sendable {
     case direct
     case tool(ToolID)
     case composition(SkillComposition)
-    case ai
+    /// AI execution, optionally through a skill the Kernel selected. The
+    /// skill rides on this case only — a skill without an AI call is
+    /// meaningless in v1, and the type makes that combination impossible.
+    case ai(skill: SkillDefinition?)
     case hybrid
 }
 

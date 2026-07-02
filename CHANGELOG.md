@@ -2,6 +2,16 @@
 
 ## [Unreleased — M1]
 
+### 2026-07-02 — M1-1: Skill Registry v1 — thêm khả năng bằng cách thêm Skill
+
+- 3 skill tổng quát **thuần dữ liệu** (`Core/Skills/BuiltIn/GenericSkills.swift`): summarize / draft / research-outline — version 1.0.0, promptTemplate với điểm chèn `{goal}` duy nhất, preferredModelTier khai báo. Không reflection, không plugin system, không dynamic loading.
+- `SkillDefinition.triggerKeywords` (field optional mới theo AD-28, có lập luận): matching data-driven — skill tự khai báo nó khớp gì, **thêm skill mới không cần sửa Kernel** (đúng mục tiêu milestone). Keyword giữ hẹp: thà fallback còn hơn khớp sai.
+- Kernel Decide mở rộng thứ tự tài nguyên: reuse → skill-match → plain AI; thuật toán chọn bất biến (nhiều hit thắng, tie theo id tăng dần — deterministic); tier lấy từ skill. Strategy `.ai` mang payload `skill:` — skill chỉ tồn tại trên đường AI, combo vô nghĩa bị type loại trừ.
+- Execution assemble template máy móc (thay `{goal}`) — không chọn, không sửa prompt (AD-25); prompt template là data qua registry, không hardcode trong code (AD-04).
+- `InMemorySkillRegistry(registering:)` — seed đồng bộ cho composition; CompositionRoot đăng ký GenericSkills.
+- Trả nợ kỹ thuật: `Kernel.skills` nay được tiêu thụ thật.
+- 4 test mới chứng minh bằng captured prompt (template vào prompt + `{goal}` được thay; goal không khớp giữ **nguyên** prompt trần — zero regression; registry rỗng an toàn; tie-break deterministic). Tổng 53/53 pass, 0 warning, offline.
+
 ### 2026-07-02 — M1-0 (phần code): Settings, API key entry & Runbook
 
 - `ProviderSettings` (Application): port dạng closure-struct cho quản lý key — mức abstraction nhỏ nhất thỏa ràng buộc arch rules (Presentation và Application đều không được chạm Infrastructure); composition root bọc KeychainSecretsVault vào closures. UI chỉ biết `ProviderStatus` (connected/offline).

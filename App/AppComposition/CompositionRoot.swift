@@ -26,7 +26,7 @@ enum CompositionRoot {
             logger: logger
         )
         let kernel = Kernel(
-            skills: InMemorySkillRegistry(),
+            skills: InMemorySkillRegistry(registering: GenericSkills.all),
             engine: DefaultExecutionEngine(gateway: gateway),
             store: makeStore(),
             approvalGate: RequireUserApprovalGate(),

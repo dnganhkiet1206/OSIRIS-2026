@@ -34,6 +34,10 @@ public struct SkillDefinition: Codable, Sendable {
     public var preferredModelTier: ModelTier?
     public var compositionSteps: [SkillID]?
     public var retryPolicy: RetryPolicy?
+    /// Data-driven matching (added M1-1 per AD-28): the skill declares what
+    /// goals it serves, so adding a skill never requires a Kernel change.
+    /// Keep keywords narrow — a fallback is cheaper than a wrong match.
+    public var triggerKeywords: [String]?
 
     public init(
         id: SkillID,
@@ -45,7 +49,8 @@ public struct SkillDefinition: Codable, Sendable {
         promptTemplate: String? = nil,
         preferredModelTier: ModelTier? = nil,
         compositionSteps: [SkillID]? = nil,
-        retryPolicy: RetryPolicy? = nil
+        retryPolicy: RetryPolicy? = nil,
+        triggerKeywords: [String]? = nil
     ) {
         self.id = id
         self.version = version
@@ -57,5 +62,6 @@ public struct SkillDefinition: Codable, Sendable {
         self.preferredModelTier = preferredModelTier
         self.compositionSteps = compositionSteps
         self.retryPolicy = retryPolicy
+        self.triggerKeywords = triggerKeywords
     }
 }

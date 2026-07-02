@@ -10,10 +10,10 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M1 — Core Runtime, đang triển khai** (M0 nghiệm thu: tag `M0` local tại `dc54059`; push tag khi merge) |
-| Task hiện tại | M1-0 (Verification & Baseline) ✅ phần code hoàn thành · phần Mac/key: **bàn giao user qua `Docs/RUNBOOK_M1-0.md`** · kế tiếp: M1-1 (xem `NEXT_TASK.md`) |
+| Task hiện tại | M1-1 (Skill Registry v1) ✅ hoàn thành · kế tiếp: M1-2 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ chạy** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **13 Architecture Test chống drift (AD-34)** |
-| Trạng thái codebase | ✅ **0 error / 0 warning, 49/49 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
+| Trạng thái codebase | ✅ **0 error / 0 warning, 53/53 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -36,14 +36,14 @@ M1 — Core Runtime: Kernel đầy đủ, hệ điều hành AI thực sự vậ
 - [x] **M0-6 — M0 Closeout**: `AnthropicProvider` (Messages API, URLSession thuần, pin `anthropic-version: 2023-06-01`, parse usage thật, error = status + hint không chứa key) — **cắm vào Gateway với 0 dòng thay đổi ở Core: AD-31 được chứng minh**; `KeychainSecretsVault` (App layer); composition graceful: có key → Anthropic + model thật, không key → Placeholder + model offline (app không bao giờ crash vì thiếu key); models/routing.json thêm claude-haiku (tier light, $1/$5 per 1M); Security Review sạch; 4 test provider offline.
 
 - [x] **M1-0 (phần code) — Settings & API key entry**: `ProviderSettings` port dạng closure-struct trong Application (giải ràng buộc: arch rule cấm cả Presentation lẫn Application chạm Infrastructure → composition root bọc Keychain vào closures); `SettingsView` tối giản (SecureField, không bao giờ hiển thị lại key, trạng thái Connected/Offline, ghi rõ cần restart); sidebar thêm mục Settings; `Docs/RUNBOOK_M1-0.md` — hướng dẫn từng bước cho user tự chạy Mac verification + smoke test + thu baseline thật.
+- [x] **M1-1 — Skill Registry v1**: 3 skill tổng quát thuần dữ liệu (`core.summarize`, `core.draft`, `core.research-outline` — version 1.0.0, promptTemplate với `{goal}`, tier khai báo); `triggerKeywords` = field optional mới trên SkillDefinition (AD-28, có lập luận: matching data-driven để **thêm skill không cần sửa Kernel** — đúng mục tiêu milestone); Kernel Decide: reuse → skill-match (nhiều hit thắng, tie theo id, không hit = fallback nguyên trạng) → plain AI; strategy `.ai(skill:)` payload — skill chỉ tồn tại trên đường AI; Execution assemble template máy móc; **trả nợ `Kernel.skills` chưa tiêu thụ**; 4 test mới chứng minh bằng captured prompt (template vào prompt, không khớp giữ prompt trần, registry rỗng an toàn, tie-break deterministic).
 
 ## 4. Việc đang chờ (Next Tasks)
 
 1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — Mac build, kiểm tra bằng mắt, nhập key, thu 3–4 dòng log `ai.request` → dán lại để điền baseline vào §4b.
-2. **M1-1 — Skill Registry hoạt động** (chi tiết: `NEXT_TASK.md`): 3 skill tổng quát với promptTemplate; Kernel Decide chọn skill theo capability (trả nợ `Kernel.skills` chưa tiêu thụ); Execution chạy skill qua Gateway.
-3. M1-2 — Store search relevance + Gateway retrieval/assembly.
-4. M1-3 — Execution: parallel + composition + resume sau suspend.
-5. M1-4 — Kernel resource-order đầy đủ + Tool Layer on-device đầu tiên.
+2. **M1-2 — Store search relevance + Gateway retrieval/assembly** (chi tiết: `NEXT_TASK.md`): Gateway thực hiện retrieve → assemble thật theo AD-24; ContextPriority được tiêu thụ.
+3. M1-3 — Execution: parallel + composition + resume sau suspend.
+4. M1-4 — Kernel resource-order đầy đủ + Tool Layer on-device đầu tiên.
 
 ## 4b. M0 Closeout & Final Verification (nghiệm thu 2026-07-02, tag `M0`)
 
@@ -137,7 +137,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | Minor | File working-context hết hạn chỉ bị lọc khi đọc, chưa xóa vật lý | Cleanup policy ở M1 (policies.json đã có TTL) |
 | Minor | `InMemoryResponseCache` không giới hạn kích thước, không TTL | Eviction khi có bằng chứng cần (đo ở M1); interface đã là seam thay thế |
 | Minor | Routing theo tier chưa hoạt động — Gateway luôn dùng `defaultModelID`; `AIRequest.preferredTier` là contract đã khai báo chưa tiêu thụ | Kích hoạt khi có ≥ 2 model thật trong catalog (sau AD-31) |
-| Minor | `Kernel.skills` là dependency đã khai báo chưa tiêu thụ (skill selection thuộc M1) | Skill selection M1 |
+| Minor | Skill matching bằng keyword contains — goal chứa từ khóa trong ngữ cảnh phủ định ("don't summarize") vẫn khớp | Chấp nhận v1 (fallback rẻ, template sai không phá kết quả); nâng cấp khi có bằng chứng từ sử dụng thật |
 | Minor | Reuse có phạm vi theo project — goal giống nhau ở project khác vẫn gọi AI (đúng Project Isolation, nhưng chưa có cross-project reuse có kiểm soát) | Cân nhắc ở M3 (Reuse pipeline hoàn chỉnh) với policy rõ ràng |
 | Minor | Scanner của Architecture Test cắt `//` theo dòng — chuỗi literal chứa `//` (URL) có thể tạo false negative | Chấp nhận cho guardrail; nâng cấp parser khi có false negative thật |
 | Minor | Build iOS app (`project.yml`) chưa được kiểm chứng vì môi trường không có macOS/Xcode; App/ + Presentation/ chưa qua compiler (ChatView/ChatViewModel mới ở M0-5) — logic đáng test đã dồn về ChatService (SPM, đã test) | Xác minh `xcodegen generate` + build simulator lần đầu trên Mac (mục của M0-6) |

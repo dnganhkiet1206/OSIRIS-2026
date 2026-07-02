@@ -17,6 +17,13 @@ public actor InMemorySkillRegistry: SkillRegistry {
 
     public init() {}
 
+    /// Synchronous seeding for composition roots and tests.
+    public init(registering initialSkills: [SkillDefinition]) {
+        for skill in initialSkills {
+            skills[skill.id] = skill
+        }
+    }
+
     public func register(_ skill: SkillDefinition) {
         skills[skill.id] = skill
     }

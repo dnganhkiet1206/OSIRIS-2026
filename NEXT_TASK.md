@@ -2,7 +2,7 @@
 
 > Quy trình phiên làm việc: đọc `Docs/PROJECT_STATE.md` → đọc file này → đọc các file liên quan → thiết kế → kiểm tra tái sử dụng → triển khai → Self Review → Architecture Review → refactor nếu cần → cập nhật tài liệu → cập nhật PROJECT_STATE → tạo NEXT_TASK mới → kết thúc. Không bỏ qua bước nào.
 >
-> **Song song:** user chạy `Docs/RUNBOOK_M1-0.md` (Mac verification + baseline thật). Nếu user dán kết quả runbook vào phiên, ưu tiên xử lý trước (điền baseline §4b / sửa lỗi compile nếu có) rồi mới làm task dưới.
+> **Song song:** user vẫn chưa chạy `Docs/RUNBOOK_M1-0.md`. Nếu user dán kết quả runbook vào phiên, xử lý trước (điền baseline §4b / sửa lỗi compile nếu có) rồi mới làm task dưới.
 
 ## Current Milestone
 
@@ -10,66 +10,65 @@
 
 ## Current Task
 
-**M1-1 — Skill Registry hoạt động: skill tổng quát đầu tiên đi qua vòng đời thật**
+**M1-2 — Gateway Retrieval & Assembly: context từ Store vào prompt theo budget (AD-24)**
 
 ## Objective
 
-Kernel chọn skill theo capability và Execution chạy skill qua Gateway — trả món nợ "`Kernel.skills` là dependency chưa tiêu thụ" và biến Skill Registry từ skeleton thành thành phần sống. Sau M1-1: goal dạng "summarize…" chạy qua skill Summarize với promptTemplate riêng thay vì prompt trần.
+AI Gateway thực hiện đúng chuỗi đã khai báo trong AD-24: **retrieve (qua Store.search) → assemble → budget → cache → route → đo**. Sau M1-2: một goal về chủ đề đã có Knowledge/WorkingContext trong project sẽ mang theo context liên quan trong prompt — chất lượng tăng mà không tăng kích thước context bừa bãi (budget 4 mức cắt từ Optional).
 
 ## Phạm vi
 
-1. **3 skill tổng quát** (Core/Skills/BuiltIn — generic, KHÔNG business): `summarize`, `draft`, `research-outline`. Mỗi skill: schema AD-28 (id, version, capabilityTags, purpose, inputs, outputs) + `promptTemplate` (có chỗ chèn `{goal}`), `preferredModelTier`.
-2. **Kernel Decide chọn skill:** sau reuse-check, tra `skills.skills(providing:)` theo capability suy ra từ goal (heuristic keyword đơn giản v0 — khai báo trong skill? cân nhắc: capability matching bằng keyword list trong SkillDefinition optional field mới `triggerKeywords`? CHỈ thêm nếu qua Năm Câu Hỏi; thay thế: map keyword→capability đặt trong Kernel Decision — quyết định trong phiên, ghi lý do).
-3. **ExecutionStrategy/Plan mang skill:** đường `.ai` có thêm thông tin skill được chọn (vd `ExecutionPlan.skill: SkillDefinition?`); Execution assemble template + goal → AIRequest (máy móc — template là data, không phải quyết định). Không skill khớp → `.ai` trần như hiện tại (fallback không đổi hành vi cũ).
-4. **Đăng ký tại composition:** BuiltIn skills đăng ký vào InMemorySkillRegistry khi khởi động.
-5. **Tests:** chọn đúng skill theo goal; template được áp vào prompt (kiểm qua CountingProvider/URLProtocol capture); goal không khớp → fallback nguyên trạng; registry lookup theo capability đã có test.
+1. **DefaultAIGateway nhận `store: (any Store)?`** (optional — Gateway vẫn hoạt động không cần Store, giữ test hiện tại nguyên trạng): trước khi gọi provider, `store.search(task, projectID)` lấy tối đa N kết quả (từ budgets.json, vd `maxContextSnippets: 3`).
+2. **Assembly theo ContextPriority** (trả nợ "ContextPriority chưa tiêu thụ"): preamble + task = `.critical`; WorkingContext = `.important`; Knowledge/Deliverable snippet = `.helpful`. Vượt `contextBudgetTokens` (đã có trong budgets.json) → cắt từ ưu tiên thấp lên (TokenEstimator đo).
+3. **Cache key phải gồm context** (context khác → không được trả cache cũ sai).
+4. **Store.search relevance v1:** tokenize needle theo từ, score = số từ khớp (thay vì cần nguyên chuỗi) — CHỈ cho search phục vụ Gateway; **reuse của Kernel giữ strict full-goal match** (không nới — thà miss còn hơn sai). Cách tách: `StoreQuery.matchMode: .exact | .anyWord` (field mới, default `.exact` — hành vi cũ không đổi) — quyết định cuối trong phiên với Năm Câu Hỏi.
+5. **Tests:** knowledge liên quan xuất hiện trong captured prompt; project khác không rò context (Context Isolation); vượt budget → phần Optional/Helpful bị cắt, Critical không bao giờ; cache không trả nhầm khi context đổi; toàn bộ test cũ pass nguyên trạng.
 
 ## Files cần tạo
 
-- `Core/Skills/BuiltIn/GenericSkills.swift` — 3 SkillDefinition (data, không logic).
-- `Tests/CoreTests/SkillSelectionTests.swift`.
+- `Tests/CoreTests/GatewayRetrievalTests.swift`.
 
 ## Files cần sửa
 
-- `Core/Kernel/Kernel.swift` — Decide: reuse → skill-match → ai-fallback (thứ tự tài nguyên).
-- `Core/Execution/ExecutionEngine.swift` + `DefaultExecutionEngine.swift` — plan mang skill; assemble template máy móc.
-- `App/AppComposition/CompositionRoot.swift` — đăng ký BuiltIn skills.
-- `Docs/PROJECT_STATE.md`, `CHANGELOG.md`, `NEXT_TASK.md` (M1-2) — cuối phiên.
+- `Core/AIGateway/DefaultAIGateway.swift` (+ có thể `Core/AIGateway/AIGateway.swift` nếu cần type assembly nhỏ).
+- `Core/Store/Store.swift` + `FileBackedStore.swift` (matchMode).
+- `Config/budgets.json` (+`maxContextSnippets`), CompositionRoot (truyền store vào Gateway).
+- `Docs/PROJECT_STATE.md`, `CHANGELOG.md`, `NEXT_TASK.md` (M1-3) — cuối phiên.
 
 ## Dependency
 
-- Registry, schema, Gateway đã sẵn. Không dependency ngoài, không network, chạy Placeholder.
+- Store.search + ContextPriority + TokenEstimator + budget đã sẵn. Không dependency ngoài, offline.
 
 ## Checklist
 
-- [ ] `Kernel.skills` được tiêu thụ thật (xóa dòng nợ tương ứng trong PROJECT_STATE §6).
-- [ ] Skill matching là quyết định → chỉ ở Kernel; template assembly là thi hành → chỉ ở Execution (arch tests canh).
-- [ ] Goal không khớp skill nào → hành vi y hệt trước M1-1 (không regression; test cũ pass nguyên trạng).
-- [ ] Skill là data thuần — không skill nào chứa closure/logic.
-- [ ] Không tạo Prompt Registry (AD-04 — template sống trong SkillDefinition).
+- [ ] Đường AI call vẫn duy nhất `Kernel → Gateway → Provider`; Gateway chạm Store qua protocol (AD-24 cho phép), KHÔNG chạm LocalStorage (arch test canh).
+- [ ] Reuse của Kernel không đổi hành vi (strict match giữ nguyên — test cũ pass nguyên trạng).
+- [ ] Context Isolation: query luôn scope theo projectID; không project nào thấy dữ liệu project khác.
+- [ ] Preamble + task không bao giờ bị cắt (Critical); log metrics thêm số snippet đưa vào (đo được mới tối ưu được).
+- [ ] Không tạo Context Engine/Builder/Loader như component riêng (banned — assembly là private trong Gateway).
 - [ ] `swift build` 0 warning; toàn bộ test pass offline.
-- [ ] Self/Architecture Review + docs + NEXT_TASK mới (M1-2).
+- [ ] Self/Architecture Review + docs + NEXT_TASK mới (M1-3).
 
 ## Definition of Done
 
-Một goal khớp capability chạy qua skill với template riêng (chứng minh bằng captured prompt); goal không khớp giữ nguyên hành vi; nợ `Kernel.skills` đã trả; tài liệu cập nhật.
+Captured prompt chứng minh: context liên quan (đúng project) được đưa vào theo ưu tiên, bị cắt đúng thứ tự khi vượt budget, cache an toàn với context; ContextPriority hết là dead contract; zero regression.
 
 ## Estimated Complexity
 
-Trung bình — chạm Decide (nhạy cảm về ranh giới) nhưng không contract mới lớn.
+Trung bình — chạm pipeline Gateway (vùng nhạy cảm nhất), nhưng toàn bộ sau interface hiện có.
 
 ## Estimated AI Cost
 
-Dev session: nhỏ–trung bình. Runtime: 0 (Placeholder).
+Dev session: trung bình. Runtime: 0 (Placeholder/Capturing provider).
 
 ## Risk
 
-- Keyword matching quá tham → chọn nhầm skill: giữ danh sách keyword hẹp, thà fallback còn hơn sai (nhất quán triết lý reuse).
-- Field optional mới trên SkillDefinition (nếu chọn hướng đó) phải qua Năm Câu Hỏi — AD-28 cho phép thêm khi có bằng chứng.
+- Retrieval kém chất lượng → nhiễu prompt: giữ N nhỏ (3), score đơn giản, đo bằng metrics — tối ưu ở M3 khi có số liệu thật.
+- Đổi `search` semantics làm reuse tham → matchMode default `.exact` bảo toàn hành vi cũ; test reuse hiện có là guard.
 
 ## Những phần tuyệt đối không được sửa
 
-- `DefaultAIGateway` pipeline; contract Store/AIProvider/ChatService/TaskUpdate.
-- Ranh giới AD-25/33 (Kernel quyết định — Execution thi hành — arch tests canh).
-- Architecture Test rules (chỉ được THÊM).
+- Contract `AIGateway`/`AIProvider`/`ChatService`/`TaskUpdate` (assembly là nội bộ DefaultAIGateway).
+- Kernel Decide/skill matching (vừa chốt ở M1-1).
+- Ranh giới AD-25/32/33; Architecture Test rules (chỉ được THÊM).
 - ADR cũ (AD-01…AD-35).
