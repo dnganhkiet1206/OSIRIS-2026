@@ -1,6 +1,6 @@
 # DEVELOPMENT_PLAN.md — Kế Hoạch Phát Triển OSIRIS
 
-> **Phiên bản:** 1.0 · **Ngày:** 2026-07-02
+> **Phiên bản:** 1.1 · **Ngày:** 2026-07-02 · *(v1.1: cập nhật theo vòng review 2 — Core 6 thành phần, AD-22…AD-29)*
 > Roadmap này **sửa lại** roadmap gốc (Part 15) theo quyết định AD-16: thay "big-bang foundation" bằng **walking skeleton** — một lát cắt dọc mỏng chạy end-to-end ngay từ M0, sau đó dày dần từng lớp. Lý do: đặc tả gốc yêu cầu xây ~16 core component (M0+M1) trước khi có bất kỳ giá trị người dùng nào — vi phạm chính nguyên tắc "smallest solution" và trì hoãn việc kiểm chứng kiến trúc bằng thực tế.
 
 ---
@@ -37,29 +37,29 @@ M8 Production Readiness  ── ổn định lâu dài: test, security, backup, 
 
 **Phạm vi:**
 1. Khung Xcode project theo `FOLDER_STRUCTURE.md`.
-2. Infrastructure tối thiểu: Config (file JSON), Logging có cấu trúc, Local Storage.
-3. **AI Gateway v0:** 1 provider adapter, đo token/cost mỗi call, System Preamble tĩnh có cache.
+2. Infrastructure tối thiểu: Configuration (file JSON + `preamble.md`), Logging có cấu trúc, Local Storage, Event Bus mỏng (AD-26).
+3. **AI Gateway v0:** 1 provider adapter, đo token/cost mỗi call (AD-15), System Preamble tĩnh từ Config có cache (AD-13, AD-23).
 4. **Kernel v0:** vòng đời Intake → Decide → Execute → Verify → Persist ở dạng tuyến tính (Decide chỉ chọn Direct vs AI).
-5. **Chat UI v0:** một màn hình chat + Execution Status events (qua Event Bus v0).
-6. **State Store v0:** Project State đọc/ghi local, khôi phục khi mở lại app.
+5. **Chat UI v0:** một màn hình chat + Execution Status events.
+6. **Store v0:** bản ghi ProjectState đọc/ghi local, khôi phục khi mở lại app.
 
-**Không làm ở M0:** Skill Registry, Memory 4 tầng, Module, Search, Dashboard, Advanced Mode.
+**Không làm ở M0:** Skill Registry, Knowledge/WorkingContext records, Module, Search, Dashboard, Advanced Mode.
 
-**Tiêu chí hoàn thành:** Người dùng gõ một mục tiêu → thấy execution events → nhận kết quả → tắt app mở lại vẫn thấy Project State. Token mỗi call được log.
+**Tiêu chí hoàn thành:** Người dùng gõ một mục tiêu → thấy execution events → nhận kết quả → tắt app mở lại vẫn thấy ProjectState. Token mỗi call được log.
 
 ### M1 — Core Runtime *(gộp Milestone 0+1 gốc, trừ phần đã làm ở M0)*
 
 **Mục tiêu:** Kernel đầy đủ, hệ điều hành AI thực sự vận hành.
 
 **Phạm vi:**
-1. **Skill Registry:** schema Skill đầy đủ (capability tags, prompt template, cost, fallback); 3–5 skill tổng quát (Research, Summarize, Document…).
-2. **Memory Store:** 4 tầng Vision / Knowledge / Project Memory / Working Context; policy ghi/hết hạn (AD-09, AD-20).
-3. **Context Engine:** retrieval theo relevance, context budget 4 mức ưu tiên, compression cơ bản.
-4. **Execution Engine đầy đủ:** parallel task độc lập, retry + fallback, workflow-as-skill-composition (AD-07), resume sau khi app suspend.
+1. **Skill Registry:** schema tối thiểu (AD-28: 6 trường bắt buộc, còn lại optional); 3–5 skill tổng quát (Research, Summarize, Document…).
+2. **Store đầy đủ:** thêm bản ghi Knowledge + WorkingContext (TTL); năng lực search/retrieval; policy ghi + learning gate (AD-20, AD-22).
+3. **AI Gateway đầy đủ:** retrieve qua Store.search → assemble → context budget 4 mức → compression cơ bản → cache → route (AD-24).
+4. **Execution Engine đầy đủ:** parallel task độc lập, retry/fallback theo policy khai báo — escalation về Kernel (AD-25), workflow-as-skill-composition (AD-07), resume sau khi app suspend.
 5. **Kernel đầy đủ:** decision theo thứ tự tài nguyên (data → cache → logic → tool → workflow → AI), Confidence 3 tier, approval gates cho hành động rủi ro.
-6. **Tool Layer v1:** on-device tools (filesystem, network, media qua Apple frameworks).
+6. **Tool Layer v1:** on-device tools (filesystem, network qua URLSession trực tiếp — AD-27, media qua Apple frameworks).
 
-**Tiêu chí hoàn thành:** Runtime thực thi được task tổng quát nhiều bước một cách tin cậy; task có thể hoàn thành **không cần AI call nào** khi tài nguyên có sẵn đáp ứng; mọi AI call đều qua Context Engine → AI Gateway.
+**Tiêu chí hoàn thành:** Runtime thực thi được task tổng quát nhiều bước một cách tin cậy; task có thể hoàn thành **không cần AI call nào** khi tài nguyên có sẵn đáp ứng; mọi AI call đều qua AI Gateway.
 
 ### M2 — User Experience *(giữ Milestone 2 gốc)*
 
@@ -137,5 +137,5 @@ M8 Production Readiness  ── ổn định lâu dài: test, security, backup, 
 | M0 xây toàn bộ foundation, M1 xây toàn bộ runtime, chưa có UI đến M2 | M0 = lát cắt dọc mỏng có UI + AI call thật | Kiểm chứng kiến trúc sớm; đúng nguyên tắc smallest solution (AD-16) |
 | Workflow Runtime cần ở M1 nhưng Workflow Engine ở M6 | Workflow = skill composition từ M1; M6 chỉ thêm automation/scheduling | Gỡ mâu thuẫn (AD-07) |
 | Deliverable Registry ở M3 | Deliverable indexing trong State + Files | AD-10 |
-| Experience Engine là deliverable riêng ở M3 | Reflection + learning policy có gate trong Memory Store | AD-20 |
+| Experience Engine là deliverable riêng ở M3 | Reflection + learning policy có gate, là policy ghi của Store | AD-20, AD-22 |
 | Không có baseline đo lường | Đo token/cost từ M0 | AD-15 |

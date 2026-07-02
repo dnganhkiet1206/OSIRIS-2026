@@ -1,7 +1,7 @@
 # FOLDER_STRUCTURE.md — Cấu Trúc Thư Mục Chuẩn OSIRIS
 
-> **Phiên bản:** 1.0 · **Ngày:** 2026-07-02
-> Cấu trúc này hiện thực hóa Part 16 (Project Structure gốc) sau khi hợp nhất kiến trúc (PROJECT_BLUEPRINT.md §4). Tổ chức dự án là **mối quan tâm kiến trúc hạng nhất**: một developer (hoặc AI session) mới phải hiểu dự án trong vài phút.
+> **Phiên bản:** 1.1 · **Ngày:** 2026-07-02
+> Cấu trúc này hiện thực hóa Part 16 (Project Structure gốc) sau **hai vòng** hợp nhất kiến trúc (PROJECT_BLUEPRINT.md §3–4: Core 6 thành phần). Tổ chức dự án là **mối quan tâm kiến trúc hạng nhất**: một developer (hoặc AI session) mới phải hiểu dự án trong vài phút.
 
 ---
 
@@ -30,49 +30,44 @@ OSIRIS/
 │   ├── Dashboard/                # Nhận thức vận hành (goal, task, usage, status)
 │   ├── Settings/                 # Cài đặt tối giản
 │   ├── Advanced/                 # Advanced/Developer Mode (ẩn mặc định)
-│   │   ├── MemoryViewer/
+│   │   ├── StoreViewer/          # Memory/Knowledge Viewer = view trên Store
 │   │   ├── LogViewer/
 │   │   ├── TokenAnalysis/
 │   │   └── ModelRouting/
 │   └── ExecutionStatus/          # Hiển thị execution events (không lộ reasoning)
 │
-├── Core/                         # 9 thành phần nền tảng — KHÔNG chứa business logic
-│   ├── Kernel/                   # Executive Brain: vòng đời 5 pha, decision, gates
-│   │   ├── Lifecycle/            # Intake, Decide, Execute, Verify, Persist
+├── Core/                         # 6 thành phần nền tảng — KHÔNG chứa business logic
+│   ├── Kernel/                   # Executive Brain: nơi DUY NHẤT quyết định
+│   │   ├── Lifecycle/            # Vòng đời 5 pha: Intake, Decide, Execute, Verify, Persist
 │   │   ├── Decision/             # Chiến lược, resource order, confidence tiers
 │   │   └── Gates/                # Validation & approval gates
-│   ├── Execution/                # Execution Engine
-│   │   ├── TaskRunner/           # Chạy task, parallel, retry, resume
+│   ├── Execution/                # Execution Engine: nơi DUY NHẤT thi hành
+│   │   ├── TaskRunner/           # Chạy task, parallel, resume sau suspend
 │   │   ├── Composition/          # Workflow = declarative skill composition (AD-07)
-│   │   └── Recovery/             # Fallback, restore state
-│   ├── Skills/                   # Skill Registry (registry DUY NHẤT cho năng lực)
+│   │   └── Recovery/             # Retry/fallback theo policy khai báo (AD-25)
+│   ├── Skills/                   # Skill Registry — điểm mở rộng DUY NHẤT
 │   │   ├── Registry/             # Đăng ký, tra cứu theo capability tag, versioning
-│   │   ├── Contracts/            # Skill schema, Capability tags
+│   │   ├── Contracts/            # Skill schema tối thiểu (AD-28), Capability tags
 │   │   └── BuiltIn/              # Skill tổng quát (Research, Summarize, Document…)
-│   ├── State/                    # State Store — nguồn sự thật duy nhất
-│   │   ├── ProjectState/         # Goal, tasks, progress, decisions, issues
-│   │   └── Persistence/          # Đọc/ghi, migration, khôi phục
-│   ├── Memory/                   # Memory Store — 4 tầng (AD-09)
-│   │   ├── Vision/               # Bất biến, rất nhỏ, luôn nạp (trong preamble)
+│   ├── Store/                    # Nguồn sự thật DUY NHẤT (AD-22)
+│   │   ├── ProjectState/         # Goal, tasks, progress, decisions, issues,
+│   │   │                         #   deliverable index (derived từ file)
 │   │   ├── Knowledge/            # Cách hệ thống hoạt động — searchable
-│   │   ├── ProjectMemory/        # Tiến độ, quyết định, ghi chú theo project
-│   │   ├── WorkingContext/       # Tạm thời, tự hết hạn
-│   │   └── Policies/             # Ghi/nén/hết hạn/learning gate (AD-20)
-│   ├── Context/                  # Context Engine (AD-02)
-│   │   ├── Retrieval/            # Truy hồi theo relevance
-│   │   ├── Budget/               # 4 mức ưu tiên, cắt Optional trước
-│   │   └── Compression/          # Tóm tắt, khử trùng lặp
-│   ├── AIGateway/                # Cửa DUY NHẤT cho mọi AI call (AD-06)
+│   │   ├── WorkingContext/       # Tạm thời, TTL tự hết hạn
+│   │   ├── Search/               # Retrieval: phục vụ Decide, AI Gateway, Global Search
+│   │   ├── Policies/             # Ghi/nén/hết hạn/learning gate (AD-20)
+│   │   └── Persistence/          # Đọc/ghi, migration, khôi phục
+│   ├── AIGateway/                # Cửa DUY NHẤT cho mọi AI call (AD-06, AD-24)
+│   │   ├── Assembly/             # Retrieve (qua Store) → assemble context
+│   │   ├── Budgeting/            # Budget 4 mức, compression, đo lường (AD-15)
+│   │   ├── Caching/              # Prompt cache (preamble), response cache
 │   │   ├── Routing/              # Chọn model theo yêu cầu/chi phí
-│   │   ├── Budgeting/            # Token budget, đo lường (AD-15)
-│   │   ├── Caching/              # Prompt cache, response cache
 │   │   └── Providers/            # Adapter từng provider (hoán đổi được)
-│   ├── Tools/                    # Tool Layer (AD-18)
-│   │   ├── Contracts/            # Interface tool chung
-│   │   ├── OnDevice/             # Filesystem, media (AVFoundation/Vision/Speech),
-│   │   │                         #   calendar, network…
-│   │   └── MCP/                  # MCP client cho remote tools (tùy chọn, thêm sau)
-│   └── Events/                   # Event Bus: progress, state-changed, task events
+│   └── Tools/                    # Tool Layer (AD-18)
+│       ├── Contracts/            # Interface tool chung
+│       ├── OnDevice/             # Filesystem, media (AVFoundation/Vision/Speech),
+│       │                         #   calendar, network (URLSession trực tiếp — AD-27)
+│       └── MCP/                  # MCP client cho remote tools (tùy chọn, thêm từ M6)
 │
 ├── Modules/                      # Nghiệp vụ — mỗi module một plugin độc lập
 │   └── YouTube/                  # ← REFERENCE IMPLEMENTATION (AD-21)
@@ -92,17 +87,19 @@ OSIRIS/
 │   └── Utilities/                # Tiện ích thuần (formatter, parser…) — không state
 │
 ├── Infrastructure/               # Kỹ thuật nền — không biết gì về nghiệp vụ
-│   ├── Storage/                  # Local storage engine, file management
-│   ├── Networking/               # HTTP client, reachability
+│   ├── Storage/                  # Local storage engine (nền vật lý cho Store), files
 │   ├── Logging/                  # Structured logs (debug, cost, execution review)
 │   ├── Security/                 # Keychain (API keys), bảo vệ dữ liệu
-│   └── Configuration/            # Nạp/ghi config, feature flags
+│   ├── Configuration/            # Nạp/ghi config, feature flags
+│   └── Events/                   # Event Bus: pub/sub mỏng (AD-26), progress events
+│   # KHÔNG có Networking/ — URLSession dùng trực tiếp tại consumer (AD-27)
 │
 ├── Config/                       # CẤU HÌNH NGOÀI SOURCE (editable không cần sửa code)
+│   ├── preamble.md               # Vision + System Preamble tĩnh < 400 token (AD-13, AD-23)
 │   ├── models.json               # Danh mục model, tier, giá
 │   ├── routing.json              # Quy tắc chọn model
 │   ├── budgets.json              # Token/context budget
-│   ├── policies.json             # Memory, execution, approval policies
+│   ├── policies.json             # Store, execution, approval policies
 │   └── features.json             # Feature flags
 │
 ├── Resources/                    # Assets — không trộn với source
@@ -115,9 +112,9 @@ OSIRIS/
 │   ├── InfrastructureTests/
 │   └── SharedTests/
 │
-└── Docs/                         # Tài liệu dự án
+└── Docs/                         # Tài liệu dự án (quy tắc nạp context: AD-29)
     ├── PROJECT_BLUEPRINT.md
-    ├── PROJECT_STATE.md
+    ├── PROJECT_STATE.md          # ← file DUY NHẤT luôn nạp vào AI dev session
     ├── DEVELOPMENT_PLAN.md
     ├── FOLDER_STRUCTURE.md
     ├── SYSTEM_COMPONENTS.md
@@ -129,13 +126,14 @@ OSIRIS/
 ## 3. Quy ước đặt tên
 
 - Tên mô tả **trách nhiệm**, không viết tắt, không mơ hồ.
-  - ✅ `ProjectStateManager`, `ExecutionEngine`, `SkillRegistry`, `ContextEngine`
+  - ✅ `Kernel`, `ExecutionEngine`, `SkillRegistry`, `Store`, `AIGateway`
   - ❌ `Helper`, `Utils2`, `ManagerNew`, `ServiceFinal`
-- Tên chuẩn hóa duy nhất theo AD-01…AD-08 (không dùng tên cũ đã hợp nhất):
+- Tên chuẩn hóa duy nhất theo AD-01…AD-08 và AD-22…AD-27 (không dùng tên cũ đã hợp nhất):
   - Dùng `Kernel` — không dùng "Planner service" / "Executive Brain service" riêng.
-  - Dùng `ContextEngine` — không dùng "ContextLoader" / "ContextBuilder".
-  - Dùng `AIGateway` — không dùng "ModelRouter" / "TokenManager" như component đỉnh.
+  - Dùng `Store` — không dùng "StateStore" / "MemoryStore" / "MemoryManager" như component riêng.
+  - Dùng `AIGateway` — không dùng "ModelRouter" / "TokenManager" / "ContextEngine" / "ContextLoader" / "ContextBuilder" như component đỉnh.
   - Workflow là `SkillComposition` — không có "WorkflowEngine".
+  - Không tạo tầng "Networking" — URLSession trực tiếp (AD-27).
 - File Swift: một type chính mỗi file, tên file = tên type.
 
 ## 4. Quy tắc vệ sinh
