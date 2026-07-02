@@ -56,7 +56,7 @@ public final class Kernel: Sendable {
             // currently exists.
             strategy = .ai
         }
-        let plan = ExecutionPlan(goal: goal, strategy: strategy)
+        let plan = ExecutionPlan(goal: goal, strategy: strategy, preferredTier: .light)
 
         // 3. EXECUTE — the engine does the work; the Kernel never does.
         await publish(.executing)
@@ -68,15 +68,27 @@ public final class Kernel: Sendable {
             throw KernelError.verificationFailed
         }
 
-        // 5. PERSIST — update the single source of truth (through Store only).
+        // 5. PERSIST — update the single source of truth (through Store only,
+        // AD-32: the Kernel orchestrates, the Store touches disk).
         await publish(.updatingState)
         var state = try await store.projectState(for: goal.projectID)
             ?? ProjectState(projectID: goal.projectID)
+        var deliverable = result.deliverable
+        if case .reuse = strategy {
+            // Reused content already lives on disk — writing it again would
+            // duplicate the deliverable and pollute future reuse detection.
+        } else {
+            let path = try await store.saveDeliverable(
+                result.deliverable.content, goal: goal.text, for: goal.projectID
+            )
+            state.deliverablePaths.append(path)
+            deliverable = Deliverable(content: result.deliverable.content, filePath: path)
+        }
         state.recordCompletion(of: goal.text)
         try await store.save(state)
 
         await publish(.completed)
-        return result.deliverable
+        return deliverable
     }
 
     // MARK: Decision helpers (pure)
@@ -89,10 +101,21 @@ public final class Kernel: Sendable {
 
     /// Reuse Before Create: strict match only — the full goal text must
     /// appear in a stored record. Prefer a miss over a wrong reuse;
-    /// relevance ranking arrives in M1.
+    /// relevance ranking arrives in M1. Full content is fetched through
+    /// the Store so the reused deliverable is complete, not a snippet.
     private func reusableResult(for objective: String, in projectID: ProjectID) async throws -> String? {
-        let results = try await store.search(StoreQuery(text: objective, projectID: projectID, limit: 1))
-        return results.first?.snippet
+        guard let hit = try await store.search(
+            StoreQuery(text: objective, projectID: projectID, limit: 1)
+        ).first else { return nil }
+
+        switch hit.kind {
+        case .knowledge:
+            return try await store.knowledge(id: hit.id)?.body
+        case .deliverable:
+            return try await store.deliverableContent(at: hit.id)
+        case .projectState, .workingContext:
+            return hit.snippet
+        }
     }
 }
 

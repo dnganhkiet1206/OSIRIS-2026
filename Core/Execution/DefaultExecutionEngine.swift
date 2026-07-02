@@ -18,7 +18,11 @@ public struct DefaultExecutionEngine: ExecutionEngine {
             return ExecutionResult(deliverable: Deliverable(content: existing))
         case .ai:
             let response = try await gateway.complete(
-                AIRequest(task: plan.goal.text, projectID: plan.goal.projectID)
+                AIRequest(
+                    task: plan.goal.text,
+                    projectID: plan.goal.projectID,
+                    preferredTier: plan.preferredTier
+                )
             )
             return ExecutionResult(
                 deliverable: Deliverable(content: response.text),

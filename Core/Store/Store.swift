@@ -21,6 +21,13 @@ public protocol Store: Sendable {
     func workingContext(for projectID: ProjectID) async throws -> [WorkingContextRecord]
     func save(_ record: WorkingContextRecord) async throws
 
+    // Deliverables (AD-10, AD-32): files on disk are the source of truth,
+    // written ONLY by the Store; ProjectState.deliverablePaths is the
+    // derived index maintained by the Kernel's Persist phase. The goal is
+    // embedded in the file so reuse detection can match repeated goals.
+    func saveDeliverable(_ content: String, goal: String, for projectID: ProjectID) async throws -> String
+    func deliverableContent(at path: String) async throws -> String?
+
     // Search across record types
     func search(_ query: StoreQuery) async throws -> [StoreSearchResult]
 }
@@ -39,7 +46,7 @@ public struct StoreQuery: Sendable {
 
 public struct StoreSearchResult: Sendable {
     public enum Kind: Sendable {
-        case projectState, knowledge, workingContext
+        case projectState, knowledge, workingContext, deliverable
     }
 
     public let kind: Kind

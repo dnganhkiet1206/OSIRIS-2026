@@ -8,66 +8,63 @@
 
 ## Current Task
 
-**M0-4B — Execution materialize + Store là persister duy nhất cho deliverable**
+**M0-5 — Chat UI v0: nối vòng đời 5 pha vào giao diện**
 
-## Mục tiêu
+## Objective
 
-1. **`Store.saveDeliverable(content:projectID:) -> String`** (AD-32): Store là nơi duy nhất ghi deliverable file (`deliverables/<projectID>/<UUID>.md` qua LocalStorage); trả về path.
-2. **Kernel Persist cập nhật index:** path vào `ProjectState.deliverablePaths` (Kernel orchestrate qua Store — không I/O trực tiếp, giữ AD-33).
-3. **Deliverable tham gia `Store.search`** (thêm `Kind.deliverable`): goal lặp lại được reuse từ deliverable cũ → lần chạy thứ hai của cùng goal = **0 AI call** (đóng vòng Reuse Before Create thật sự).
-4. **`DefaultExecutionEngine` truyền `preferredTier`** từ plan vào `AIRequest` (đúng contract; Gateway route theo tier khi có ≥2 model — AD-31).
+Người dùng gõ một goal trong ChatView → thấy Execution Status events chạy ("Understanding… Planning… Executing…") → nhận deliverable → `needsClarification` hiển thị thành câu hỏi thân thiện → lỗi hiển thị theo UI contract (chuyện gì xảy ra / đã thử gì / bước tiếp theo). Toàn bộ chạy trên Placeholder provider — 0 chi phí.
 
-## Lý do cần làm
+## Thiết kế ràng buộc (đã chốt, không bàn lại)
 
-M0-4A đã cho Kernel quyết định; M0-4B cho hệ thống *nhớ và tái dùng kết quả của chính nó*. Không có bước này, reuse chỉ hoạt động với Knowledge seed sẵn — chưa phải vòng lặp tự cải thiện. Đây cũng là mảnh cuối của AD-10 (deliverable = file + index phái sinh) và AD-32 (một persister).
+- **Presentation không import OsirisInfrastructure** (arch rule mới từ M0-4B đang canh). UI nhận events qua `AsyncStream<ExecutionEvent>` (type Core) do CompositionRoot cung cấp — EventBus vẫn là chi tiết hạ tầng trong composition root.
+- UI không lộ reasoning — chỉ activity events (UI contract §6 BLUEPRINT).
+- Không chặn UI: `kernel.handle` chạy trong Task, progress cập nhật real-time.
 
-## Các file cần tạo
+## Files cần tạo
 
-- `Tests/CoreTests/DeliverablePersistenceTests.swift` — (a) sau `kernel.handle`, file deliverable tồn tại trên đĩa và path nằm trong `ProjectState.deliverablePaths`; (b) chạy cùng goal lần 2 → 0 provider call (reuse từ deliverable); (c) `saveDeliverable` với projectID lạ → path an toàn (percent-encode, tái dùng helper hiện có).
+- `Presentation/Chat/ChatViewModel.swift` — `@MainActor @Observable`: nhận `Kernel` + `AsyncStream<ExecutionEvent>`; state: transcript (goal, events, deliverable, question/error), `isWorking`; logic mỏng nhất có thể (không compile được trên Linux — giữ nhỏ để rủi ro thấp).
+- `Presentation/ExecutionStatus/ExecutionStatusView.swift` — hiển thị event hiện tại, calm & unobtrusive, không % giả.
 
-## Các file cần sửa
+## Files cần sửa
 
-- `Core/Store/Store.swift` — thêm `saveDeliverable` vào protocol + `Kind.deliverable`.
-- `Core/Store/Persistence/FileBackedStore.swift` — implement saveDeliverable + đưa deliverable vào search (đọc file dưới prefix `deliverables/`).
-- `Core/Kernel/Kernel.swift` — pha Persist: gọi `store.saveDeliverable`, thêm path vào state (qua Store, không LocalStorage).
-- `Core/Execution/DefaultExecutionEngine.swift` — truyền preferredTier.
-- `Core/Execution/ExecutionEngine.swift` — `ExecutionPlan` thêm `preferredTier: ModelTier` (Kernel quyết định tier — mặc định `.light` ở M0).
-- `Docs/PROJECT_STATE.md`, `CHANGELOG.md`, `NEXT_TASK.md` (bản mới cho M0-5) — cuối phiên.
+- `App/AppComposition/CompositionRoot.swift` — trả về `AppDependencies` (kernel + events stream) thay vì chỉ Kernel; EventBus subscribe được nối tại đây.
+- `App/OsirisApp.swift` — khởi tạo dependencies một lần, inject vào ChatView.
+- `Presentation/Chat/ChatView.swift` — form nhập goal, transcript, trạng thái làm việc, hiển thị kết quả/câu hỏi/lỗi.
+- `Docs/PROJECT_STATE.md`, `CHANGELOG.md`, `NEXT_TASK.md` (bản mới cho M0-6) — cuối phiên.
 
 ## Dependency
 
-- Đã có đủ: LocalStorage (chỉ Store dùng), Architecture Tests sẽ tự cưỡng chế AD-32/33 trong lúc triển khai. Không dependency ngoài, không network.
+- Core đã đủ: Kernel 5 pha, ExecutionEvent, KernelError.needsClarification, Gateway metrics. Không thêm dependency ngoài, không network, không đổi Core.
 
 ## Checklist
 
-- [ ] `testOnlyStoreTouchesLocalStorage` và `testKernelIsPureDecisionLogic` vẫn pass (Kernel không I/O; chỉ Store chạm LocalStorage).
-- [ ] Goal lặp lại → 0 provider call, deliverable cũ được trả (CountingProvider chứng minh).
-- [ ] Search deliverable KHÔNG load toàn bộ nội dung mọi file vào memory một cách vô tội vạ — đọc tuần tự, dừng sớm khi đủ limit.
-- [ ] Không tạo Deliverable Registry (AD-10) — chỉ file + index + search.
-- [ ] `swift build` 0 error / 0 warning; toàn bộ test (unit + architecture) pass, offline.
-- [ ] Self Review + Architecture Review + cập nhật docs + NEXT_TASK mới (M0-5).
+- [ ] Presentation không import OsirisInfrastructure (arch test canh).
+- [ ] Không sửa bất kỳ file nào trong `Core/` (M0-5 là App/Presentation thuần túy; nếu phát hiện Core thiếu API cho UI → dừng, ghi nhận, đề xuất — không tiện tay sửa).
+- [ ] `needsClarification` hiển thị câu hỏi, không hiển thị stack trace.
+- [ ] Lỗi Gateway (budget, provider) hiển thị thân thiện theo UI contract.
+- [ ] `swift build` + toàn bộ test (unit + architecture) vẫn 36+/36+ pass trên Linux (SPM package không đổi).
+- [ ] Self Review + Architecture Review + cập nhật docs + NEXT_TASK mới (M0-6).
 
 ## Definition of Done
 
-Vòng lặp reuse khép kín: goal mới → AI (placeholder) → deliverable file + index → goal lặp lại → reuse, 0 AI call. Kernel vẫn thuần túy (arch test chứng minh). Tài liệu cập nhật; NEXT_TASK M0-5 đã tạo.
+Luồng "gõ goal → thấy events → nhận kết quả → goal lặp lại trả về tức thì (reuse)" hoàn chỉnh ở mức code + test package xanh; xác minh chạy thật trên simulator thuộc M0-6 (cần Mac). Tài liệu cập nhật; NEXT_TASK M0-6 đã tạo.
 
 ## Estimated Complexity
 
-Thấp–Trung bình — 1 method protocol mới, search mở rộng, không component mới.
+Thấp–Trung bình — 2 file SwiftUI mới + 3 file sửa; rủi ro chính là không compile được UI trên Linux.
 
 ## Estimated AI Cost
 
-Dev session: nhỏ (PROJECT_STATE + NEXT_TASK + Store 2 file + Kernel + Execution 2 file). Runtime: 0 (Placeholder).
+Dev session: nhỏ. Runtime: 0 (Placeholder).
 
-## Các rủi ro
+## Risk
 
-- Reuse từ deliverable của goal *khác nhưng chứa* goal hiện tại → trả sai; giữ tiêu chí chặt (match nguyên văn goal), thà miss còn hơn sai — relevance ranking M1.
-- `Store` protocol đổi (thêm method) → đây là mở rộng có chủ đích theo AD-32 đã duyệt, không phải drift; cập nhật SYSTEM_COMPONENTS nếu mô tả lệch.
+- **App/Presentation không qua compiler trong môi trường này** — giữ SwiftUI tối giản, tránh API mới lạ; mọi lỗi compile sẽ lộ ở lần build Mac đầu tiên (M0-6 đã có mục xác minh).
+- Concurrency SwiftUI (@Observable + Task + AsyncStream): giữ mọi state mutation trên @MainActor.
 
 ## Những phần tuyệt đối không được sửa
 
-- Ranh giới AD-33: Kernel không import Infrastructure, không I/O (arch test đang canh).
-- `DefaultAIGateway` pipeline + contract AIGateway/AIProvider/ResponseCache.
+- Toàn bộ `Core/**` và `Infrastructure/**` (M0-5 không có lý do chạm vào).
+- Architecture Test rules (chỉ được THÊM).
+- Config schema, Package.swift targets.
 - Không tích hợp provider thật (AD-31 — thuộc M0-6).
-- Architecture Test rules hiện có (chỉ được THÊM rule, không nới lỏng rule để cho code qua).
-- 6 thành phần Core, cấu trúc thư mục, Package.swift targets (trừ khi thêm test target mới có lý do).

@@ -193,6 +193,16 @@ final class ArchitectureRulesTests: XCTestCase {
         )
     }
 
+    // MARK: Presentation boundary (added M0-4B — rules are only ever added)
+
+    func testPresentationNeverTouchesInfrastructure() {
+        assertNoMatch(
+            sources(under: "Presentation/"),
+            pattern: #"(?m)^import OsirisInfrastructure"#,
+            rule: "Presentation reaches the platform through Core and the composition root, never Infrastructure directly"
+        )
+    }
+
     // MARK: Module isolation (AD-19, AD-21) — active once modules exist
 
     func testModulesImportOnlyCoreAndInfrastructure() {

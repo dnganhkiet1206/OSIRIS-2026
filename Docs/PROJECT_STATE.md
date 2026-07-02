@@ -10,10 +10,10 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M0 — Walking Skeleton, đang triển khai** |
-| Task hiện tại | M0-4A (Kernel Decide thuần túy + Architecture Tests) ✅ hoàn thành · kế tiếp: M0-4B (xem `NEXT_TASK.md`) |
+| Task hiện tại | M0-4B (Execution & Deliverable Persistence) ✅ hoàn thành · kế tiếp: M0-5 (xem `NEXT_TASK.md`) |
 | Nền tảng | iOS (iPhone), SwiftUI · Core = SwiftPM package build được mọi nền tảng (AD-30) |
-| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** · **10 Architecture Test tự động chống drift (AD-34)** |
-| Trạng thái codebase | ✅ **0 error / 0 warning, 32/32 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
+| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** · **11 Architecture Test tự động chống drift (AD-34)** |
+| Trạng thái codebase | ✅ **0 error / 0 warning, 36/36 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline · vòng Reuse khép kín |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -29,12 +29,12 @@ Hoàn thành Milestone 0: một lát cắt dọc mỏng chạy end-to-end (Chat 
 - [x] **M0-2 — Store v0 bền vững + Config wiring**: `FileBackedStore` (JSON qua LocalStorage; layout `project-state|knowledge|working-context/<id>.json`; ID percent-encode chống path traversal); test "restart" chứng minh ProjectState sống sót qua app restart; `LocalStorage` thêm `keys(withPrefix:)` (điều kiện bắt buộc cho Store.search — công khai trong Self Review); CompositionRoot đọc preamble/routing từ Config, fail-fast khi thiếu; **xóa InMemoryStore** (thừa sau khi có FileBackedStore — một implementation Store duy nhất).
 - [x] **M0-3 — AI Gateway hoàn thiện như thành phần độc lập** (AD-31, phạm vi do user điều chỉnh: KHÔNG provider thật): pipeline validate → budget → cache → (dry-run | retry khai báo) → metrics → log; `AIRequestMetrics` đầy đủ (AD-15); `GatewayConfiguration` throwing init = config validation fail-fast (kèm cưỡng chế preamble ≤ 400 token — AD-13 bằng máy); `ResponseCache` protocol + in-memory impl; Dry Run mode; retry tái dùng `RetryPolicy` duy nhất; 9 test Gateway offline.
 - [x] **M0-4A — Kernel Decide thuần túy + Architecture Tests** (AD-32/33/34; M0-4 được chia A/B sau Architecture Review): 10 Architecture Test quét source (import matrix, Kernel purity, một persister, một cổng AI, chỉ Kernel tạo ExecutionPlan, 1 impl Store/Gateway, cấm component đã loại bỏ, module isolation) — **bắt được ngay vi phạm thật**: Kernel import Infrastructure → sửa bằng closure inject (AD-33); pha Decide thật: Confidence v0 (goal rỗng → hỏi lại, không đoán), reuse-before-AI qua Store.search (strategy `.reuse` mang content để Execution máy móc), hết reuse → `.ai` (Gateway lần đầu được gọi từ vòng đời thật).
+- [x] **M0-4B — Execution & Deliverable Persistence** (AD-10/32): `Store.saveDeliverable` + `deliverableContent` — chỉ Store chạm đĩa; deliverable = file .md có goal trong front matter (để search khớp goal lặp lại — không cần record phụ); Kernel Persist cập nhật `deliverablePaths` index, KHÔNG ghi lại file khi reuse (tránh duplicate); search deliverable đi qua index (AD-10), dừng sớm khi đủ limit; **vòng Reuse khép kín — goal lặp lại = 0 AI call (có test chứng minh)**; reuse lấy nội dung đầy đủ (trả nợ M0-4A); `preferredTier` truyền xuyên suốt; +1 arch rule mới (Presentation không import Infrastructure).
 
 ## 4. Việc đang chờ (Next Tasks) — theo thứ tự
 
-1. **M0-4B — Execution materialize + Store persister duy nhất** (chi tiết: `NEXT_TASK.md`): `Store.saveDeliverable` ghi deliverable file (AD-32), Kernel Persist cập nhật `deliverablePaths` index, deliverable cũ tham gia Store.search (goal lặp lại → 0 AI call), Execution truyền `preferredTier`.
-2. M0-5 — Chat UI v0 nối Kernel + hiển thị Execution Status events; `needsClarification` → hỏi lại qua UI.
-3. M0-6 — M0 review tổng + tích hợp provider thật đầu tiên (Integration, sau khi Core M0 ổn định — AD-31) + token baseline đầu tiên.
+1. **M0-5 — Chat UI v0** (chi tiết: `NEXT_TASK.md`): nối Kernel vào ChatView, hiển thị Execution Status events (qua AsyncStream Core-type, Presentation không chạm Infrastructure), `needsClarification` → hỏi lại trong UI, lỗi hiển thị thân thiện theo UI contract.
+2. M0-6 — M0 review tổng + tích hợp provider thật đầu tiên (Integration, sau khi Core M0 ổn định — AD-31) + token baseline đầu tiên + xác minh build iOS trên Mac.
 
 ## 5. Quyết định kiến trúc đã chốt (Architecture Decisions Log)
 
@@ -98,7 +98,8 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | Minor | File working-context hết hạn chỉ bị lọc khi đọc, chưa xóa vật lý | Cleanup policy ở M1 (policies.json đã có TTL) |
 | Minor | `InMemoryResponseCache` không giới hạn kích thước, không TTL | Eviction khi có bằng chứng cần (đo ở M1); interface đã là seam thay thế |
 | Minor | Routing theo tier chưa hoạt động — Gateway luôn dùng `defaultModelID`; `AIRequest.preferredTier` là contract đã khai báo chưa tiêu thụ | Kích hoạt khi có ≥ 2 model thật trong catalog (sau AD-31) |
-| Minor | `Kernel.skills` là dependency đã khai báo chưa tiêu thụ (skill selection thuộc M1); reuse heuristic trả `snippet` (ngắn) thay vì nội dung đầy đủ | Skill selection M1; reuse content đầy đủ khi deliverable tham gia search (M0-4B) |
+| Minor | `Kernel.skills` là dependency đã khai báo chưa tiêu thụ (skill selection thuộc M1) | Skill selection M1 |
+| Minor | Reuse có phạm vi theo project — goal giống nhau ở project khác vẫn gọi AI (đúng Project Isolation, nhưng chưa có cross-project reuse có kiểm soát) | Cân nhắc ở M3 (Reuse pipeline hoàn chỉnh) với policy rõ ràng |
 | Minor | Scanner của Architecture Test cắt `//` theo dòng — chuỗi literal chứa `//` (URL) có thể tạo false negative | Chấp nhận cho guardrail; nâng cấp parser khi có false negative thật |
 | Minor | Build iOS app (`project.yml`) chưa được kiểm chứng vì môi trường không có macOS/Xcode; App/ + Presentation/ chưa qua compiler (CompositionRoot vừa sửa ở M0-3) | Xác minh `xcodegen generate` + build lần đầu trên Mac; giữ App shell tối giản đến lúc đó |
 | Ghi chú | Chưa có số liệu token baseline | Đo từ AI call thật đầu tiên (AD-15) — thuộc M0-6 theo AD-31 |

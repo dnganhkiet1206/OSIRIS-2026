@@ -12,11 +12,20 @@ public struct ExecutionPlan: Sendable {
     public let goal: Goal
     public let strategy: ExecutionStrategy
     public let retryPolicy: RetryPolicy
+    /// Model tier the Kernel decided on; Execution passes it through
+    /// unchanged (routing by tier activates with ≥2 real models — AD-31).
+    public let preferredTier: ModelTier
 
-    public init(goal: Goal, strategy: ExecutionStrategy, retryPolicy: RetryPolicy = .none) {
+    public init(
+        goal: Goal,
+        strategy: ExecutionStrategy,
+        retryPolicy: RetryPolicy = .none,
+        preferredTier: ModelTier = .light
+    ) {
         self.goal = goal
         self.strategy = strategy
         self.retryPolicy = retryPolicy
+        self.preferredTier = preferredTier
     }
 }
 

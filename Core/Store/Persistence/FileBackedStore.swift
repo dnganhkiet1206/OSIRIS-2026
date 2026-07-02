@@ -16,6 +16,7 @@ public actor FileBackedStore: Store {
         static let projectState = "project-state"
         static let knowledge = "knowledge"
         static let workingContext = "working-context"
+        static let deliverables = "deliverables"
     }
 
     private let storage: any LocalStorage
@@ -67,6 +68,25 @@ public actor FileBackedStore: Store {
         try write(record, key: key(Prefix.workingContext, id: record.id))
     }
 
+    // MARK: Deliverables (AD-32: only the Store touches disk)
+
+    /// Writes the deliverable as a Markdown file with the goal embedded as
+    /// front matter — the file stays a usable asset AND repeated goals can
+    /// be matched by search without a second record anywhere.
+    public func saveDeliverable(_ content: String, goal: String, for projectID: ProjectID) throws -> String {
+        let path = "\(Prefix.deliverables)/\(Self.safeFilename(projectID.rawValue))/\(UUID().uuidString).md"
+        let goalLine = goal.replacingOccurrences(of: "\n", with: " ")
+        let file = "---\ngoal: \(goalLine)\n---\n\n\(content)"
+        try storage.write(Data(file.utf8), key: path)
+        return path
+    }
+
+    public func deliverableContent(at path: String) throws -> String? {
+        guard let data = try storage.read(key: path),
+              let text = String(data: data, encoding: .utf8) else { return nil }
+        return Self.strippingFrontMatter(from: text)
+    }
+
     // MARK: Search (naive substring match; relevance ranking arrives in M1)
 
     public func search(_ query: StoreQuery) throws -> [StoreSearchResult] {
@@ -75,27 +95,55 @@ public actor FileBackedStore: Store {
 
         for record in try loadAll(KnowledgeRecord.self, prefix: Prefix.knowledge)
             .sorted(by: { $0.id < $1.id }) {
+            guard results.count < query.limit else { return results }
             if record.topic.lowercased().contains(needle) || record.body.lowercased().contains(needle) {
                 results.append(StoreSearchResult(kind: .knowledge, id: record.id, snippet: record.topic))
             }
         }
         for record in try loadAll(WorkingContextRecord.self, prefix: Prefix.workingContext)
             .sorted(by: { $0.id < $1.id }) {
+            guard results.count < query.limit else { return results }
             guard !record.isExpired() else { continue }
             if let projectID = query.projectID, record.projectID != projectID { continue }
             if record.content.lowercased().contains(needle) {
                 results.append(StoreSearchResult(kind: .workingContext, id: record.id, snippet: record.content))
             }
         }
-        return Array(results.prefix(query.limit))
+        // Deliverables are found through their index (ProjectState.deliverablePaths,
+        // AD-10) — no directory walking, reads stop as soon as the limit is hit.
+        let states: [ProjectState]
+        if let projectID = query.projectID {
+            states = try projectState(for: projectID).map { [$0] } ?? []
+        } else {
+            states = try loadAll(ProjectState.self, prefix: Prefix.projectState)
+        }
+        for state in states {
+            for path in state.deliverablePaths {
+                guard results.count < query.limit else { return results }
+                guard let data = try storage.read(key: path),
+                      let text = String(data: data, encoding: .utf8),
+                      text.lowercased().contains(needle) else { continue }
+                let body = Self.strippingFrontMatter(from: text)
+                results.append(StoreSearchResult(kind: .deliverable, id: path, snippet: String(body.prefix(120))))
+            }
+        }
+        return results
     }
 
     // MARK: Private
 
     /// Record IDs are percent-encoded so arbitrary IDs map to safe filenames.
+    private static func safeFilename(_ raw: String) -> String {
+        raw.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? raw
+    }
+
     private func key(_ prefix: String, id: String) -> String {
-        let safe = id.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? id
-        return "\(prefix)/\(safe).json"
+        "\(prefix)/\(Self.safeFilename(id)).json"
+    }
+
+    private static func strippingFrontMatter(from text: String) -> String {
+        guard text.hasPrefix("---\n"), let end = text.range(of: "\n---\n") else { return text }
+        return String(String(text[end.upperBound...]).drop(while: { $0 == "\n" }))
     }
 
     private func load<T: Decodable>(_ type: T.Type, key: String) throws -> T? {
