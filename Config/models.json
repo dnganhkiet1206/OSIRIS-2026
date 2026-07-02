@@ -1,0 +1,11 @@
+{
+  "models": [
+    {
+      "id": "placeholder-local",
+      "provider": "placeholder",
+      "tier": "light",
+      "inputCostPer1MTokens": 0,
+      "outputCostPer1MTokens": 0
+    }
+  ]
+}

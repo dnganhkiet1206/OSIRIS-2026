@@ -1,0 +1,8 @@
+{
+  "defaultModelID": "placeholder-local",
+  "tierDefaults": {
+    "light": "placeholder-local",
+    "standard": "placeholder-local",
+    "advanced": "placeholder-local"
+  }
+}

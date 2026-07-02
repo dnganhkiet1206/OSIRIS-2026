@@ -9,15 +9,15 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **Pre-code — Kiến trúc đã chốt (2 vòng review), chưa viết dòng code nào** |
-| Milestone hiện tại | Chuẩn bị **M0 — Walking Skeleton** (xem DEVELOPMENT_PLAN.md) |
-| Nền tảng | iOS (iPhone), SwiftUI |
+| Giai đoạn | **M0 — Walking Skeleton, đang triển khai** |
+| Task hiện tại | M0-1 (Bootstrap) ✅ hoàn thành · kế tiếp: M0-2 (xem `NEXT_TASK.md`) |
+| Nền tảng | iOS (iPhone), SwiftUI · Core = SwiftPM package build được mọi nền tảng (AD-30) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần**, đã qua Principal review lần 2 |
-| Trạng thái codebase | Trống (chỉ có tài liệu) |
+| Trạng thái codebase | ✅ Bootstrap compile sạch: **0 error / 0 warning, 8/8 test pass** (Swift 6.0.3, Linux) |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
-Bắt đầu Milestone 0: một lát cắt dọc mỏng chạy end-to-end (Chat UI → Kernel tối giản → AI Gateway → kết quả + persist ProjectState).
+Hoàn thành Milestone 0: một lát cắt dọc mỏng chạy end-to-end (Chat UI → Kernel tối giản → AI Gateway → kết quả + persist ProjectState).
 
 ## 3. Việc đã hoàn thành (Completed)
 
@@ -25,15 +25,15 @@ Bắt đầu Milestone 0: một lát cắt dọc mỏng chạy end-to-end (Chat 
 - [x] **Review vòng 1** (trên đặc tả gốc): 21 quyết định AD-01 → AD-21; ~16–20 tên component → 9 Core; 5 pipeline → 1 vòng đời chuẩn 5 pha; 6 registry → 2.
 - [x] **Review vòng 2** (Principal review trên v1.0): 8 quyết định AD-22 → AD-29; Core 9 → **6**; sửa lỗi dual-source-of-truth (State Store vs Memory Store); hợp nhất Context Engine vào AI Gateway; Vision → Config artifact.
 - [x] Ban hành bộ 5 tài liệu nền tảng v1.1: BLUEPRINT, STATE, PLAN, FOLDER_STRUCTURE, SYSTEM_COMPONENTS.
+- [x] **M0-1 — Project Bootstrap** (AD-30): SwiftPM package (OsirisCore 6 thành phần + OsirisInfrastructure 5 thành phần), App shell SwiftUI + `project.yml` (XcodeGen), Config ngoài source (preamble + 5 json), tài liệu vào `Docs/`, kiểm chứng build + test trên Linux. Kernel skeleton chạy đủ 5 pha với placeholder provider (không tốn chi phí AI).
 
 ## 4. Việc đang chờ (Next Tasks) — theo thứ tự
 
-1. Khởi tạo Xcode project theo `FOLDER_STRUCTURE.md`; chuyển 5 file .md vào `Docs/`, 18 file .docx vào `Docs/archive/` (M0-1).
-2. Dựng khung Infrastructure tối thiểu: Configuration, Logging, Storage (M0-2).
-3. AI Gateway v0: 1 provider adapter + System Preamble tĩnh (từ `Config/preamble.md`) + đo token/cost (M0-3).
-4. Kernel v0: vòng đời 5 pha dạng tối giản (Decide chỉ chọn Direct vs AI) (M0-4).
-5. Chat UI v0 + Execution Status events (qua Event Bus mỏng trong Infrastructure) (M0-5).
-6. Store v0: bản ghi ProjectState đọc/ghi local, khôi phục khi mở lại app (M0-6).
+1. **M0-2 — Store v0 bền vững + nạp Config thật** (chi tiết: `NEXT_TASK.md`): FileStorage-backed Store, ProjectState sống sót qua app restart; CompositionRoot đọc preamble/routing/budgets từ ConfigurationLoader thay vì hardcode.
+2. M0-3 — AI Gateway v0: provider adapter thật (URLSession), API key qua SecretsVault (Keychain impl trên app layer), model từ routing.json.
+3. M0-4 — Kernel Decide v0: direct vs ai + reuse check qua Store.search; nối ApprovalGate/ConfidenceTier vào pha Decide.
+4. M0-5 — Chat UI v0 nối Kernel + hiển thị Execution Status events.
+5. M0-6 — M0 review tổng: tiêu chí hoàn thành milestone + baseline token đầu tiên.
 
 ## 5. Quyết định kiến trúc đã chốt (Architecture Decisions Log)
 
@@ -78,13 +78,21 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | AD-28 | Skill schema tối thiểu: 6 trường bắt buộc (`id, version, capabilityTags, purpose, inputs, outputs`), còn lại optional — thêm khi có bằng chứng |
 | AD-29 | Context tiering cho tài liệu: chỉ PROJECT_STATE.md luôn nạp; các file khác nạp theo tình huống |
 
+**Triển khai:**
+
+| ID | Quyết định |
+|---|---|
+| AD-30 | Core + Infrastructure = SwiftPM targets (dependency direction do compiler cưỡng chế; build/test mọi nền tảng); App shell qua `project.yml` (XcodeGen) trên macOS |
+
 ## 6. Vấn đề đã biết & Nợ kỹ thuật (Known Issues / Tech Debt)
 
 | Mức | Mô tả | Kế hoạch |
 |---|---|---|
-| Minor | 18 file .docx gốc còn ở repo root | Chuyển vào `Docs/archive/` khi khởi tạo project (M0-1); **không nạp vào AI context** (AD-14) |
-| Minor | Chưa chọn provider AI đầu tiên cho M0 và cơ chế lưu trữ local (SwiftData vs file JSON) cho Store | Quyết định ở M0-2/M0-3; yêu cầu: dễ thay thế, đúng contract AI Gateway / Store |
-| Ghi chú | Chưa có số liệu token baseline | Bắt đầu đo từ AI call đầu tiên (AD-15) |
+| Minor | `InMemorySecretsVault` là placeholder không mã hóa, không persist | Thay bằng Keychain impl ở app layer tại M0-3; cấm dùng cho key thật |
+| Minor | `InMemoryStore` không bền vững; Store search là substring match ngây thơ | File-backed Store ở M0-2; relevance ranking ở M1 |
+| Minor | Build iOS app (`project.yml`) chưa được kiểm chứng vì môi trường không có macOS/Xcode; Swift files trong App/ + Presentation/ chưa qua compiler | Xác minh `xcodegen generate` + build lần đầu trên Mac; giữ App shell tối giản đến lúc đó |
+| Minor | Chưa chọn provider AI đầu tiên cho M0-3 | Quyết định ở M0-3; yêu cầu: adapter thuần URLSession, đúng contract AIProvider |
+| Ghi chú | Chưa có số liệu token baseline | Bắt đầu đo từ AI call thật đầu tiên (AD-15) |
 
 ## 7. Rủi ro đang theo dõi
 

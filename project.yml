@@ -1,0 +1,30 @@
+# XcodeGen spec for the iOS app shell (AD-30).
+# On macOS: `brew install xcodegen && xcodegen generate`, then open OSIRIS.xcodeproj.
+# Core/Infrastructure build everywhere via SwiftPM: `swift build && swift test`.
+name: OSIRIS
+options:
+  bundleIdPrefix: com.osiris
+  deploymentTarget:
+    iOS: "17.0"
+packages:
+  OsirisKit:
+    path: .
+targets:
+  Osiris:
+    type: application
+    platform: iOS
+    sources:
+      - App
+      - Presentation
+      - path: Config
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - package: OsirisKit
+        product: OsirisCore
+      - package: OsirisKit
+        product: OsirisInfrastructure
+    settings:
+      base:
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        GENERATE_INFOPLIST_FILE: YES

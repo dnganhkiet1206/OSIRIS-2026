@@ -101,6 +101,12 @@ Vòng này áp lại chính bộ tiêu chí trên vào bản hợp nhất v1.0 v
 | AD-28 | Skill schema v1.0 có ~12 trường bắt buộc trước khi tồn tại skill đầu tiên (YAGNI) | Schema sai ở M1 đắt hơn schema thiếu, với chân trời 10 năm | **Schema tối thiểu 5 trường bắt buộc:** `id, version, capabilityTags, purpose, inputs/outputs`. Mọi trường khác (preferredTools, modelTier, cost, fallback, promptTemplate, compositionSteps…) là **optional** — thêm khi có bằng chứng cần |
 | AD-29 | AD-14 thay 18 file bằng 5 file nhưng chưa quy định file nào nạp khi nào — nạp cả 5 mỗi dev session là tái phạm lỗi cũ | Token phí trong chính vòng lặp phát triển | **Context tiering cho tài liệu:** chỉ `PROJECT_STATE.md` luôn trong context; BLUEPRINT/COMPONENTS nạp khi chạm kiến trúc; PLAN nạp khi chuyển milestone; FOLDER_STRUCTURE nạp khi tạo file mới |
 
+### 3.6. Quyết định trong quá trình triển khai
+
+| # | Bối cảnh | Quyết định |
+|---|---|---|
+| AD-30 | Core/Infrastructure là pure Swift không phụ thuộc UI; cần cưỡng chế dependency direction và build/test được ngoài Xcode | **Core + Infrastructure là SwiftPM targets** (`Package.swift` tại repo root; Core phụ thuộc Infrastructure — compiler cưỡng chế, không thể import ngược). App shell (App/ + Presentation/, SwiftUI) build qua Xcode project sinh từ `project.yml` (XcodeGen) trên macOS, link package này. Core build/test được trên mọi nền tảng: `swift build && swift test` |
+
 ---
 
 ## 4. Kiến trúc tối ưu — Tổng quan
