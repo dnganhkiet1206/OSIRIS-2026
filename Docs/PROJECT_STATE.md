@@ -9,15 +9,15 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M0 — Walking Skeleton, đang triển khai** |
-| Task hiện tại | M0-5 (Chat UI v0 & Application Layer) ✅ hoàn thành · kế tiếp: M0-6 (xem `NEXT_TASK.md`) |
+| Giai đoạn | **M0 — Walking Skeleton: ✅ CODE-COMPLETE** (2 mục pending cần Mac/API key — xem §4b) |
+| Task hiện tại | M0-6 (Closeout) ✅ hoàn thành · kế tiếp: chờ user xác nhận mở M1 (đề xuất: `NEXT_TASK.md`) |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
-| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **13 Architecture Test chống drift (AD-34)** |
-| Trạng thái codebase | ✅ **0 error / 0 warning, 42/42 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
+| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **13 Architecture Test chống drift (AD-34)** · AD-31 đã được chứng minh (provider thật cắm vào, Gateway 0 dòng thay đổi) |
+| Trạng thái codebase | ✅ **0 error / 0 warning, 46/46 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
-Hoàn thành Milestone 0: một lát cắt dọc mỏng chạy end-to-end (Chat UI → Kernel tối giản → AI Gateway → kết quả + persist ProjectState).
+M0 nghiệm thu xong (§4b). Chờ xác nhận của user để mở Milestone M1 — Core Runtime.
 
 ## 3. Việc đã hoàn thành (Completed)
 
@@ -33,9 +33,26 @@ Hoàn thành Milestone 0: một lát cắt dọc mỏng chạy end-to-end (Chat 
 
 - [x] **M0-5 — Chat UI v0 & Application Layer** (AD-35): SPM target `OsirisApplication` — `ChatService` là cầu nối duy nhất UI ↔ Core, dịch `ExecutionEvent`/error → `TaskUpdate` với thông điệp thân thiện theo UI contract (test chứng minh không rò tên error nội bộ); `ChatViewModel` (@MainActor @Observable) chỉ quản lý state UI; ChatView kiểu ChatGPT (sidebar + transcript + composer + status line); giữ nguyên tên `ExecutionEvent` (tính tổng quát đạt bằng tầng dịch, không rename); +2 arch rule (Presentation chỉ import OsirisApplication; Application chỉ import OsirisCore); 4 test ChatService chạy trên Linux.
 
-## 4. Việc đang chờ (Next Tasks) — theo thứ tự
+- [x] **M0-6 — M0 Closeout**: `AnthropicProvider` (Messages API, URLSession thuần, pin `anthropic-version: 2023-06-01`, parse usage thật, error = status + hint không chứa key) — **cắm vào Gateway với 0 dòng thay đổi ở Core: AD-31 được chứng minh**; `KeychainSecretsVault` (App layer); composition graceful: có key → Anthropic + model thật, không key → Placeholder + model offline (app không bao giờ crash vì thiếu key); models/routing.json thêm claude-haiku (tier light, $1/$5 per 1M); Security Review sạch; 4 test provider offline.
 
-1. **M0-6 — M0 Closeout** (chi tiết: `NEXT_TASK.md`): provider thật đầu tiên (AD-31 cho phép — Core M0 đã xong) + KeychainSecretsVault + token baseline đầu tiên + xác minh build iOS/simulator trên Mac + M0 review tổng theo Definition of Done.
+## 4. Việc đang chờ (Next Tasks)
+
+**Chờ user xác nhận mở M1.** Đề xuất task đầu tiên tại `NEXT_TASK.md` (M1-0: Verification & Baseline — trả nốt 2 mục pending của M0 trước khi xây tính năng M1).
+
+## 4b. M0 Closeout (nghiệm thu 2026-07-02)
+
+| Tiêu chí M0 / Definition of Done | Kết quả |
+|---|---|
+| Vòng đời 5 pha end-to-end: goal → events → deliverable → restart vẫn còn ProjectState | ✅ chứng minh bằng test (package level) |
+| Token/cost/latency mỗi AI call được log (AD-15) | ✅ pipeline đo hoạt động (placeholder); **baseline số liệu thật: PENDING — cần API key + smoke test** |
+| Kiến trúc sạch, không vi phạm dependency rule | ✅ 13 arch test + compiler |
+| Reuse loop: goal lặp lại = 0 AI call | ✅ test chứng minh |
+| App hoạt động không cần API key | ✅ graceful fallback |
+| Nợ kỹ thuật Critical = 0 | ✅ (toàn bộ Minor, có ghi nhận) |
+| Build iOS/simulator trên Mac | ⚠️ **PENDING — môi trường không có macOS/Xcode** (App/Presentation chưa qua compiler) |
+| Docs + State + NEXT_TASK cập nhật | ✅ |
+
+**Kết luận:** M0 đạt mục tiêu walking skeleton ở mức code-complete + test-proven. Hai mục pending (Mac build, baseline thật) không chặn kiến trúc M1 nhưng phải trả trước khi xây UI M2 — đề xuất gom vào M1-0.
 
 ## 5. Quyết định kiến trúc đã chốt (Architecture Decisions Log)
 
@@ -95,7 +112,8 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 
 | Mức | Mô tả | Kế hoạch |
 |---|---|---|
-| Minor | `InMemorySecretsVault` là placeholder không mã hóa, không persist | Thay bằng Keychain impl ở app layer khi tích hợp provider thật (M0-6); cấm dùng cho key thật |
+| Minor | Chưa có UI nhập API key — key chỉ vào được vault bằng tay/dev | Settings tối thiểu (1 SecureField → vault) ở M1-0 hoặc M2; điều kiện của token baseline |
+| Minor | `InMemorySecretsVault` (Infrastructure) giờ không có người dùng production (Keychain vault đã thay ở App) — giữ cho test tương lai của consumer SecretsVault | Xóa nếu đến M2 vẫn không có test nào dùng |
 | Minor | Store search là substring match ngây thơ; FileBackedStore đọc lại toàn bộ file mỗi lần search (chưa cache/index) | Relevance ranking + tối ưu đọc ở M1, khi có số liệu thật |
 | Minor | File working-context hết hạn chỉ bị lọc khi đọc, chưa xóa vật lý | Cleanup policy ở M1 (policies.json đã có TTL) |
 | Minor | `InMemoryResponseCache` không giới hạn kích thước, không TTL | Eviction khi có bằng chứng cần (đo ở M1); interface đã là seam thay thế |

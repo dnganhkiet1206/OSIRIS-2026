@@ -1,77 +1,72 @@
 # NEXT_TASK.md
 
+> **TRẠNG THÁI: CHỜ XÁC NHẬN CỦA USER.** M0 đã nghiệm thu (PROJECT_STATE §4b). Task dưới đây là ĐỀ XUẤT cho phiên đầu tiên của M1 — không tự ý bắt đầu.
+
 > Quy trình phiên làm việc: đọc `Docs/PROJECT_STATE.md` → đọc file này → đọc các file liên quan → thiết kế → kiểm tra tái sử dụng → triển khai → Self Review → Architecture Review → refactor nếu cần → cập nhật tài liệu → cập nhật PROJECT_STATE → tạo NEXT_TASK mới → kết thúc. Không bỏ qua bước nào.
 
 ## Current Milestone
 
-**M0 — Walking Skeleton** (DEVELOPMENT_PLAN.md §2) — task cuối cùng.
+**M1 — Core Runtime** (đề xuất mở; DEVELOPMENT_PLAN.md §2)
 
-## Current Task
+## Current Task (đề xuất)
 
-**M0-6 — M0 Closeout: provider thật đầu tiên + token baseline + M0 review tổng**
+**M1-0 — Verification & Baseline: trả nốt 2 mục pending của M0 trước khi xây tính năng M1**
 
 ## Objective
 
-Core M0 đã hoàn thiện và ổn định → AD-31 cho phép integration đầu tiên. Mục tiêu: một AI call thật đi hết đường `Kernel → AI Gateway → AnthropicProvider`, usage thật được đo (token baseline đầu tiên của dự án — AD-15), app vẫn chạy được hoàn toàn khi chưa có API key, và M0 được nghiệm thu theo Definition of Done.
+Đóng hai mục PENDING của M0 closeout để mọi tính năng M1 xây trên nền đã xác minh thật:
+1. **Mac verification:** `xcodegen generate` → build iOS simulator → chạy app thật: gõ goal → events → deliverable → restart giữ ProjectState. Sửa mọi lỗi compile của App/Presentation (vùng chưa qua compiler).
+2. **API key entry tối thiểu:** một màn Settings nhỏ (1 SecureField → KeychainSecretsVault qua Application layer — thêm method `setAPIKey` vào ChatService hoặc một SettingsService mỏng; giữ đúng AD-35: Presentation không chạm Infrastructure).
+3. **Token baseline thật (AD-15):** 1–3 smoke call có kiểm soát qua claude-haiku; ghi vào PROJECT_STATE: tokens in/out, latency, cost, cache-hit lần 2. Đây là baseline mọi tối ưu M3/M7 so sánh về sau.
 
-## Phạm vi
+## Lý do
 
-1. **`AnthropicProvider`** (`Core/AIGateway/Providers/`): adapter Messages API bằng URLSession thuần (AD-27); pin `anthropic-version`; parse text + usage thật (input/output tokens) vào `ProviderResponse`; error map rõ ràng (401/429/5xx → error mô tả được, KHÔNG chứa API key). Adapter chỉ làm một việc — mọi thứ khác (budget/cache/retry/metrics) đã thuộc Gateway.
-2. **`KeychainSecretsVault`** (`App/AppComposition/`): implement `SecretsVault` bằng Keychain Services (Xcode-only; giữ nhỏ nhất).
-3. **CompositionRoot graceful:** có key trong vault → AnthropicProvider; chưa có → PlaceholderAIProvider. App KHÔNG BAO GIỜ crash vì thiếu key.
-4. **Config:** thêm model Anthropic thật (tier light, giá thật) vào `models.json` + `routing.json`.
-5. **Token baseline:** chạy 1 smoke test thủ công có key (trên Mac hoặc qua swift run CLI nhỏ? — chỉ khi khả thi) và ghi số liệu đầu tiên vào PROJECT_STATE. Nếu môi trường không có key/Mac: ghi rõ baseline pending, KHÔNG giả số liệu.
-6. **M0 review tổng** theo Definition of Done (DEVELOPMENT_PLAN §3): kiểm từng tiêu chí M0, ghi kết quả vào PROJECT_STATE; xác minh build iOS/simulator trên Mac (nếu không có Mac trong phiên: ghi pending — đây là mục duy nhất được phép pending).
+Định nghĩa Done của M0 có 2 mục chỉ hoàn thành được trên Mac + có key. Kéo dài sang M1 mà không đóng sẽ tích lũy rủi ro compile UI và mọi quyết định token thiếu số liệu gốc.
 
 ## Files cần tạo
 
-- `Core/AIGateway/Providers/AnthropicProvider.swift`
-- `App/AppComposition/KeychainSecretsVault.swift`
-- `Tests/CoreTests/AnthropicProviderTests.swift` — parse fixture JSON (KHÔNG network trong test); map lỗi HTTP; usage đúng.
+- `Presentation/Settings/SettingsView.swift` — tối giản: nhập/xóa API key, trạng thái provider hiện tại ("Offline mode" / "Connected").
+- (Application) API mỏng cho Settings — cân nhắc `SettingsService` riêng chỉ khi ChatService bắt đầu gánh 2 vai; nếu chỉ 1 method thì thêm vào ChatService, không tạo service mới (Năm Câu Hỏi).
 
 ## Files cần sửa
 
-- `App/AppComposition/CompositionRoot.swift` — chọn provider theo key; đọc key qua SecretsVault.
-- `Config/models.json`, `Config/routing.json` — model thật + placeholder fallback.
-- `Docs/PROJECT_STATE.md`, `CHANGELOG.md`, `NEXT_TASK.md` (bản mới — mở M1 hoặc phần còn thiếu của M0 nếu review fail).
+- `App/AppComposition/CompositionRoot.swift` — expose vault cho Application API; chọn lại provider sau khi key đổi (restart-based là đủ cho v0 — ghi rõ trong UI).
+- `Presentation/Chat/ChatView.swift` — sidebar thêm mục Settings.
+- `Docs/PROJECT_STATE.md` (điền baseline), `CHANGELOG.md`, `NEXT_TASK.md` (M1-1: Skill Registry đầy đủ + 3–5 skill tổng quát).
 
 ## Dependency
 
-- Toàn bộ Gateway pipeline (M0-3) và graceful composition đã sẵn. Không SDK ngoài — URLSession thuần. Test dùng fixture; smoke test thật là bước thủ công có kiểm soát (Approval contract: chi tiêu nhỏ, có chủ đích).
+- Cần: máy Mac có Xcode + XcodeGen; API key Anthropic của user (chi tiêu nhỏ có chủ đích — Approval contract).
+- Nếu phiên chạy trong môi trường không có Mac: chỉ làm phần 2 (code Settings) + để 1 và 3 thành hướng dẫn từng bước cho user tự chạy, KHÔNG giả số liệu.
 
 ## Checklist
 
-- [ ] Test parse/error của AnthropicProvider chạy offline, không network.
-- [ ] API key chỉ qua SecretsVault; arch-grep nhanh: không có chuỗi `sk-` / key literal trong repo; key không xuất hiện trong log/error message.
-- [ ] App chạy đầy đủ không key (Placeholder fallback) — không crash, không lỗi user-facing khó hiểu.
-- [ ] Không hardcode model ID trong code — chỉ từ Config.
-- [ ] Arch tests giữ nguyên pass (AnthropicProvider nằm trong Core/AIGateway — đúng vùng được phép).
-- [ ] `swift build` 0 error / 0 warning; toàn bộ test pass.
-- [ ] M0 Definition of Done: từng mục được đánh giá và ghi lại trung thực (pass / pending kèm lý do).
-- [ ] Self Review + Architecture Review + docs + NEXT_TASK mới.
+- [ ] App build + chạy trên simulator; luồng goal → deliverable hoạt động bằng mắt thường.
+- [ ] Key nhập qua Settings vào Keychain; không bao giờ hiển thị lại plain text; không vào log.
+- [ ] Baseline ghi vào PROJECT_STATE với số thật (hoặc đánh dấu pending kèm hướng dẫn).
+- [ ] Arch tests giữ nguyên pass; không sửa Core (trừ khi Mac build lộ lỗi compile — sửa lỗi được phép, không đổi thiết kế).
+- [ ] Self/Architecture/Quality Review + docs + NEXT_TASK mới.
 
 ## Definition of Done
 
-AnthropicProvider hoạt động sau Gateway với usage thật được log; app không key vẫn dùng được; token baseline được ghi (hoặc pending có lý do rõ); M0 closeout report nằm trong PROJECT_STATE; NEXT_TASK kế tiếp đã tạo.
+Hai mục pending của M0 đóng (hoặc có hướng dẫn thực thi rõ nếu môi trường thiếu Mac/key); baseline nằm trong PROJECT_STATE; app dùng được thật trên simulator.
 
 ## Estimated Complexity
 
-Trung bình — adapter mạng + DTO + error mapping + Keychain nhỏ.
+Thấp — chủ yếu wiring + xác minh; rủi ro là lỗi compile SwiftUI tồn đọng.
 
 ## Estimated AI Cost
 
-Dev session: nhỏ. Runtime: lần đầu có chi phí thật, chỉ khi có key và chỉ trong smoke test thủ công (vài trăm token).
+Dev session: nhỏ. Runtime: vài trăm token cho smoke test (chỉ khi user cung cấp key).
 
 ## Risk
 
-- Test gọi mạng thật = flaky + tốn tiền → cấm trong test suite; fixture only.
-- Keychain code không compile trên Linux → nằm ở App/ (Xcode-only), lỗi compile lộ ở lần build Mac đầu — giữ file nhỏ nhất.
-- API schema đổi theo version → pin `anthropic-version` header, ghi chú nguồn trong doc comment.
+- Lỗi compile App/Presentation tích tụ từ M0-1 → M0-6 lộ ra cùng lúc ở lần build Mac đầu — dự phòng thời gian sửa.
+- Đổi provider cần restart app (composition tĩnh) — chấp nhận ở v0, ghi trong UI; hot-swap chỉ làm khi có nhu cầu thật.
 
 ## Những phần tuyệt đối không được sửa
 
-- `DefaultAIGateway` pipeline (adapter cắm vào, Gateway không đổi — đó chính là phép thử của AD-31).
-- `ChatService`/`TaskUpdate` contract (UI không được biết provider mới xuất hiện).
-- Kernel, Execution, Store, Skill Registry.
+- Toàn bộ thiết kế Core/Gateway/Store/Kernel (chỉ fix lỗi compile nếu Mac build lộ ra, không đổi thiết kế).
 - Architecture Test rules (chỉ được THÊM).
-- ADR cũ (AD-01…AD-35) — chỉ thêm ADR mới nếu có quyết định mới.
+- ADR cũ (AD-01…AD-35).
+- Không bắt đầu Skill Registry/tính năng M1 nào khác trong M1-0.

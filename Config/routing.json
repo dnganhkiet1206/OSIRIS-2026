@@ -1,8 +1,9 @@
 {
-  "defaultModelID": "placeholder-local",
+  "defaultModelID": "claude-haiku-4-5-20251001",
+  "offlineModelID": "placeholder-local",
   "tierDefaults": {
-    "light": "placeholder-local",
-    "standard": "placeholder-local",
-    "advanced": "placeholder-local"
+    "light": "claude-haiku-4-5-20251001",
+    "standard": "claude-haiku-4-5-20251001",
+    "advanced": "claude-haiku-4-5-20251001"
   }
 }
