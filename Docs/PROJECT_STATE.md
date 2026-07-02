@@ -9,7 +9,7 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M0 — Walking Skeleton: ✅ ĐÃ NGHIỆM THU** (tag `M0`; 2 mục pending cần Mac/API key — xem §4b) |
+| Giai đoạn | **M0 — Walking Skeleton: ✅ ĐÃ NGHIỆM THU** (tag `M0` tại commit `dc54059` — tạo local, push tag bị chặn bởi quyền branch-scoped của môi trường; push lại khi merge. 2 mục pending cần Mac/API key — xem §4b) |
 | Task hiện tại | M0 Final Verification ✅ hoàn thành · kế tiếp: chờ user xác nhận mở M1 (`NEXT_TASK.md` = M1-0) |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **13 Architecture Test chống drift (AD-34)** · AD-31 đã được chứng minh (provider thật cắm vào, Gateway 0 dòng thay đổi) |
