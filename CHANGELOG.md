@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [M0] — 2026-07-02 (tag `M0`)
+
+### M0 Final Verification & Acceptance
+
+- 3 test xác minh mới (49/49 pass, debug + release 0 warning):
+  - `ShippedConfigurationTests`: Config/ thật phải qua đúng validation của Gateway (cả 2 chế độ online/offline) — guard vĩnh viễn chống config drift.
+  - `AnthropicProviderIntegrationTests`: round-trip qua URLSession thật với URLProtocol stub (không Internet) — body đúng schema Messages API, preamble được assemble, parse usage thật, **cost accounting xác minh: $0.0035 cho 1000 in/500 out haiku**; headers (pin version, key) assert trực tiếp trên URLRequest (phát hiện quirk: URLProtocol trên Linux không expose request headers → tách `makeRequest` internal cho testability).
+  - `PipelineBaselineTests`: baseline AD-15 đầu tiên — **fresh-goal ~4.65 ms/request, reuse-path ~2.54 ms/request** (overhead nội bộ, không gồm provider).
+- App/Presentation (6 file SwiftUI) qua `swiftc -parse`; Config JSON + project.yml validate.
+- Nghiệm thu M0 ghi tại PROJECT_STATE §4b; 2 mục pending có kế hoạch (Mac simulator, baseline provider thật — M1-0).
+
 ## [Unreleased]
 
 ### 2026-07-02 — M0-6: Milestone Closeout — provider thật đầu tiên (AD-31 được chứng minh)

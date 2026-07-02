@@ -9,15 +9,15 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M0 — Walking Skeleton: ✅ CODE-COMPLETE** (2 mục pending cần Mac/API key — xem §4b) |
-| Task hiện tại | M0-6 (Closeout) ✅ hoàn thành · kế tiếp: chờ user xác nhận mở M1 (đề xuất: `NEXT_TASK.md`) |
+| Giai đoạn | **M0 — Walking Skeleton: ✅ ĐÃ NGHIỆM THU** (tag `M0`; 2 mục pending cần Mac/API key — xem §4b) |
+| Task hiện tại | M0 Final Verification ✅ hoàn thành · kế tiếp: chờ user xác nhận mở M1 (`NEXT_TASK.md` = M1-0) |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **13 Architecture Test chống drift (AD-34)** · AD-31 đã được chứng minh (provider thật cắm vào, Gateway 0 dòng thay đổi) |
-| Trạng thái codebase | ✅ **0 error / 0 warning, 46/46 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 49/49 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
-M0 nghiệm thu xong (§4b). Chờ xác nhận của user để mở Milestone M1 — Core Runtime.
+M0 đã nghiệm thu (§4b, tag `M0`). Chờ xác nhận của user để mở Milestone M1 — Core Runtime.
 
 ## 3. Việc đã hoàn thành (Completed)
 
@@ -39,20 +39,33 @@ M0 nghiệm thu xong (§4b). Chờ xác nhận của user để mở Milestone M
 
 **Chờ user xác nhận mở M1.** Đề xuất task đầu tiên tại `NEXT_TASK.md` (M1-0: Verification & Baseline — trả nốt 2 mục pending của M0 trước khi xây tính năng M1).
 
-## 4b. M0 Closeout (nghiệm thu 2026-07-02)
+## 4b. M0 Closeout & Final Verification (nghiệm thu 2026-07-02, tag `M0`)
 
 | Tiêu chí M0 / Definition of Done | Kết quả |
 |---|---|
 | Vòng đời 5 pha end-to-end: goal → events → deliverable → restart vẫn còn ProjectState | ✅ chứng minh bằng test (package level) |
-| Token/cost/latency mỗi AI call được log (AD-15) | ✅ pipeline đo hoạt động (placeholder); **baseline số liệu thật: PENDING — cần API key + smoke test** |
-| Kiến trúc sạch, không vi phạm dependency rule | ✅ 13 arch test + compiler |
+| Token/cost/latency mỗi AI call được log (AD-15) | ✅ pipeline đo hoạt động; cost accounting xác minh bằng integration test ($0.0035 cho 1000 in/500 out haiku) |
+| Kiến trúc sạch, không vi phạm dependency rule | ✅ 13 arch test + compiler; debug + release build 0 warning |
 | Reuse loop: goal lặp lại = 0 AI call | ✅ test chứng minh |
 | App hoạt động không cần API key | ✅ graceful fallback |
-| Nợ kỹ thuật Critical = 0 | ✅ (toàn bộ Minor, có ghi nhận) |
-| Build iOS/simulator trên Mac | ⚠️ **PENDING — môi trường không có macOS/Xcode** (App/Presentation chưa qua compiler) |
-| Docs + State + NEXT_TASK cập nhật | ✅ |
+| Config/ shipped hợp lệ (cả 2 chế độ online/offline) | ✅ `ShippedConfigurationTests` — validation vĩnh viễn trong suite |
+| Tích hợp Anthropic end-to-end (URLSession thật, không Internet) | ✅ URLProtocol stub: headers pinned, body đúng schema, parse usage, cost từ catalog |
+| App/Presentation (6 file SwiftUI) | ✅ qua `swiftc -parse` (cú pháp); ⚠️ **type-check/simulator PENDING — cần Mac** |
+| Smoke test provider thật + baseline token/cost thật | ⚠️ **PENDING — cần API key của user** (không giả số liệu) |
+| Nợ kỹ thuật Critical = 0 | ✅ (toàn bộ Minor/Low, có ghi nhận §6) |
+| Docs + State + NEXT_TASK + git tag | ✅ |
 
-**Kết luận:** M0 đạt mục tiêu walking skeleton ở mức code-complete + test-proven. Hai mục pending (Mac build, baseline thật) không chặn kiến trúc M1 nhưng phải trả trước khi xây UI M2 — đề xuất gom vào M1-0.
+### Baseline (AD-15) — đo ngày 2026-07-02, Linux container, Swift 6.0.3
+
+| Chỉ số | Giá trị | Ghi chú |
+|---|---|---|
+| Pipeline overhead, goal mới (5 pha + search miss + ghi file, KHÔNG gồm provider) | **~4.65 ms/request** | mean 30 runs, `PipelineBaselineTests` |
+| Pipeline overhead, đường reuse (0 AI call) | **~2.54 ms/request** | mean 30 runs |
+| Cost accounting | ✅ xác minh: 1000 in + 500 out (haiku $1/$5 per 1M) = $0.0035 | integration test |
+| Token/latency/cost provider thật | **PENDING** | cần API key; đo ở M1-0 bằng 1–3 smoke call |
+| Chi phí AI tích lũy toàn M0 | **$0.00** | |
+
+**Kết luận nghiệm thu:** M0 ĐẠT — mọi thứ kiểm chứng được trong môi trường hiện tại đều xanh; 2 mục pending (Mac type-check/simulator, baseline provider thật) đã khoanh vùng, có kế hoạch tại M1-0, không chặn kiến trúc M1.
 
 ## 5. Quyết định kiến trúc đã chốt (Architecture Decisions Log)
 

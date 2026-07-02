@@ -1,6 +1,6 @@
 # NEXT_TASK.md
 
-> **TRẠNG THÁI: CHỜ XÁC NHẬN CỦA USER.** M0 đã nghiệm thu (PROJECT_STATE §4b). Task dưới đây là ĐỀ XUẤT cho phiên đầu tiên của M1 — không tự ý bắt đầu.
+> **TRẠNG THÁI: CHỜ USER XÁC NHẬN MỞ M1.** M0 đã nghiệm thu chính thức (PROJECT_STATE §4b, tag `M0`, Final Verification 2026-07-02: 49/49 test, release build sạch, baseline nội bộ đã đo). Task dưới đây là phiên đầu tiên của M1 — không tự ý bắt đầu.
 
 > Quy trình phiên làm việc: đọc `Docs/PROJECT_STATE.md` → đọc file này → đọc các file liên quan → thiết kế → kiểm tra tái sử dụng → triển khai → Self Review → Architecture Review → refactor nếu cần → cập nhật tài liệu → cập nhật PROJECT_STATE → tạo NEXT_TASK mới → kết thúc. Không bỏ qua bước nào.
 

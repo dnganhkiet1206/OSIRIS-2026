@@ -31,7 +31,7 @@ M8 Production Readiness  ── ổn định lâu dài: test, security, backup, 
 
 ## 2. Chi tiết milestone
 
-### M0 — Walking Skeleton *(thay thế Milestone 0 gốc)*
+### M0 — Walking Skeleton *(thay thế Milestone 0 gốc)* — ✅ ĐÃ NGHIỆM THU 2026-07-02 (tag `M0`; 2 pending: Mac simulator + baseline provider thật → M1-0)
 
 **Mục tiêu:** Một request đi hết vòng đời 5 pha ở dạng tối giản và trả về kết quả thật, kèm persist Project State. Chứng minh mọi tầng kiến trúc nói chuyện được với nhau.
 

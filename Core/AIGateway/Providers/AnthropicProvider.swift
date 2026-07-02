@@ -35,6 +35,16 @@ public struct AnthropicProvider: AIProvider {
     }
 
     public func complete(prompt: String, modelID: String) async throws -> ProviderResponse {
+        let (data, http) = try await perform(makeRequest(prompt: prompt, modelID: modelID))
+        guard http.statusCode == 200 else {
+            throw AnthropicProviderError.httpStatus(http.statusCode, Self.userHint(forStatus: http.statusCode))
+        }
+        return try Self.parse(data)
+    }
+
+    /// Internal for tests: header/body correctness is asserted on the
+    /// URLRequest directly, independent of platform networking quirks.
+    func makeRequest(prompt: String, modelID: String) throws -> URLRequest {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -45,12 +55,7 @@ public struct AnthropicProvider: AIProvider {
             maxTokens: maxOutputTokens,
             messages: [RequestBody.Message(role: "user", content: prompt)]
         ))
-
-        let (data, http) = try await perform(request)
-        guard http.statusCode == 200 else {
-            throw AnthropicProviderError.httpStatus(http.statusCode, Self.userHint(forStatus: http.statusCode))
-        }
-        return try Self.parse(data)
+        return request
     }
 
     // MARK: Parsing (static and pure — unit tested offline)
