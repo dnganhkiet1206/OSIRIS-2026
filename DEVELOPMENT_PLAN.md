@@ -1,0 +1,141 @@
+# DEVELOPMENT_PLAN.md — Kế Hoạch Phát Triển OSIRIS
+
+> **Phiên bản:** 1.0 · **Ngày:** 2026-07-02
+> Roadmap này **sửa lại** roadmap gốc (Part 15) theo quyết định AD-16: thay "big-bang foundation" bằng **walking skeleton** — một lát cắt dọc mỏng chạy end-to-end ngay từ M0, sau đó dày dần từng lớp. Lý do: đặc tả gốc yêu cầu xây ~16 core component (M0+M1) trước khi có bất kỳ giá trị người dùng nào — vi phạm chính nguyên tắc "smallest solution" và trì hoãn việc kiểm chứng kiến trúc bằng thực tế.
+
+---
+
+## 0. Nguyên tắc thi công
+
+- **Một milestone tại một thời điểm.** Không bắt đầu milestone kế tiếp khi milestone hiện tại chưa qua đủ: Architecture Review, Quality Review, Token Review, cập nhật PROJECT_STATE.md.
+- **Mỗi milestone kết thúc ở trạng thái chạy được** (production-ready cho phạm vi của nó), không phải "gần xong".
+- **Nợ kỹ thuật Critical phải trả trước khi sang milestone mới.** Important/Minor ghi vào PROJECT_STATE.md.
+- **Đo trước, tối ưu sau.** Không tối ưu sớm; nhưng đo (token/cost/time) ngay từ M0 để có baseline (AD-15).
+- Mỗi chu kỳ trong milestone: Design → Implement → Test → Review → Optimize → Update State/Memory → Commit.
+
+## 1. Lộ trình tổng quan
+
+```
+M0 Walking Skeleton      ── chứng minh kiến trúc bằng lát cắt dọc mỏng nhất
+M1 Core Runtime          ── Kernel đầy đủ 5 pha, Skill Registry, Memory, Context
+M2 User Experience       ── ứng dụng dùng được hằng ngày: Sidebar, Projects, Search
+M3 Intelligence Layer    ── quyết định thông minh hơn, rẻ hơn: cache, reflection
+M4 YouTube Module        ── module nghiệp vụ đầu tiên = reference implementation
+M5 Platform Expansion    ── nhân bản mô hình module (TikTok, Shopify, …)
+M6 Automation            ── scheduling, background, MCP mở rộng
+M7 Optimization          ── hạ chi phí vận hành toàn hệ thống
+M8 Production Readiness  ── ổn định lâu dài: test, security, backup, recovery
+```
+
+---
+
+## 2. Chi tiết milestone
+
+### M0 — Walking Skeleton *(thay thế Milestone 0 gốc)*
+
+**Mục tiêu:** Một request đi hết vòng đời 5 pha ở dạng tối giản và trả về kết quả thật, kèm persist Project State. Chứng minh mọi tầng kiến trúc nói chuyện được với nhau.
+
+**Phạm vi:**
+1. Khung Xcode project theo `FOLDER_STRUCTURE.md`.
+2. Infrastructure tối thiểu: Config (file JSON), Logging có cấu trúc, Local Storage.
+3. **AI Gateway v0:** 1 provider adapter, đo token/cost mỗi call, System Preamble tĩnh có cache.
+4. **Kernel v0:** vòng đời Intake → Decide → Execute → Verify → Persist ở dạng tuyến tính (Decide chỉ chọn Direct vs AI).
+5. **Chat UI v0:** một màn hình chat + Execution Status events (qua Event Bus v0).
+6. **State Store v0:** Project State đọc/ghi local, khôi phục khi mở lại app.
+
+**Không làm ở M0:** Skill Registry, Memory 4 tầng, Module, Search, Dashboard, Advanced Mode.
+
+**Tiêu chí hoàn thành:** Người dùng gõ một mục tiêu → thấy execution events → nhận kết quả → tắt app mở lại vẫn thấy Project State. Token mỗi call được log.
+
+### M1 — Core Runtime *(gộp Milestone 0+1 gốc, trừ phần đã làm ở M0)*
+
+**Mục tiêu:** Kernel đầy đủ, hệ điều hành AI thực sự vận hành.
+
+**Phạm vi:**
+1. **Skill Registry:** schema Skill đầy đủ (capability tags, prompt template, cost, fallback); 3–5 skill tổng quát (Research, Summarize, Document…).
+2. **Memory Store:** 4 tầng Vision / Knowledge / Project Memory / Working Context; policy ghi/hết hạn (AD-09, AD-20).
+3. **Context Engine:** retrieval theo relevance, context budget 4 mức ưu tiên, compression cơ bản.
+4. **Execution Engine đầy đủ:** parallel task độc lập, retry + fallback, workflow-as-skill-composition (AD-07), resume sau khi app suspend.
+5. **Kernel đầy đủ:** decision theo thứ tự tài nguyên (data → cache → logic → tool → workflow → AI), Confidence 3 tier, approval gates cho hành động rủi ro.
+6. **Tool Layer v1:** on-device tools (filesystem, network, media qua Apple frameworks).
+
+**Tiêu chí hoàn thành:** Runtime thực thi được task tổng quát nhiều bước một cách tin cậy; task có thể hoàn thành **không cần AI call nào** khi tài nguyên có sẵn đáp ứng; mọi AI call đều qua Context Engine → AI Gateway.
+
+### M2 — User Experience *(giữ Milestone 2 gốc)*
+
+**Mục tiêu:** Ứng dụng cảm giác hoàn chỉnh, dùng hằng ngày được.
+
+**Phạm vi:** Sidebar (Chat, Projects, Settings; Advanced Mode ẩn) · Projects (goals, files, deliverables, history, resume tức thì) · Settings tối giản · Global Search · Dashboard nhận thức vận hành (Current Goal/Task, Progress, Token Usage, System Status) · Advanced Mode (Memory Viewer, Logs, Token Analysis, Model Routing) · Accessibility (Dynamic Type, VoiceOver, Dark/Light) từ đầu.
+
+**Tiêu chí hoàn thành:** Người dùng mới hiểu app trong phút đầu tiên, không cần hướng dẫn; mọi màn hình đạt UI contract (không lộ reasoning, lỗi thân thiện).
+
+### M3 — Intelligence Layer *(giữ Milestone 3 gốc, đã gọn hóa theo AD-05/AD-10/AD-20)*
+
+**Mục tiêu:** Quyết định tốt hơn trước khi gọi model — rẻ hơn mà chất lượng cao hơn.
+
+**Phạm vi:** Smart planning (ước lượng complexity/cost trước khi chạy) · Reuse pipeline hoàn chỉnh (search deliverable/memory/cache trước khi tạo) · Response cache + prompt cache tối ưu · Reflection sau task (cải thiện lần sau, có gate AD-20) · Deliverable indexing & templates (Executive Summary, actionable next steps) · Tự động cập nhật Project State/Memory sau mỗi execution.
+
+**Tiêu chí hoàn thành:** Số AI call và token trung bình cho cùng loại task **giảm có đo lường** so với baseline M1; chất lượng deliverable qua Verify gate ổn định.
+
+### M4 — YouTube Module (Reference Implementation)
+
+**Mục tiêu:** Module nghiệp vụ production-quality đầu tiên; trở thành khuôn mẫu bắt buộc cho mọi module sau (AD-21).
+
+**Phạm vi:** Research, Channel Analysis, Idea Generation, Script Generation, SEO, Thumbnail Planning, Shorts Planning, Publishing Package, Project Tracking — tất cả hiện thực dưới dạng **Skills + Templates trong module**, tái dùng toàn bộ Core.
+
+**Tiêu chí hoàn thành:** Hoàn thành công việc YouTube có ý nghĩa từ đầu tới cuối chỉ bằng mục tiêu một câu; module tuân thủ 100% Module contract (manifest, cấu trúc thư mục chuẩn, không đụng Core).
+
+### M5 — Platform Expansion
+
+**Mục tiêu:** Nhân bản mô hình module. Thứ tự đề xuất theo giá trị: TikTok → Shopify → Etsy → Instagram/Facebook → Research/Documents → Trading Research.
+
+**Quy tắc:** mỗi module copy đúng cấu trúc YouTube module; **không** sửa Core; nếu một module "cần" sửa Core → dừng lại, review kiến trúc trước.
+
+**Tiêu chí hoàn thành:** ≥ 3 module mới hoạt động mà Core không đổi (chứng minh plugin architecture).
+
+### M6 — Automation
+
+**Mục tiêu:** Nối trí tuệ với thực thi tự động — *không* xây visual workflow builder.
+
+**Phạm vi:** Scheduling · Background execution & task queue (trong giới hạn iOS) · Automation rules đơn giản (điều kiện → skill composition) · MCP integration mở rộng cho remote tools (AD-18) · Execution monitoring.
+
+**Tiêu chí hoàn thành:** Công việc lặp lại chạy tự động, mọi hành động rủi ro vẫn qua approval gate.
+
+### M7 — Optimization
+
+**Mục tiêu:** Hạ chi phí vận hành, dựa trên số liệu đã tích lũy từ M0.
+
+**Phạm vi:** Context loading, caching, memory compression, model routing (dùng model nhỏ hơn khi số liệu cho phép), tốc độ thực thi, network, battery, UI performance.
+
+**Tiêu chí hoàn thành:** Chất lượng giữ nguyên hoặc tăng trong khi token/cost/latency giảm có số liệu.
+
+### M8 — Production Readiness
+
+**Mục tiêu:** Sẵn sàng sử dụng hằng ngày lâu dài.
+
+**Phạm vi:** Test coverage cho Core contracts · Performance review · Security review (API keys, dữ liệu người dùng) · Backup & Recovery (Project State, Memory, Files) · Crash recovery (không mất tiến độ) · Documentation cập nhật · Accessibility audit.
+
+**Tiêu chí hoàn thành:** Mất điện thoại giữa chừng task → mở lại không mất trạng thái; toàn bộ Definition of Done đạt.
+
+---
+
+## 3. Definition of Done (áp dụng mọi milestone)
+
+- [ ] Tính năng chạy đúng, qua Verify gate.
+- [ ] Kiến trúc sạch: không vi phạm dependency rule, không business logic trong Core.
+- [ ] `PROJECT_STATE.md` + Memory cập nhật.
+- [ ] Tài liệu module/component cập nhật (ngắn gọn).
+- [ ] Test cho contract quan trọng.
+- [ ] Token review: số liệu ghi nhận, không thoái lui so với baseline.
+- [ ] Nợ kỹ thuật phân loại (Critical/Important/Minor); Critical = 0.
+- [ ] Việc kế tiếp được ghi vào PROJECT_STATE.md.
+
+## 4. Khác biệt so với roadmap gốc (Part 15) — tóm tắt
+
+| Gốc | Sửa | Lý do |
+|---|---|---|
+| M0 xây toàn bộ foundation, M1 xây toàn bộ runtime, chưa có UI đến M2 | M0 = lát cắt dọc mỏng có UI + AI call thật | Kiểm chứng kiến trúc sớm; đúng nguyên tắc smallest solution (AD-16) |
+| Workflow Runtime cần ở M1 nhưng Workflow Engine ở M6 | Workflow = skill composition từ M1; M6 chỉ thêm automation/scheduling | Gỡ mâu thuẫn (AD-07) |
+| Deliverable Registry ở M3 | Deliverable indexing trong State + Files | AD-10 |
+| Experience Engine là deliverable riêng ở M3 | Reflection + learning policy có gate trong Memory Store | AD-20 |
+| Không có baseline đo lường | Đo token/cost từ M0 | AD-15 |
