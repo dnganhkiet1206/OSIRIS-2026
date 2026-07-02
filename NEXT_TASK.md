@@ -1,72 +1,75 @@
 # NEXT_TASK.md
 
-> **TRẠNG THÁI: CHỜ USER XÁC NHẬN MỞ M1.** M0 đã nghiệm thu chính thức (PROJECT_STATE §4b, tag `M0`, Final Verification 2026-07-02: 49/49 test, release build sạch, baseline nội bộ đã đo). Task dưới đây là phiên đầu tiên của M1 — không tự ý bắt đầu.
-
 > Quy trình phiên làm việc: đọc `Docs/PROJECT_STATE.md` → đọc file này → đọc các file liên quan → thiết kế → kiểm tra tái sử dụng → triển khai → Self Review → Architecture Review → refactor nếu cần → cập nhật tài liệu → cập nhật PROJECT_STATE → tạo NEXT_TASK mới → kết thúc. Không bỏ qua bước nào.
+>
+> **Song song:** user chạy `Docs/RUNBOOK_M1-0.md` (Mac verification + baseline thật). Nếu user dán kết quả runbook vào phiên, ưu tiên xử lý trước (điền baseline §4b / sửa lỗi compile nếu có) rồi mới làm task dưới.
 
 ## Current Milestone
 
-**M1 — Core Runtime** (đề xuất mở; DEVELOPMENT_PLAN.md §2)
+**M1 — Core Runtime** (DEVELOPMENT_PLAN.md §2)
 
-## Current Task (đề xuất)
+## Current Task
 
-**M1-0 — Verification & Baseline: trả nốt 2 mục pending của M0 trước khi xây tính năng M1**
+**M1-1 — Skill Registry hoạt động: skill tổng quát đầu tiên đi qua vòng đời thật**
 
 ## Objective
 
-Đóng hai mục PENDING của M0 closeout để mọi tính năng M1 xây trên nền đã xác minh thật:
-1. **Mac verification:** `xcodegen generate` → build iOS simulator → chạy app thật: gõ goal → events → deliverable → restart giữ ProjectState. Sửa mọi lỗi compile của App/Presentation (vùng chưa qua compiler).
-2. **API key entry tối thiểu:** một màn Settings nhỏ (1 SecureField → KeychainSecretsVault qua Application layer — thêm method `setAPIKey` vào ChatService hoặc một SettingsService mỏng; giữ đúng AD-35: Presentation không chạm Infrastructure).
-3. **Token baseline thật (AD-15):** 1–3 smoke call có kiểm soát qua claude-haiku; ghi vào PROJECT_STATE: tokens in/out, latency, cost, cache-hit lần 2. Đây là baseline mọi tối ưu M3/M7 so sánh về sau.
+Kernel chọn skill theo capability và Execution chạy skill qua Gateway — trả món nợ "`Kernel.skills` là dependency chưa tiêu thụ" và biến Skill Registry từ skeleton thành thành phần sống. Sau M1-1: goal dạng "summarize…" chạy qua skill Summarize với promptTemplate riêng thay vì prompt trần.
 
-## Lý do
+## Phạm vi
 
-Định nghĩa Done của M0 có 2 mục chỉ hoàn thành được trên Mac + có key. Kéo dài sang M1 mà không đóng sẽ tích lũy rủi ro compile UI và mọi quyết định token thiếu số liệu gốc.
+1. **3 skill tổng quát** (Core/Skills/BuiltIn — generic, KHÔNG business): `summarize`, `draft`, `research-outline`. Mỗi skill: schema AD-28 (id, version, capabilityTags, purpose, inputs, outputs) + `promptTemplate` (có chỗ chèn `{goal}`), `preferredModelTier`.
+2. **Kernel Decide chọn skill:** sau reuse-check, tra `skills.skills(providing:)` theo capability suy ra từ goal (heuristic keyword đơn giản v0 — khai báo trong skill? cân nhắc: capability matching bằng keyword list trong SkillDefinition optional field mới `triggerKeywords`? CHỈ thêm nếu qua Năm Câu Hỏi; thay thế: map keyword→capability đặt trong Kernel Decision — quyết định trong phiên, ghi lý do).
+3. **ExecutionStrategy/Plan mang skill:** đường `.ai` có thêm thông tin skill được chọn (vd `ExecutionPlan.skill: SkillDefinition?`); Execution assemble template + goal → AIRequest (máy móc — template là data, không phải quyết định). Không skill khớp → `.ai` trần như hiện tại (fallback không đổi hành vi cũ).
+4. **Đăng ký tại composition:** BuiltIn skills đăng ký vào InMemorySkillRegistry khi khởi động.
+5. **Tests:** chọn đúng skill theo goal; template được áp vào prompt (kiểm qua CountingProvider/URLProtocol capture); goal không khớp → fallback nguyên trạng; registry lookup theo capability đã có test.
 
 ## Files cần tạo
 
-- `Presentation/Settings/SettingsView.swift` — tối giản: nhập/xóa API key, trạng thái provider hiện tại ("Offline mode" / "Connected").
-- (Application) API mỏng cho Settings — cân nhắc `SettingsService` riêng chỉ khi ChatService bắt đầu gánh 2 vai; nếu chỉ 1 method thì thêm vào ChatService, không tạo service mới (Năm Câu Hỏi).
+- `Core/Skills/BuiltIn/GenericSkills.swift` — 3 SkillDefinition (data, không logic).
+- `Tests/CoreTests/SkillSelectionTests.swift`.
 
 ## Files cần sửa
 
-- `App/AppComposition/CompositionRoot.swift` — expose vault cho Application API; chọn lại provider sau khi key đổi (restart-based là đủ cho v0 — ghi rõ trong UI).
-- `Presentation/Chat/ChatView.swift` — sidebar thêm mục Settings.
-- `Docs/PROJECT_STATE.md` (điền baseline), `CHANGELOG.md`, `NEXT_TASK.md` (M1-1: Skill Registry đầy đủ + 3–5 skill tổng quát).
+- `Core/Kernel/Kernel.swift` — Decide: reuse → skill-match → ai-fallback (thứ tự tài nguyên).
+- `Core/Execution/ExecutionEngine.swift` + `DefaultExecutionEngine.swift` — plan mang skill; assemble template máy móc.
+- `App/AppComposition/CompositionRoot.swift` — đăng ký BuiltIn skills.
+- `Docs/PROJECT_STATE.md`, `CHANGELOG.md`, `NEXT_TASK.md` (M1-2) — cuối phiên.
 
 ## Dependency
 
-- Cần: máy Mac có Xcode + XcodeGen; API key Anthropic của user (chi tiêu nhỏ có chủ đích — Approval contract).
-- Nếu phiên chạy trong môi trường không có Mac: chỉ làm phần 2 (code Settings) + để 1 và 3 thành hướng dẫn từng bước cho user tự chạy, KHÔNG giả số liệu.
+- Registry, schema, Gateway đã sẵn. Không dependency ngoài, không network, chạy Placeholder.
 
 ## Checklist
 
-- [ ] App build + chạy trên simulator; luồng goal → deliverable hoạt động bằng mắt thường.
-- [ ] Key nhập qua Settings vào Keychain; không bao giờ hiển thị lại plain text; không vào log.
-- [ ] Baseline ghi vào PROJECT_STATE với số thật (hoặc đánh dấu pending kèm hướng dẫn).
-- [ ] Arch tests giữ nguyên pass; không sửa Core (trừ khi Mac build lộ lỗi compile — sửa lỗi được phép, không đổi thiết kế).
-- [ ] Self/Architecture/Quality Review + docs + NEXT_TASK mới.
+- [ ] `Kernel.skills` được tiêu thụ thật (xóa dòng nợ tương ứng trong PROJECT_STATE §6).
+- [ ] Skill matching là quyết định → chỉ ở Kernel; template assembly là thi hành → chỉ ở Execution (arch tests canh).
+- [ ] Goal không khớp skill nào → hành vi y hệt trước M1-1 (không regression; test cũ pass nguyên trạng).
+- [ ] Skill là data thuần — không skill nào chứa closure/logic.
+- [ ] Không tạo Prompt Registry (AD-04 — template sống trong SkillDefinition).
+- [ ] `swift build` 0 warning; toàn bộ test pass offline.
+- [ ] Self/Architecture Review + docs + NEXT_TASK mới (M1-2).
 
 ## Definition of Done
 
-Hai mục pending của M0 đóng (hoặc có hướng dẫn thực thi rõ nếu môi trường thiếu Mac/key); baseline nằm trong PROJECT_STATE; app dùng được thật trên simulator.
+Một goal khớp capability chạy qua skill với template riêng (chứng minh bằng captured prompt); goal không khớp giữ nguyên hành vi; nợ `Kernel.skills` đã trả; tài liệu cập nhật.
 
 ## Estimated Complexity
 
-Thấp — chủ yếu wiring + xác minh; rủi ro là lỗi compile SwiftUI tồn đọng.
+Trung bình — chạm Decide (nhạy cảm về ranh giới) nhưng không contract mới lớn.
 
 ## Estimated AI Cost
 
-Dev session: nhỏ. Runtime: vài trăm token cho smoke test (chỉ khi user cung cấp key).
+Dev session: nhỏ–trung bình. Runtime: 0 (Placeholder).
 
 ## Risk
 
-- Lỗi compile App/Presentation tích tụ từ M0-1 → M0-6 lộ ra cùng lúc ở lần build Mac đầu — dự phòng thời gian sửa.
-- Đổi provider cần restart app (composition tĩnh) — chấp nhận ở v0, ghi trong UI; hot-swap chỉ làm khi có nhu cầu thật.
+- Keyword matching quá tham → chọn nhầm skill: giữ danh sách keyword hẹp, thà fallback còn hơn sai (nhất quán triết lý reuse).
+- Field optional mới trên SkillDefinition (nếu chọn hướng đó) phải qua Năm Câu Hỏi — AD-28 cho phép thêm khi có bằng chứng.
 
 ## Những phần tuyệt đối không được sửa
 
-- Toàn bộ thiết kế Core/Gateway/Store/Kernel (chỉ fix lỗi compile nếu Mac build lộ ra, không đổi thiết kế).
+- `DefaultAIGateway` pipeline; contract Store/AIProvider/ChatService/TaskUpdate.
+- Ranh giới AD-25/33 (Kernel quyết định — Execution thi hành — arch tests canh).
 - Architecture Test rules (chỉ được THÊM).
 - ADR cũ (AD-01…AD-35).
-- Không bắt đầu Skill Registry/tính năng M1 nào khác trong M1-0.

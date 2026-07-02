@@ -36,6 +36,21 @@ enum CompositionRoot {
         return service
     }
 
+    /// Port for the Settings screen (AD-35): closures over the Keychain
+    /// vault so neither Presentation nor Application touch Infrastructure.
+    static func makeProviderSettings() -> ProviderSettings {
+        let vault = KeychainSecretsVault()
+        let keyName = anthropicKeyName
+        return ProviderSettings(
+            currentStatus: {
+                let key = (try? vault.secret(for: keyName)) ?? nil
+                return (key?.isEmpty == false) ? .connected : .offline
+            },
+            setKey: { try vault.setSecret($0, for: keyName) },
+            removeKey: { try vault.removeSecret(for: keyName) }
+        )
+    }
+
     // MARK: Provider selection (AD-31: adapters plug in; the Gateway never changes)
 
     private static let anthropicKeyName = "anthropic-api-key"

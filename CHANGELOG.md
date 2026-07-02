@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [Unreleased — M1]
+
+### 2026-07-02 — M1-0 (phần code): Settings, API key entry & Runbook
+
+- `ProviderSettings` (Application): port dạng closure-struct cho quản lý key — mức abstraction nhỏ nhất thỏa ràng buộc arch rules (Presentation và Application đều không được chạm Infrastructure); composition root bọc KeychainSecretsVault vào closures. UI chỉ biết `ProviderStatus` (connected/offline).
+- `SettingsView`: SecureField nhập key (không bao giờ hiển thị lại), Save/Remove, trạng thái, ghi rõ áp dụng sau restart; sidebar thêm mục Settings (selection-based; root view sẽ tái cấu trúc ở M2).
+- `Docs/RUNBOOK_M1-0.md`: hướng dẫn từng bước cho user — Mac build (xcodegen), checklist kiểm tra bằng mắt (chat, reuse, restart, clarification), nhập key, smoke test 3 goal + đọc log `ai.request` để thu token/latency/cost baseline thật. Không giả số liệu — baseline điền vào PROJECT_STATE §4b khi user dán kết quả.
+- 49/49 test pass, 0 warning; toàn bộ file UI mới qua `swiftc -parse`.
+
 ## [M0] — 2026-07-02 (tag `M0`)
 
 ### M0 Final Verification & Acceptance

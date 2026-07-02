@@ -1,26 +1,43 @@
 import SwiftUI
+import OsirisApplication
 
 /// The application IS this screen: a simple sidebar, the conversation in
 /// the center, the composer at the bottom. Minimal by design — Dashboard
-/// and Settings attach to the sidebar in M2.
+/// and richer Settings attach to the sidebar in M2 (where this root view
+/// gets restructured properly).
 struct ChatView: View {
-    @State private var model: ChatViewModel
+    private enum SidebarItem: Hashable {
+        case chat, settings
+    }
 
-    init(model: ChatViewModel) {
+    @State private var model: ChatViewModel
+    @State private var selection: SidebarItem? = .chat
+    private let settings: ProviderSettings
+
+    init(model: ChatViewModel, settings: ProviderSettings) {
         _model = State(initialValue: model)
+        self.settings = settings
     }
 
     var body: some View {
         NavigationSplitView {
-            List {
+            List(selection: $selection) {
                 Label("Chat", systemImage: "bubble.left.and.text.bubble.right")
+                    .tag(SidebarItem.chat)
+                Label("Settings", systemImage: "gearshape")
+                    .tag(SidebarItem.settings)
             }
             .navigationTitle("OSIRIS")
         } detail: {
-            VStack(spacing: 0) {
-                transcript
-                statusBar
-                composer
+            switch selection {
+            case .settings:
+                SettingsView(settings: settings)
+            default:
+                VStack(spacing: 0) {
+                    transcript
+                    statusBar
+                    composer
+                }
             }
         }
     }

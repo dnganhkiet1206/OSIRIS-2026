@@ -6,10 +6,14 @@ import SwiftUI
 @main
 struct OsirisApp: App {
     private let chatService = CompositionRoot.makeChatService()
+    private let providerSettings = CompositionRoot.makeProviderSettings()
 
     var body: some Scene {
         WindowGroup {
-            ChatView(model: ChatViewModel(service: chatService))
+            ChatView(
+                model: ChatViewModel(service: chatService),
+                settings: providerSettings
+            )
         }
     }
 }

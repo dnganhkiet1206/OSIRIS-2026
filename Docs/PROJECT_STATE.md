@@ -9,15 +9,15 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M0 — Walking Skeleton: ✅ ĐÃ NGHIỆM THU** (tag `M0` tại commit `dc54059` — tạo local, push tag bị chặn bởi quyền branch-scoped của môi trường; push lại khi merge. 2 mục pending cần Mac/API key — xem §4b) |
-| Task hiện tại | M0 Final Verification ✅ hoàn thành · kế tiếp: chờ user xác nhận mở M1 (`NEXT_TASK.md` = M1-0) |
+| Giai đoạn | **M1 — Core Runtime, đang triển khai** (M0 nghiệm thu: tag `M0` local tại `dc54059`; push tag khi merge) |
+| Task hiện tại | M1-0 (Verification & Baseline) ✅ phần code hoàn thành · phần Mac/key: **bàn giao user qua `Docs/RUNBOOK_M1-0.md`** · kế tiếp: M1-1 (xem `NEXT_TASK.md`) |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
-| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **13 Architecture Test chống drift (AD-34)** · AD-31 đã được chứng minh (provider thật cắm vào, Gateway 0 dòng thay đổi) |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 49/49 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
+| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **13 Architecture Test chống drift (AD-34)** |
+| Trạng thái codebase | ✅ **0 error / 0 warning, 49/49 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
-M0 đã nghiệm thu (§4b, tag `M0`). Chờ xác nhận của user để mở Milestone M1 — Core Runtime.
+M1 — Core Runtime: Kernel đầy đủ, hệ điều hành AI thực sự vận hành (DEVELOPMENT_PLAN §2/M1). Trước mắt: user chạy `Docs/RUNBOOK_M1-0.md` (Mac build + key + baseline thật); song song có thể tiến M1-1.
 
 ## 3. Việc đã hoàn thành (Completed)
 
@@ -35,9 +35,15 @@ M0 đã nghiệm thu (§4b, tag `M0`). Chờ xác nhận của user để mở M
 
 - [x] **M0-6 — M0 Closeout**: `AnthropicProvider` (Messages API, URLSession thuần, pin `anthropic-version: 2023-06-01`, parse usage thật, error = status + hint không chứa key) — **cắm vào Gateway với 0 dòng thay đổi ở Core: AD-31 được chứng minh**; `KeychainSecretsVault` (App layer); composition graceful: có key → Anthropic + model thật, không key → Placeholder + model offline (app không bao giờ crash vì thiếu key); models/routing.json thêm claude-haiku (tier light, $1/$5 per 1M); Security Review sạch; 4 test provider offline.
 
+- [x] **M1-0 (phần code) — Settings & API key entry**: `ProviderSettings` port dạng closure-struct trong Application (giải ràng buộc: arch rule cấm cả Presentation lẫn Application chạm Infrastructure → composition root bọc Keychain vào closures); `SettingsView` tối giản (SecureField, không bao giờ hiển thị lại key, trạng thái Connected/Offline, ghi rõ cần restart); sidebar thêm mục Settings; `Docs/RUNBOOK_M1-0.md` — hướng dẫn từng bước cho user tự chạy Mac verification + smoke test + thu baseline thật.
+
 ## 4. Việc đang chờ (Next Tasks)
 
-**Chờ user xác nhận mở M1.** Đề xuất task đầu tiên tại `NEXT_TASK.md` (M1-0: Verification & Baseline — trả nốt 2 mục pending của M0 trước khi xây tính năng M1).
+1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — Mac build, kiểm tra bằng mắt, nhập key, thu 3–4 dòng log `ai.request` → dán lại để điền baseline vào §4b.
+2. **M1-1 — Skill Registry hoạt động** (chi tiết: `NEXT_TASK.md`): 3 skill tổng quát với promptTemplate; Kernel Decide chọn skill theo capability (trả nợ `Kernel.skills` chưa tiêu thụ); Execution chạy skill qua Gateway.
+3. M1-2 — Store search relevance + Gateway retrieval/assembly.
+4. M1-3 — Execution: parallel + composition + resume sau suspend.
+5. M1-4 — Kernel resource-order đầy đủ + Tool Layer on-device đầu tiên.
 
 ## 4b. M0 Closeout & Final Verification (nghiệm thu 2026-07-02, tag `M0`)
 
