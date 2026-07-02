@@ -10,5 +10,8 @@
     "permanentSettingsChange",
     "coreBehaviorChange"
   ],
-  "workingContextDefaultTTLHours": 24
+  "workingContextDefaultTTLHours": 24,
+  "aiRetry": {
+    "maxAttempts": 2
+  }
 }

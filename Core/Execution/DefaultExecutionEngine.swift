@@ -18,7 +18,7 @@ public struct DefaultExecutionEngine: ExecutionEngine {
             )
             return ExecutionResult(
                 deliverable: Deliverable(content: response.text),
-                usage: response.usage
+                aiMetrics: response.metrics
             )
         case .direct, .tool, .composition, .hybrid:
             // M0 placeholder: only .direct is meaningfully used; the others

@@ -67,8 +67,7 @@ public actor FileBackedStore: Store {
         try write(record, key: key(Prefix.workingContext, id: record.id))
     }
 
-    // MARK: Search (same naive substring semantics as InMemoryStore;
-    // relevance ranking arrives in M1)
+    // MARK: Search (naive substring match; relevance ranking arrives in M1)
 
     public func search(_ query: StoreQuery) throws -> [StoreSearchResult] {
         let needle = query.text.lowercased()

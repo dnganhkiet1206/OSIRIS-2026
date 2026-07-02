@@ -22,10 +22,10 @@ public struct ExecutionPlan: Sendable {
 
 public struct ExecutionResult: Sendable {
     public let deliverable: Deliverable
-    public let usage: AIUsage?
+    public let aiMetrics: AIRequestMetrics?
 
-    public init(deliverable: Deliverable, usage: AIUsage? = nil) {
+    public init(deliverable: Deliverable, aiMetrics: AIRequestMetrics? = nil) {
         self.deliverable = deliverable
-        self.usage = usage
+        self.aiMetrics = aiMetrics
     }
 }

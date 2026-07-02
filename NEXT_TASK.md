@@ -8,69 +8,65 @@
 
 ## Current Task
 
-**M0-3 — AI Gateway v0: provider adapter thật**
+**M0-4 — Kernel Decide v0: pha Decide thật sự quyết định**
 
 ## Mục tiêu
 
-1. `AnthropicProvider`: adapter đầu tiên implement `AIProvider` — gọi Anthropic Messages API bằng URLSession thuần (AD-27), đọc usage thật (input/output tokens, model) từ response vào `AIUsage`.
-2. `RoutingConfiguration` promote từ CompositionRoot vào `Core/AIGateway/Routing/` (Gateway bắt đầu tiêu thụ routing trực tiếp).
-3. `KeychainSecretsVault` trong App layer (implement `SecretsVault` bằng Keychain Services) — chỉ viết, kiểm chứng compile ở Mac.
-4. CompositionRoot: chọn provider theo nguyên tắc *graceful*: có API key trong SecretsVault → AnthropicProvider; chưa có key → PlaceholderAIProvider (app luôn chạy được, không crash vì thiếu key).
+1. **Reuse check (Reuse Before Create):** pha Decide gọi `Store.search` trước khi execute; nếu tìm thấy kết quả khớp đủ mạnh cho goal → trả deliverable từ nguồn có sẵn, không execute gì cả (đường rẻ nhất trong resource order).
+2. **Đường `.ai` sống:** hết reuse → Decide chọn `.ai` (hiện Kernel hardcode `.direct`, nghĩa là Gateway chưa bao giờ được gọi từ vòng đời thật). Strategy `.direct` chỉ còn cho trường hợp không cần AI (sẽ do Skill quyết định từ M1).
+3. **Deliverable là file (AD-10):** pha Persist ghi deliverable ra đĩa qua `LocalStorage` (`deliverables/<projectID>/<timestamp>.md`) và cập nhật `ProjectState.deliverablePaths` (index phái sinh).
+4. `DefaultExecutionEngine` truyền `preferredTier` từ plan vào `AIRequest` (đúng contract, dù Gateway chưa route theo tier — AD-31).
 
 ## Lý do cần làm
 
-Đây là bước biến walking skeleton thành hệ thống thật: AI call đầu tiên có chi phí thật → kích hoạt đo lường AD-15 và tạo **token baseline** đầu tiên của dự án. Không có provider thật thì M0-4/M0-5 chỉ demo với dữ liệu giả.
+Đây là mảnh cuối để vòng đời 5 pha có ý nghĩa thật: Decide đang là stub luôn chọn `.direct` — toàn bộ Gateway vừa hoàn thiện ở M0-3 chưa được Kernel sử dụng. Sau M0-4, chuỗi `Goal → Decide (reuse? ai?) → Gateway (dry-run/placeholder) → Deliverable file → ProjectState` chạy trọn — sẵn sàng cho Chat UI (M0-5) nối vào.
 
 ## Các file cần tạo
 
-- `Core/AIGateway/Providers/AnthropicProvider.swift` — request/response DTO tối thiểu cho Messages API; parse usage; error rõ ràng (401/429/5xx).
-- `Core/AIGateway/Routing/RoutingConfiguration.swift` — struct Decodable (defaultModelID, tierDefaults) chuyển từ CompositionRoot vào Core.
-- `App/AppComposition/KeychainSecretsVault.swift` — Keychain impl của SecretsVault (App layer vì cần Security framework).
-- `Tests/CoreTests/AnthropicProviderTests.swift` — parse response từ JSON fixture (KHÔNG gọi mạng thật trong test); test map lỗi HTTP.
+- `Tests/CoreTests/KernelDecideTests.swift` — (a) goal trùng deliverable đã có → không gọi Gateway (CountingProvider đếm 0), trả từ reuse; (b) goal mới → Gateway được gọi đúng 1 lần; (c) deliverable file tồn tại trên đĩa sau Persist và path nằm trong ProjectState.
 
 ## Các file cần sửa
 
-- `App/AppComposition/CompositionRoot.swift` — bỏ private RoutingConfiguration (dùng bản Core), logic chọn provider theo key.
-- `Config/models.json` + `Config/routing.json` — thêm model Anthropic thật cho tier light (giữ placeholder làm fallback).
-- `Docs/PROJECT_STATE.md`, `CHANGELOG.md`, `NEXT_TASK.md` (bản mới cho M0-4) — cuối phiên.
+- `Core/Kernel/Kernel.swift` — pha Decide (search → reuse | .ai) và pha Persist (ghi file + index). Kernel nhận thêm `LocalStorage` (hoặc Store mở rộng? KHÔNG — cân nhắc kỹ: deliverable là FILE, nguồn sự thật là đĩa; đi qua LocalStorage trực tiếp, Store chỉ giữ index trong ProjectState. Không thêm method deliverable vào Store — tránh biến Store thành god object).
+- `Core/Execution/DefaultExecutionEngine.swift` — truyền preferredTier.
+- `Tests/CoreTests/KernelTests.swift` — cập nhật construction nếu Kernel init đổi.
+- `App/AppComposition/CompositionRoot.swift` — inject LocalStorage cho Kernel.
+- `Docs/PROJECT_STATE.md`, `CHANGELOG.md`, `NEXT_TASK.md` (bản mới cho M0-5) — cuối phiên.
 
 ## Dependency
 
-- Đã có: `AIProvider`/`AIGateway` contract, `AIUsage`, `SecretsVault` protocol, ConfigurationLoader.
-- Không thêm SDK/dependency ngoài — URLSession thuần (AD-27). Trên Linux test dùng fixture, không network.
+- Đã có đủ: Store.search, LocalStorage, Gateway pipeline hoàn chỉnh, EventBus. Không thêm dependency ngoài, không network.
 
 ## Checklist
 
-- [ ] AnthropicProvider parse đúng text + usage từ fixture response.
-- [ ] Lỗi HTTP map thành error có thể hiển thị thân thiện (UI contract: what happened / attempted / next).
-- [ ] Không hardcode model ID trong code — chỉ từ routing.json.
-- [ ] API key chỉ đi qua SecretsVault; **không bao giờ** xuất hiện trong log, prompt, config file (Prompt Security).
-- [ ] App chạy được khi chưa có key (Placeholder fallback) — không crash.
-- [ ] `swift build` 0 error / 0 warning; `swift test` pass toàn bộ.
-- [ ] Không tái tạo component bị cấm; mọi AI call vẫn chỉ qua AI Gateway.
-- [ ] Self Review + Architecture Review + cập nhật docs + NEXT_TASK mới (M0-4).
+- [ ] Reuse hit → 0 provider call (chứng minh bằng CountingProvider).
+- [ ] Reuse miss → đúng 1 provider call; deliverable file trên đĩa; path trong ProjectState.deliverablePaths.
+- [ ] Heuristic reuse ĐƠN GIẢN (substring match qua Store.search hiện có) — không xây scoring engine; relevance là việc của M1.
+- [ ] Không thêm method vào protocol `Store`; không tạo Deliverable Registry (AD-10).
+- [ ] Execution vẫn không chứa quyết định nào (AD-25).
+- [ ] `swift build` 0 error / 0 warning; toàn bộ test pass, offline.
+- [ ] Self Review + Architecture Review + cập nhật docs + NEXT_TASK mới (M0-5).
 
 ## Definition of Done
 
-Provider thật hoạt động sau AI Gateway với usage được log (AD-15); routing config sống trong Core; Keychain vault viết xong chờ kiểm chứng Mac; test parse/error pass không cần mạng; tài liệu cập nhật; NEXT_TASK M0-4 đã tạo.
+Vòng đời 5 pha chạy trọn với Decide thật: reuse-first, AI-last; deliverable là file có index; test chứng minh cả hai nhánh; tài liệu cập nhật; NEXT_TASK M0-5 đã tạo.
 
 ## Estimated Complexity
 
-Trung bình — 1 adapter mạng + DTO + error mapping; không đụng contract Core nào ngoài việc *thêm* RoutingConfiguration.
+Thấp–Trung bình — logic Decide ~30 dòng, Persist ~15 dòng, không contract mới.
 
 ## Estimated AI Cost
 
-Dev session: nhỏ (nạp PROJECT_STATE + NEXT_TASK + 3 file AIGateway). Runtime: lần đầu phát sinh chi phí thật — chỉ khi user có key; test không tốn token.
+Dev session: nhỏ (PROJECT_STATE + NEXT_TASK + Kernel.swift + 2 test file). Runtime: 0 (Placeholder/dry-run).
 
 ## Các rủi ro
 
-- Test gọi mạng thật = flaky + tốn tiền → cấm; chỉ fixture. Smoke test thật thực hiện thủ công ở M0-5.
-- Keychain code không compile được trên Linux → không đưa vào SPM target; nằm ở App/ (Xcode-only), rủi ro lỗi compile tồn đến khi build Mac đầu tiên — giữ file nhỏ nhất có thể.
-- API schema thay đổi theo version header → pin `anthropic-version` trong adapter, ghi chú nguồn.
+- Heuristic reuse quá tham (trả nhầm kết quả cũ cho goal khác) → giữ tiêu chí khớp chặt (goal text xuất hiện nguyên vẹn), thà miss còn hơn sai; nới lỏng ở M1 khi có relevance ranking.
+- Kernel init thêm tham số → cập nhật đồng bộ KernelTests/CompositionRoot trong cùng commit.
 
 ## Những phần tuyệt đối không được sửa
 
-- Protocol `AIGateway`, `AIProvider`, `Store` (chỉ thêm implementation/type mới, không đổi interface).
-- `Kernel`, `ExecutionEngine` (thuộc M0-4).
+- `DefaultAIGateway` pipeline và toàn bộ contract AIGateway/AIProvider/ResponseCache (vừa chốt ở M0-3).
+- Protocol `Store` (không thêm method — deliverable đi qua LocalStorage).
+- Không tích hợp provider thật (AD-31 — thuộc M0-6).
 - 6 thành phần Core, cấu trúc thư mục, Package.swift targets, danh sách component bị cấm (SYSTEM_COMPONENTS.md §6).
-- `Docs/PROJECT_BLUEPRINT.md` (trừ khi có AD mới được duyệt).

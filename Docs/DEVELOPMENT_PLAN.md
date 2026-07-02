@@ -38,7 +38,7 @@ M8 Production Readiness  ── ổn định lâu dài: test, security, backup, 
 **Phạm vi:**
 1. Khung Xcode project theo `FOLDER_STRUCTURE.md`.
 2. Infrastructure tối thiểu: Configuration (file JSON + `preamble.md`), Logging có cấu trúc, Local Storage, Event Bus mỏng (AD-26).
-3. **AI Gateway v0:** 1 provider adapter, đo token/cost mỗi call (AD-15), System Preamble tĩnh từ Config có cache (AD-13, AD-23).
+3. **AI Gateway v0:** đo token/cost mỗi call (AD-15), System Preamble tĩnh từ Config (AD-13, AD-23). Provider thật là Integration — hoãn đến khi Core hoàn thiện (AD-31); PlaceholderProvider là provider duy nhất trong M0.
 4. **Kernel v0:** vòng đời Intake → Decide → Execute → Verify → Persist ở dạng tuyến tính (Decide chỉ chọn Direct vs AI).
 5. **Chat UI v0:** một màn hình chat + Execution Status events.
 6. **Store v0:** bản ghi ProjectState đọc/ghi local, khôi phục khi mở lại app.

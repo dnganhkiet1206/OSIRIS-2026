@@ -1,9 +1,10 @@
 import Foundation
 
-/// The single door for every AI call (AD-06, AD-24). Owns the full chain:
-/// retrieve (via Store) → assemble → budget → cache → route → measure.
-/// No component calls a provider directly; there is no separate Context
-/// Engine/Loader/Builder — recreating one violates the architecture.
+/// The single door for every AI call (AD-06, AD-24). Owns the full request
+/// lifecycle: validate → budget → cache → (dry-run | provider with retry) →
+/// measure → log. No component calls a provider directly; there is no
+/// separate Context Engine/Loader/Builder — recreating one violates the
+/// architecture.
 public protocol AIGateway: Sendable {
     func complete(_ request: AIRequest) async throws -> AIResponse
 }
@@ -24,25 +25,21 @@ public struct AIRequest: Sendable {
 
 public struct AIResponse: Sendable {
     public let text: String
-    public let usage: AIUsage
+    public let metrics: AIRequestMetrics
 
-    public init(text: String, usage: AIUsage) {
+    public init(text: String, metrics: AIRequestMetrics) {
         self.text = text
-        self.usage = usage
+        self.metrics = metrics
     }
 }
 
-/// Every call is measured — unmeasured is unoptimizable (AD-15).
-public struct AIUsage: Codable, Sendable {
-    public let modelID: String
-    public let tokensIn: Int
-    public let tokensOut: Int
-    public let cacheHit: Bool
-
-    public init(modelID: String, tokensIn: Int, tokensOut: Int, cacheHit: Bool) {
-        self.modelID = modelID
-        self.tokensIn = tokensIn
-        self.tokensOut = tokensOut
-        self.cacheHit = cacheHit
-    }
+/// Gateway failures. Every case carries enough context for the UI contract:
+/// what happened, what was attempted, what to do next. Never contains
+/// prompt content or secrets.
+public enum AIGatewayError: Error, Equatable, Sendable {
+    case invalidConfiguration(String)
+    case invalidRequest(String)
+    case tokenBudgetExceeded(estimated: Int, limit: Int)
+    case costBudgetExceeded(estimatedUSD: Double, limitUSD: Double)
+    case providerFailed(attempts: Int, lastError: String)
 }

@@ -10,8 +10,15 @@ final class KernelTests: XCTestCase {
         let store = FileBackedStore(storage: try FileStorage(baseDirectory: directory))
         let gateway = DefaultAIGateway(
             provider: PlaceholderAIProvider(),
-            preamble: "",
-            defaultModelID: "placeholder-local",
+            configuration: try GatewayConfiguration(
+                models: [ModelInfo(id: "placeholder-local", tier: .light, inputCostPer1MTokens: 0, outputCostPer1MTokens: 0)],
+                defaultModelID: "placeholder-local",
+                budget: BudgetPolicy(maxTokensPerRequest: 8000, maxCostPerRequestUSD: 1),
+                retry: .none,
+                preamble: "",
+                preambleMaxTokens: 400,
+                dryRun: false
+            ),
             logger: ConsoleLogger()
         )
         let kernel = Kernel(

@@ -10,10 +10,10 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M0 — Walking Skeleton, đang triển khai** |
-| Task hiện tại | M0-2 (Store bền vững + Config wiring) ✅ hoàn thành · kế tiếp: M0-3 (xem `NEXT_TASK.md`) |
+| Task hiện tại | M0-3 (AI Gateway hoàn thiện, không provider thật — AD-31) ✅ hoàn thành · kế tiếp: M0-4 (xem `NEXT_TASK.md`) |
 | Nền tảng | iOS (iPhone), SwiftUI · Core = SwiftPM package build được mọi nền tảng (AD-30) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần**, đã qua Principal review lần 2 |
-| Trạng thái codebase | ✅ **0 error / 0 warning, 10/10 test pass** (Swift 6.0.3, Linux) · một implementation Store duy nhất |
+| Trạng thái codebase | ✅ **0 error / 0 warning, 19/19 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -27,13 +27,13 @@ Hoàn thành Milestone 0: một lát cắt dọc mỏng chạy end-to-end (Chat 
 - [x] Ban hành bộ 5 tài liệu nền tảng v1.1: BLUEPRINT, STATE, PLAN, FOLDER_STRUCTURE, SYSTEM_COMPONENTS.
 - [x] **M0-1 — Project Bootstrap** (AD-30): SwiftPM package (OsirisCore 6 thành phần + OsirisInfrastructure 5 thành phần), App shell SwiftUI + `project.yml` (XcodeGen), Config ngoài source (preamble + 5 json), tài liệu vào `Docs/`, kiểm chứng build + test trên Linux. Kernel skeleton chạy đủ 5 pha với placeholder provider (không tốn chi phí AI).
 - [x] **M0-2 — Store v0 bền vững + Config wiring**: `FileBackedStore` (JSON qua LocalStorage; layout `project-state|knowledge|working-context/<id>.json`; ID percent-encode chống path traversal); test "restart" chứng minh ProjectState sống sót qua app restart; `LocalStorage` thêm `keys(withPrefix:)` (điều kiện bắt buộc cho Store.search — công khai trong Self Review); CompositionRoot đọc preamble/routing từ Config, fail-fast khi thiếu; **xóa InMemoryStore** (thừa sau khi có FileBackedStore — một implementation Store duy nhất).
+- [x] **M0-3 — AI Gateway hoàn thiện như thành phần độc lập** (AD-31, phạm vi do user điều chỉnh: KHÔNG provider thật): pipeline validate → budget → cache → (dry-run | retry khai báo) → metrics → log; `AIRequestMetrics` đầy đủ (AD-15); `GatewayConfiguration` throwing init = config validation fail-fast (kèm cưỡng chế preamble ≤ 400 token — AD-13 bằng máy); `ResponseCache` protocol + in-memory impl; Dry Run mode; retry tái dùng `RetryPolicy` duy nhất; 9 test Gateway offline.
 
 ## 4. Việc đang chờ (Next Tasks) — theo thứ tự
 
-1. **M0-3 — AI Gateway v0: provider thật** (chi tiết: `NEXT_TASK.md`): Anthropic adapter qua URLSession, API key qua SecretsVault (Keychain impl trên app layer), routing/model từ config, usage thật từ API.
-2. M0-4 — Kernel Decide v0: direct vs ai + reuse check qua Store.search; nối ApprovalGate/ConfidenceTier vào pha Decide.
-3. M0-5 — Chat UI v0 nối Kernel + hiển thị Execution Status events.
-4. M0-6 — M0 review tổng: tiêu chí hoàn thành milestone + baseline token đầu tiên.
+1. **M0-4 — Kernel Decide v0** (chi tiết: `NEXT_TASK.md`): pha Decide thật — reuse check qua Store.search trước khi execute, đường `.ai` sống (hiện Kernel luôn chọn `.direct` nên Gateway chưa bao giờ được gọi từ vòng đời thật), deliverable ghi ra file + index vào ProjectState (AD-10).
+2. M0-5 — Chat UI v0 nối Kernel + hiển thị Execution Status events; ConfidenceTier Low → hỏi lại qua UI.
+3. M0-6 — M0 review tổng + tích hợp provider thật đầu tiên (Integration, sau khi Core M0 ổn định — AD-31) + token baseline đầu tiên.
 
 ## 5. Quyết định kiến trúc đã chốt (Architecture Decisions Log)
 
@@ -83,16 +83,19 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | ID | Quyết định |
 |---|---|
 | AD-30 | Core + Infrastructure = SwiftPM targets (dependency direction do compiler cưỡng chế; build/test mọi nền tảng); App shell qua `project.yml` (XcodeGen) trên macOS |
+| AD-31 | AI Provider là Integration, không phải Core: Core hoàn thiện trước khi kết nối provider thật; PlaceholderProvider là provider duy nhất đến hết M0; Gateway hoạt động đầy đủ không phụ thuộc provider thật; adapter thật thêm sau không đổi Gateway |
 
 ## 6. Vấn đề đã biết & Nợ kỹ thuật (Known Issues / Tech Debt)
 
 | Mức | Mô tả | Kế hoạch |
 |---|---|---|
-| Minor | `InMemorySecretsVault` là placeholder không mã hóa, không persist | Thay bằng Keychain impl ở app layer tại M0-3; cấm dùng cho key thật |
+| Minor | `InMemorySecretsVault` là placeholder không mã hóa, không persist | Thay bằng Keychain impl ở app layer khi tích hợp provider thật (M0-6); cấm dùng cho key thật |
 | Minor | Store search là substring match ngây thơ; FileBackedStore đọc lại toàn bộ file mỗi lần search (chưa cache/index) | Relevance ranking + tối ưu đọc ở M1, khi có số liệu thật |
 | Minor | File working-context hết hạn chỉ bị lọc khi đọc, chưa xóa vật lý | Cleanup policy ở M1 (policies.json đã có TTL) |
-| Minor | Build iOS app (`project.yml`) chưa được kiểm chứng vì môi trường không có macOS/Xcode; App/ + Presentation/ chưa qua compiler (CompositionRoot vừa sửa ở M0-2) | Xác minh `xcodegen generate` + build lần đầu trên Mac; giữ App shell tối giản đến lúc đó |
-| Ghi chú | Chưa có số liệu token baseline | Bắt đầu đo từ AI call thật đầu tiên (AD-15, M0-3) |
+| Minor | `InMemoryResponseCache` không giới hạn kích thước, không TTL | Eviction khi có bằng chứng cần (đo ở M1); interface đã là seam thay thế |
+| Minor | Routing theo tier chưa hoạt động — Gateway luôn dùng `defaultModelID`; `AIRequest.preferredTier` là contract đã khai báo chưa tiêu thụ | Kích hoạt khi có ≥ 2 model thật trong catalog (sau AD-31) |
+| Minor | Build iOS app (`project.yml`) chưa được kiểm chứng vì môi trường không có macOS/Xcode; App/ + Presentation/ chưa qua compiler (CompositionRoot vừa sửa ở M0-3) | Xác minh `xcodegen generate` + build lần đầu trên Mac; giữ App shell tối giản đến lúc đó |
+| Ghi chú | Chưa có số liệu token baseline | Đo từ AI call thật đầu tiên (AD-15) — thuộc M0-6 theo AD-31 |
 
 ## 7. Rủi ro đang theo dõi
 

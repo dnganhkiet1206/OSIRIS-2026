@@ -1,24 +1,42 @@
 import Foundation
 
-/// Provider adapter contract. Providers are interchangeable; the platform
-/// keeps functioning regardless of which one is active (AI Philosophy).
+/// Provider adapter contract — the standard every future provider must
+/// follow. Providers do exactly one thing: turn a prompt into text and
+/// report what the API actually consumed. Everything else (validation,
+/// budget, cache, retry, dry-run, metrics, logging) is the Gateway's job —
+/// never reimplement it inside an adapter.
 public protocol AIProvider: Sendable {
     var id: String { get }
-    func complete(prompt: String, modelID: String) async throws -> AIResponse
+    func complete(prompt: String, modelID: String) async throws -> ProviderResponse
 }
 
-/// Deterministic offline provider for bootstrap and tests. Echoes the task so
-/// the end-to-end pipeline is verifiable without network or cost. The first
-/// real provider adapter is task M0-3.
+/// What a provider reports back. Token counts are optional because not every
+/// provider reports them; the Gateway falls back to estimates.
+public struct ProviderResponse: Sendable {
+    public let text: String
+    public let tokensIn: Int?
+    public let tokensOut: Int?
+
+    public init(text: String, tokensIn: Int? = nil, tokensOut: Int? = nil) {
+        self.text = text
+        self.tokensIn = tokensIn
+        self.tokensOut = tokensOut
+    }
+}
+
+/// Deterministic offline provider: no network, no tokens, no cost. The only
+/// provider until the Core is complete — real adapters are integrations and
+/// arrive in a later milestone, after the Gateway is stable.
 public struct PlaceholderAIProvider: AIProvider {
     public let id = "placeholder"
 
     public init() {}
 
-    public func complete(prompt: String, modelID: String) async throws -> AIResponse {
-        AIResponse(
+    public func complete(prompt: String, modelID: String) async throws -> ProviderResponse {
+        ProviderResponse(
             text: "[placeholder:\(modelID)] \(prompt)",
-            usage: AIUsage(modelID: modelID, tokensIn: prompt.count / 4, tokensOut: 0, cacheHit: false)
+            tokensIn: TokenEstimator.estimate(prompt),
+            tokensOut: 0
         )
     }
 }

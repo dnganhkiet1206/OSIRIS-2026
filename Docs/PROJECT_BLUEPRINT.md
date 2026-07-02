@@ -106,6 +106,7 @@ Vòng này áp lại chính bộ tiêu chí trên vào bản hợp nhất v1.0 v
 | # | Bối cảnh | Quyết định |
 |---|---|---|
 | AD-30 | Core/Infrastructure là pure Swift không phụ thuộc UI; cần cưỡng chế dependency direction và build/test được ngoài Xcode | **Core + Infrastructure là SwiftPM targets** (`Package.swift` tại repo root; Core phụ thuộc Infrastructure — compiler cưỡng chế, không thể import ngược). App shell (App/ + Presentation/, SwiftUI) build qua Xcode project sinh từ `project.yml` (XcodeGen) trên macOS, link package này. Core build/test được trên mọi nền tảng: `swift build && swift test` |
+| AD-31 | AI Gateway là Core nhưng AI Provider là Integration; tích hợp sớm sẽ để chi tiết provider ảnh hưởng thiết kế Core | **Core hoàn thiện và ổn định trước khi kết nối provider thật.** PlaceholderAIProvider (offline, deterministic, 0 chi phí) là provider duy nhất đến khi Core M0 hoàn tất. Gateway phải hoạt động đầy đủ (validate → budget → cache → dry-run/retry → metrics → log) không phụ thuộc bất kỳ provider thật nào. Adapter thật (Anthropic/OpenAI/…) chỉ là một struct conform `AIProvider` thêm vào sau — không đổi Gateway |
 
 ---
 

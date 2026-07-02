@@ -1,4 +1,5 @@
 {
   "advancedMode": false,
-  "mcpRemoteTools": false
+  "mcpRemoteTools": false,
+  "aiDryRun": false
 }
