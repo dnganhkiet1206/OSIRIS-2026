@@ -1,4 +1,5 @@
 import Foundation
+import OsirisApplication
 import OsirisCore
 import OsirisInfrastructure
 
@@ -9,24 +10,26 @@ import OsirisInfrastructure
 /// Missing or invalid bundled Config resources mean a broken install; this
 /// layer fails fast with a clear message rather than running misconfigured.
 enum CompositionRoot {
-    static func makeKernel() -> Kernel {
+    /// Wires the whole graph behind the Application layer (AD-35). The
+    /// Kernel publishes progress straight into the service (AD-33); the
+    /// Event Bus joins when multiple consumers exist (Dashboard, M2).
+    static func makeChatService() -> ChatService {
+        let service = ChatService()
         let logger = ConsoleLogger()
         let gateway = DefaultAIGateway(
             provider: PlaceholderAIProvider(),
             configuration: makeGatewayConfiguration(),
             logger: logger
         )
-        // Kernel is pure (AD-33): it publishes progress through a closure;
-        // the bus stays an infrastructure detail wired here. The UI
-        // subscribes to this bus in M0-5.
-        let events = EventBus<ExecutionEvent>()
-        return Kernel(
+        let kernel = Kernel(
             skills: InMemorySkillRegistry(),
             engine: DefaultExecutionEngine(gateway: gateway),
             store: makeStore(),
             approvalGate: RequireUserApprovalGate(),
-            publish: { await events.publish($0) }
+            publish: { [weak service] event in service?.relay(event) }
         )
+        service.configure(kernel: kernel)
+        return service
     }
 
     // MARK: Configuration

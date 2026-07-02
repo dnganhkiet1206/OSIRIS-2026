@@ -10,10 +10,10 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M0 — Walking Skeleton, đang triển khai** |
-| Task hiện tại | M0-4B (Execution & Deliverable Persistence) ✅ hoàn thành · kế tiếp: M0-5 (xem `NEXT_TASK.md`) |
-| Nền tảng | iOS (iPhone), SwiftUI · Core = SwiftPM package build được mọi nền tảng (AD-30) |
-| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** · **11 Architecture Test tự động chống drift (AD-34)** |
-| Trạng thái codebase | ✅ **0 error / 0 warning, 36/36 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline · vòng Reuse khép kín |
+| Task hiện tại | M0-5 (Chat UI v0 & Application Layer) ✅ hoàn thành · kế tiếp: M0-6 (xem `NEXT_TASK.md`) |
+| Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
+| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **13 Architecture Test chống drift (AD-34)** |
+| Trạng thái codebase | ✅ **0 error / 0 warning, 42/42 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -31,10 +31,11 @@ Hoàn thành Milestone 0: một lát cắt dọc mỏng chạy end-to-end (Chat 
 - [x] **M0-4A — Kernel Decide thuần túy + Architecture Tests** (AD-32/33/34; M0-4 được chia A/B sau Architecture Review): 10 Architecture Test quét source (import matrix, Kernel purity, một persister, một cổng AI, chỉ Kernel tạo ExecutionPlan, 1 impl Store/Gateway, cấm component đã loại bỏ, module isolation) — **bắt được ngay vi phạm thật**: Kernel import Infrastructure → sửa bằng closure inject (AD-33); pha Decide thật: Confidence v0 (goal rỗng → hỏi lại, không đoán), reuse-before-AI qua Store.search (strategy `.reuse` mang content để Execution máy móc), hết reuse → `.ai` (Gateway lần đầu được gọi từ vòng đời thật).
 - [x] **M0-4B — Execution & Deliverable Persistence** (AD-10/32): `Store.saveDeliverable` + `deliverableContent` — chỉ Store chạm đĩa; deliverable = file .md có goal trong front matter (để search khớp goal lặp lại — không cần record phụ); Kernel Persist cập nhật `deliverablePaths` index, KHÔNG ghi lại file khi reuse (tránh duplicate); search deliverable đi qua index (AD-10), dừng sớm khi đủ limit; **vòng Reuse khép kín — goal lặp lại = 0 AI call (có test chứng minh)**; reuse lấy nội dung đầy đủ (trả nợ M0-4A); `preferredTier` truyền xuyên suốt; +1 arch rule mới (Presentation không import Infrastructure).
 
+- [x] **M0-5 — Chat UI v0 & Application Layer** (AD-35): SPM target `OsirisApplication` — `ChatService` là cầu nối duy nhất UI ↔ Core, dịch `ExecutionEvent`/error → `TaskUpdate` với thông điệp thân thiện theo UI contract (test chứng minh không rò tên error nội bộ); `ChatViewModel` (@MainActor @Observable) chỉ quản lý state UI; ChatView kiểu ChatGPT (sidebar + transcript + composer + status line); giữ nguyên tên `ExecutionEvent` (tính tổng quát đạt bằng tầng dịch, không rename); +2 arch rule (Presentation chỉ import OsirisApplication; Application chỉ import OsirisCore); 4 test ChatService chạy trên Linux.
+
 ## 4. Việc đang chờ (Next Tasks) — theo thứ tự
 
-1. **M0-5 — Chat UI v0** (chi tiết: `NEXT_TASK.md`): nối Kernel vào ChatView, hiển thị Execution Status events (qua AsyncStream Core-type, Presentation không chạm Infrastructure), `needsClarification` → hỏi lại trong UI, lỗi hiển thị thân thiện theo UI contract.
-2. M0-6 — M0 review tổng + tích hợp provider thật đầu tiên (Integration, sau khi Core M0 ổn định — AD-31) + token baseline đầu tiên + xác minh build iOS trên Mac.
+1. **M0-6 — M0 Closeout** (chi tiết: `NEXT_TASK.md`): provider thật đầu tiên (AD-31 cho phép — Core M0 đã xong) + KeychainSecretsVault + token baseline đầu tiên + xác minh build iOS/simulator trên Mac + M0 review tổng theo Definition of Done.
 
 ## 5. Quyết định kiến trúc đã chốt (Architecture Decisions Log)
 
@@ -88,6 +89,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | AD-32 | Một persister duy nhất: chỉ Store chạm LocalStorage; Store ghi cả deliverable file (`saveDeliverable`); Execution trả kết quả in-memory; Kernel orchestrate persistence chỉ qua Store |
 | AD-33 | Kernel thuần túy: chỉ phụ thuộc protocol Core, không I/O, không import Infrastructure; progress events qua closure `@Sendable (ExecutionEvent) async -> Void` inject từ composition root |
 | AD-34 | Architecture Test Suite trong `swift test` quét source cưỡng chế quy tắc kiến trúc; compiler cưỡng chế đồ thị target, test cưỡng chế quy tắc trong target; AD mới có rule kiểm được → thêm rule |
+| AD-35 | Application Layer (`OsirisApplication`, chỉ phụ thuộc OsirisCore): ChatService là cầu nối duy nhất UI ↔ Core, dịch event/error → TaskUpdate; Presentation chỉ import OsirisApplication; UI không biết provider/retry/reuse; không rename ExecutionEvent — tổng quát hóa bằng tầng dịch |
 
 ## 6. Vấn đề đã biết & Nợ kỹ thuật (Known Issues / Tech Debt)
 
@@ -101,7 +103,8 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | Minor | `Kernel.skills` là dependency đã khai báo chưa tiêu thụ (skill selection thuộc M1) | Skill selection M1 |
 | Minor | Reuse có phạm vi theo project — goal giống nhau ở project khác vẫn gọi AI (đúng Project Isolation, nhưng chưa có cross-project reuse có kiểm soát) | Cân nhắc ở M3 (Reuse pipeline hoàn chỉnh) với policy rõ ràng |
 | Minor | Scanner của Architecture Test cắt `//` theo dòng — chuỗi literal chứa `//` (URL) có thể tạo false negative | Chấp nhận cho guardrail; nâng cấp parser khi có false negative thật |
-| Minor | Build iOS app (`project.yml`) chưa được kiểm chứng vì môi trường không có macOS/Xcode; App/ + Presentation/ chưa qua compiler (CompositionRoot vừa sửa ở M0-3) | Xác minh `xcodegen generate` + build lần đầu trên Mac; giữ App shell tối giản đến lúc đó |
+| Minor | Build iOS app (`project.yml`) chưa được kiểm chứng vì môi trường không có macOS/Xcode; App/ + Presentation/ chưa qua compiler (ChatView/ChatViewModel mới ở M0-5) — logic đáng test đã dồn về ChatService (SPM, đã test) | Xác minh `xcodegen generate` + build simulator lần đầu trên Mac (mục của M0-6) |
+| Ghi chú | `EventBus` (Infrastructure) hiện chưa có consumer production — Kernel publish thẳng vào ChatService (một consumer duy nhất ở M0) | Bus tham gia khi có nhiều consumer thật: Dashboard (M2), Modules (M4). Giữ làm contract, không xóa (quy tắc ổn định kiến trúc) |
 | Ghi chú | Chưa có số liệu token baseline | Đo từ AI call thật đầu tiên (AD-15) — thuộc M0-6 theo AD-31 |
 
 ## 7. Rủi ro đang theo dõi

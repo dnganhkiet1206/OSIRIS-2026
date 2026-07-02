@@ -4,67 +4,74 @@
 
 ## Current Milestone
 
-**M0 — Walking Skeleton** (DEVELOPMENT_PLAN.md §2)
+**M0 — Walking Skeleton** (DEVELOPMENT_PLAN.md §2) — task cuối cùng.
 
 ## Current Task
 
-**M0-5 — Chat UI v0: nối vòng đời 5 pha vào giao diện**
+**M0-6 — M0 Closeout: provider thật đầu tiên + token baseline + M0 review tổng**
 
 ## Objective
 
-Người dùng gõ một goal trong ChatView → thấy Execution Status events chạy ("Understanding… Planning… Executing…") → nhận deliverable → `needsClarification` hiển thị thành câu hỏi thân thiện → lỗi hiển thị theo UI contract (chuyện gì xảy ra / đã thử gì / bước tiếp theo). Toàn bộ chạy trên Placeholder provider — 0 chi phí.
+Core M0 đã hoàn thiện và ổn định → AD-31 cho phép integration đầu tiên. Mục tiêu: một AI call thật đi hết đường `Kernel → AI Gateway → AnthropicProvider`, usage thật được đo (token baseline đầu tiên của dự án — AD-15), app vẫn chạy được hoàn toàn khi chưa có API key, và M0 được nghiệm thu theo Definition of Done.
 
-## Thiết kế ràng buộc (đã chốt, không bàn lại)
+## Phạm vi
 
-- **Presentation không import OsirisInfrastructure** (arch rule mới từ M0-4B đang canh). UI nhận events qua `AsyncStream<ExecutionEvent>` (type Core) do CompositionRoot cung cấp — EventBus vẫn là chi tiết hạ tầng trong composition root.
-- UI không lộ reasoning — chỉ activity events (UI contract §6 BLUEPRINT).
-- Không chặn UI: `kernel.handle` chạy trong Task, progress cập nhật real-time.
+1. **`AnthropicProvider`** (`Core/AIGateway/Providers/`): adapter Messages API bằng URLSession thuần (AD-27); pin `anthropic-version`; parse text + usage thật (input/output tokens) vào `ProviderResponse`; error map rõ ràng (401/429/5xx → error mô tả được, KHÔNG chứa API key). Adapter chỉ làm một việc — mọi thứ khác (budget/cache/retry/metrics) đã thuộc Gateway.
+2. **`KeychainSecretsVault`** (`App/AppComposition/`): implement `SecretsVault` bằng Keychain Services (Xcode-only; giữ nhỏ nhất).
+3. **CompositionRoot graceful:** có key trong vault → AnthropicProvider; chưa có → PlaceholderAIProvider. App KHÔNG BAO GIỜ crash vì thiếu key.
+4. **Config:** thêm model Anthropic thật (tier light, giá thật) vào `models.json` + `routing.json`.
+5. **Token baseline:** chạy 1 smoke test thủ công có key (trên Mac hoặc qua swift run CLI nhỏ? — chỉ khi khả thi) và ghi số liệu đầu tiên vào PROJECT_STATE. Nếu môi trường không có key/Mac: ghi rõ baseline pending, KHÔNG giả số liệu.
+6. **M0 review tổng** theo Definition of Done (DEVELOPMENT_PLAN §3): kiểm từng tiêu chí M0, ghi kết quả vào PROJECT_STATE; xác minh build iOS/simulator trên Mac (nếu không có Mac trong phiên: ghi pending — đây là mục duy nhất được phép pending).
 
 ## Files cần tạo
 
-- `Presentation/Chat/ChatViewModel.swift` — `@MainActor @Observable`: nhận `Kernel` + `AsyncStream<ExecutionEvent>`; state: transcript (goal, events, deliverable, question/error), `isWorking`; logic mỏng nhất có thể (không compile được trên Linux — giữ nhỏ để rủi ro thấp).
-- `Presentation/ExecutionStatus/ExecutionStatusView.swift` — hiển thị event hiện tại, calm & unobtrusive, không % giả.
+- `Core/AIGateway/Providers/AnthropicProvider.swift`
+- `App/AppComposition/KeychainSecretsVault.swift`
+- `Tests/CoreTests/AnthropicProviderTests.swift` — parse fixture JSON (KHÔNG network trong test); map lỗi HTTP; usage đúng.
 
 ## Files cần sửa
 
-- `App/AppComposition/CompositionRoot.swift` — trả về `AppDependencies` (kernel + events stream) thay vì chỉ Kernel; EventBus subscribe được nối tại đây.
-- `App/OsirisApp.swift` — khởi tạo dependencies một lần, inject vào ChatView.
-- `Presentation/Chat/ChatView.swift` — form nhập goal, transcript, trạng thái làm việc, hiển thị kết quả/câu hỏi/lỗi.
-- `Docs/PROJECT_STATE.md`, `CHANGELOG.md`, `NEXT_TASK.md` (bản mới cho M0-6) — cuối phiên.
+- `App/AppComposition/CompositionRoot.swift` — chọn provider theo key; đọc key qua SecretsVault.
+- `Config/models.json`, `Config/routing.json` — model thật + placeholder fallback.
+- `Docs/PROJECT_STATE.md`, `CHANGELOG.md`, `NEXT_TASK.md` (bản mới — mở M1 hoặc phần còn thiếu của M0 nếu review fail).
 
 ## Dependency
 
-- Core đã đủ: Kernel 5 pha, ExecutionEvent, KernelError.needsClarification, Gateway metrics. Không thêm dependency ngoài, không network, không đổi Core.
+- Toàn bộ Gateway pipeline (M0-3) và graceful composition đã sẵn. Không SDK ngoài — URLSession thuần. Test dùng fixture; smoke test thật là bước thủ công có kiểm soát (Approval contract: chi tiêu nhỏ, có chủ đích).
 
 ## Checklist
 
-- [ ] Presentation không import OsirisInfrastructure (arch test canh).
-- [ ] Không sửa bất kỳ file nào trong `Core/` (M0-5 là App/Presentation thuần túy; nếu phát hiện Core thiếu API cho UI → dừng, ghi nhận, đề xuất — không tiện tay sửa).
-- [ ] `needsClarification` hiển thị câu hỏi, không hiển thị stack trace.
-- [ ] Lỗi Gateway (budget, provider) hiển thị thân thiện theo UI contract.
-- [ ] `swift build` + toàn bộ test (unit + architecture) vẫn 36+/36+ pass trên Linux (SPM package không đổi).
-- [ ] Self Review + Architecture Review + cập nhật docs + NEXT_TASK mới (M0-6).
+- [ ] Test parse/error của AnthropicProvider chạy offline, không network.
+- [ ] API key chỉ qua SecretsVault; arch-grep nhanh: không có chuỗi `sk-` / key literal trong repo; key không xuất hiện trong log/error message.
+- [ ] App chạy đầy đủ không key (Placeholder fallback) — không crash, không lỗi user-facing khó hiểu.
+- [ ] Không hardcode model ID trong code — chỉ từ Config.
+- [ ] Arch tests giữ nguyên pass (AnthropicProvider nằm trong Core/AIGateway — đúng vùng được phép).
+- [ ] `swift build` 0 error / 0 warning; toàn bộ test pass.
+- [ ] M0 Definition of Done: từng mục được đánh giá và ghi lại trung thực (pass / pending kèm lý do).
+- [ ] Self Review + Architecture Review + docs + NEXT_TASK mới.
 
 ## Definition of Done
 
-Luồng "gõ goal → thấy events → nhận kết quả → goal lặp lại trả về tức thì (reuse)" hoàn chỉnh ở mức code + test package xanh; xác minh chạy thật trên simulator thuộc M0-6 (cần Mac). Tài liệu cập nhật; NEXT_TASK M0-6 đã tạo.
+AnthropicProvider hoạt động sau Gateway với usage thật được log; app không key vẫn dùng được; token baseline được ghi (hoặc pending có lý do rõ); M0 closeout report nằm trong PROJECT_STATE; NEXT_TASK kế tiếp đã tạo.
 
 ## Estimated Complexity
 
-Thấp–Trung bình — 2 file SwiftUI mới + 3 file sửa; rủi ro chính là không compile được UI trên Linux.
+Trung bình — adapter mạng + DTO + error mapping + Keychain nhỏ.
 
 ## Estimated AI Cost
 
-Dev session: nhỏ. Runtime: 0 (Placeholder).
+Dev session: nhỏ. Runtime: lần đầu có chi phí thật, chỉ khi có key và chỉ trong smoke test thủ công (vài trăm token).
 
 ## Risk
 
-- **App/Presentation không qua compiler trong môi trường này** — giữ SwiftUI tối giản, tránh API mới lạ; mọi lỗi compile sẽ lộ ở lần build Mac đầu tiên (M0-6 đã có mục xác minh).
-- Concurrency SwiftUI (@Observable + Task + AsyncStream): giữ mọi state mutation trên @MainActor.
+- Test gọi mạng thật = flaky + tốn tiền → cấm trong test suite; fixture only.
+- Keychain code không compile trên Linux → nằm ở App/ (Xcode-only), lỗi compile lộ ở lần build Mac đầu — giữ file nhỏ nhất.
+- API schema đổi theo version → pin `anthropic-version` header, ghi chú nguồn trong doc comment.
 
 ## Những phần tuyệt đối không được sửa
 
-- Toàn bộ `Core/**` và `Infrastructure/**` (M0-5 không có lý do chạm vào).
+- `DefaultAIGateway` pipeline (adapter cắm vào, Gateway không đổi — đó chính là phép thử của AD-31).
+- `ChatService`/`TaskUpdate` contract (UI không được biết provider mới xuất hiện).
+- Kernel, Execution, Store, Skill Registry.
 - Architecture Test rules (chỉ được THÊM).
-- Config schema, Package.swift targets.
-- Không tích hợp provider thật (AD-31 — thuộc M0-6).
+- ADR cũ (AD-01…AD-35) — chỉ thêm ADR mới nếu có quyết định mới.

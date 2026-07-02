@@ -24,6 +24,8 @@ targets:
         product: OsirisCore
       - package: OsirisKit
         product: OsirisInfrastructure
+      - package: OsirisKit
+        product: OsirisApplication
     settings:
       base:
         INFOPLIST_KEY_UILaunchScreen_Generation: YES

@@ -69,6 +69,10 @@ OSIRIS/
 │       │                         #   calendar, network (URLSession trực tiếp — AD-27)
 │       └── MCP/                  # MCP client cho remote tools (tùy chọn, thêm từ M6)
 │
+├── Application/                  # Application Layer (AD-35) — SPM target OsirisApplication
+│   └── ChatService.swift         # Cầu nối DUY NHẤT UI ↔ Core: gọi Kernel, dịch
+│                                 #   ExecutionEvent/error → TaskUpdate; không business logic
+│
 ├── Modules/                      # Nghiệp vụ — mỗi module một plugin độc lập
 │   └── YouTube/                  # ← REFERENCE IMPLEMENTATION (AD-21)
 │       ├── Manifest/             # id, version, capabilities, dependencies, status

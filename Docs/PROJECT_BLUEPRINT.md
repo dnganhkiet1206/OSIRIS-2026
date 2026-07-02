@@ -110,6 +110,7 @@ Vòng này áp lại chính bộ tiêu chí trên vào bản hợp nhất v1.0 v
 | AD-32 | Deliverable là file (AD-10) nhưng nếu Kernel hoặc Execution tự ghi file thì có ≥ 2 nơi persist — vi phạm "một persister duy nhất" | **Chỉ Store được chạm LocalStorage.** Store persist mọi bản ghi VÀ deliverable file (`saveDeliverable`); Execution trả kết quả in-memory; Kernel orchestrate persistence chỉ qua Store. Phân công: *Kernel quyết định — Execution thi hành — Store là nơi duy nhất chạm đĩa* |
 | AD-33 | Kernel (bộ quyết định thuần túy) đang import OsirisInfrastructure vì phụ thuộc trực tiếp EventBus — phát hiện qua Architecture Review M0-4 | **Kernel chỉ phụ thuộc protocol của Core.** Progress events phát qua closure `@Sendable (ExecutionEvent) async -> Void` inject từ composition root (không tạo protocol mới — một function type là đủ). `import OsirisInfrastructure` bị cấm trong `Core/Kernel/**`, cưỡng chế bằng Architecture Test |
 | AD-34 | Quy tắc kiến trúc chỉ nằm trong tài liệu sẽ suy thoái theo thời gian (architecture drift) | **Architecture Test Suite** (`Tests/ArchitectureTests`) chạy trong `swift test`: quét source cưỡng chế — chỉ Gateway chạm provider; chỉ Store chạm LocalStorage; Kernel thuần túy; chỉ Kernel tạo ExecutionPlan; đúng 1 implementation cho Store/AIGateway (single source of truth); import matrix theo tầng; cấm khai báo lại component đã loại bỏ. Compiler cưỡng chế đồ thị target; test cưỡng chế quy tắc trong target. Mỗi AD mới có quy tắc kiểm được → thêm rule |
+| AD-35 | UI cần dùng platform nhưng Presentation import Core trực tiếp sẽ rò rỉ khái niệm nội bộ (provider, retry, reuse, strategy) vào UI; đồng thời logic dịch sự kiện/lỗi đặt trong App/ (Xcode-only) thì không test được trên Linux | **Application Layer** (`Application/`, SPM target `OsirisApplication`, chỉ phụ thuộc OsirisCore): cầu nối DUY NHẤT giữa UI và Core — nhận goal, gọi Kernel, dịch `ExecutionEvent`/error thành `TaskUpdate` (activity / needsClarification / completed / failed) theo UI contract; không chứa business logic. **Presentation chỉ được import OsirisApplication** — UI không phân biệt kết quả đến từ reuse hay AI. Không đổi tên `ExecutionEvent` (Core-internal); tính tổng quát cho UI đạt bằng tầng dịch, không bằng rename. Cưỡng chế bằng 2 arch rule mới |
 
 ---
 
@@ -121,6 +122,9 @@ Vòng này áp lại chính bộ tiêu chí trên vào bản hợp nhất v1.0 v
 ┌────────────────────────────────────────────────────┐
 │  PRESENTATION  (SwiftUI: Chat, Sidebar, Projects,  │
 │                 Dashboard, Settings, Advanced Mode)│
+├────────────────────────────────────────────────────┤
+│  APPLICATION   (ChatService — cầu nối duy nhất     │
+│                 UI ↔ Core; dịch event/error, AD-35)│
 ├────────────────────────────────────────────────────┤
 │  MODULES       (YouTube, TikTok, Shopify, …)       │
 │                 UI riêng + Skills + Templates      │

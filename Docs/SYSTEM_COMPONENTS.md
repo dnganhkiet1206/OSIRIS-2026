@@ -112,7 +112,13 @@
 
 *(Không có component Networking riêng — AD-27: consumer dùng URLSession trực tiếp.)*
 
-## 4. PRESENTATION — các màn hình
+## 4. APPLICATION & PRESENTATION
+
+**Application Layer (AD-35)** — SPM target `OsirisApplication`, chỉ phụ thuộc OsirisCore:
+- **ChatService**: cầu nối DUY NHẤT giữa UI và Core — nhận goal từ UI, gọi Kernel, dịch `ExecutionEvent`/error thành `TaskUpdate` (activity / needsClarification / completed / failed) theo UI contract. Không business logic, không quyết định. UI không bao giờ biết kết quả đến từ reuse hay AI, không biết provider/retry/strategy là gì.
+- **Quy tắc import (cưỡng chế bằng arch test):** Presentation chỉ import `OsirisApplication`; Application chỉ import `OsirisCore`; ViewModel chỉ nói chuyện với Application, chỉ quản lý trạng thái giao diện.
+
+**Presentation — các màn hình:**
 
 | Màn hình | Vai trò | Ghi chú |
 |---|---|---|

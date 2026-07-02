@@ -14,6 +14,7 @@ let package = Package(
     products: [
         .library(name: "OsirisCore", targets: ["OsirisCore"]),
         .library(name: "OsirisInfrastructure", targets: ["OsirisInfrastructure"]),
+        .library(name: "OsirisApplication", targets: ["OsirisApplication"]),
     ],
     targets: [
         // Dependency direction is enforced by target boundaries:
@@ -29,6 +30,13 @@ let package = Package(
             path: "Core",
             exclude: ["README.md"]
         ),
+        // Application layer (AD-35): the only bridge between Presentation
+        // and Core. Thin translation, no business logic.
+        .target(
+            name: "OsirisApplication",
+            dependencies: ["OsirisCore"],
+            path: "Application"
+        ),
         .testTarget(
             name: "OsirisCoreTests",
             dependencies: ["OsirisCore"],
@@ -38,6 +46,11 @@ let package = Package(
             name: "OsirisInfrastructureTests",
             dependencies: ["OsirisInfrastructure"],
             path: "Tests/InfrastructureTests"
+        ),
+        .testTarget(
+            name: "OsirisApplicationTests",
+            dependencies: ["OsirisApplication"],
+            path: "Tests/ApplicationTests"
         ),
         // Architecture Tests (AD-34): source-scanning rules that fail when
         // the architecture degrades. No target dependencies — they read files.

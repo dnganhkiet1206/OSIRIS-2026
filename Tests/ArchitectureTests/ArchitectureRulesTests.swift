@@ -21,7 +21,7 @@ final class ArchitectureRulesTests: XCTestCase {
         .deletingLastPathComponent()
         .deletingLastPathComponent()
 
-    private static let sourceDirectories = ["Core", "Infrastructure", "Modules", "App", "Presentation", "Shared"]
+    private static let sourceDirectories = ["Core", "Infrastructure", "Application", "Modules", "App", "Presentation", "Shared"]
 
     private static let allSources: [SourceFile] = {
         var files: [SourceFile] = []
@@ -201,6 +201,36 @@ final class ArchitectureRulesTests: XCTestCase {
             pattern: #"(?m)^import OsirisInfrastructure"#,
             rule: "Presentation reaches the platform through Core and the composition root, never Infrastructure directly"
         )
+    }
+
+    // MARK: Application layer boundary (AD-35, added M0-5 — rules are only ever added)
+
+    func testPresentationTouchesOnlyApplicationLayer() {
+        let regex = try! NSRegularExpression(pattern: #"(?m)^import (Osiris\w+)"#)
+        for source in sources(under: "Presentation/") {
+            let range = NSRange(source.content.startIndex..., in: source.content)
+            for match in regex.matches(in: source.content, range: range) {
+                let name = (source.content as NSString).substring(with: match.range(at: 1))
+                XCTAssertEqual(
+                    name, "OsirisApplication",
+                    "AD-35: Presentation may import only OsirisApplication — \(source.relativePath) imports \(name)"
+                )
+            }
+        }
+    }
+
+    func testApplicationImportsOnlyCore() {
+        let regex = try! NSRegularExpression(pattern: #"(?m)^import (Osiris\w+)"#)
+        for source in sources(under: "Application/") {
+            let range = NSRange(source.content.startIndex..., in: source.content)
+            for match in regex.matches(in: source.content, range: range) {
+                let name = (source.content as NSString).substring(with: match.range(at: 1))
+                XCTAssertEqual(
+                    name, "OsirisCore",
+                    "AD-35: the Application layer may import only OsirisCore — \(source.relativePath) imports \(name)"
+                )
+            }
+        }
     }
 
     // MARK: Module isolation (AD-19, AD-21) — active once modules exist
