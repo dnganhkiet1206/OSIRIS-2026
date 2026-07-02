@@ -10,10 +10,10 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M0 — Walking Skeleton, đang triển khai** |
-| Task hiện tại | M0-1 (Bootstrap) ✅ hoàn thành · kế tiếp: M0-2 (xem `NEXT_TASK.md`) |
+| Task hiện tại | M0-2 (Store bền vững + Config wiring) ✅ hoàn thành · kế tiếp: M0-3 (xem `NEXT_TASK.md`) |
 | Nền tảng | iOS (iPhone), SwiftUI · Core = SwiftPM package build được mọi nền tảng (AD-30) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần**, đã qua Principal review lần 2 |
-| Trạng thái codebase | ✅ Bootstrap compile sạch: **0 error / 0 warning, 8/8 test pass** (Swift 6.0.3, Linux) |
+| Trạng thái codebase | ✅ **0 error / 0 warning, 10/10 test pass** (Swift 6.0.3, Linux) · một implementation Store duy nhất |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -26,14 +26,14 @@ Hoàn thành Milestone 0: một lát cắt dọc mỏng chạy end-to-end (Chat 
 - [x] **Review vòng 2** (Principal review trên v1.0): 8 quyết định AD-22 → AD-29; Core 9 → **6**; sửa lỗi dual-source-of-truth (State Store vs Memory Store); hợp nhất Context Engine vào AI Gateway; Vision → Config artifact.
 - [x] Ban hành bộ 5 tài liệu nền tảng v1.1: BLUEPRINT, STATE, PLAN, FOLDER_STRUCTURE, SYSTEM_COMPONENTS.
 - [x] **M0-1 — Project Bootstrap** (AD-30): SwiftPM package (OsirisCore 6 thành phần + OsirisInfrastructure 5 thành phần), App shell SwiftUI + `project.yml` (XcodeGen), Config ngoài source (preamble + 5 json), tài liệu vào `Docs/`, kiểm chứng build + test trên Linux. Kernel skeleton chạy đủ 5 pha với placeholder provider (không tốn chi phí AI).
+- [x] **M0-2 — Store v0 bền vững + Config wiring**: `FileBackedStore` (JSON qua LocalStorage; layout `project-state|knowledge|working-context/<id>.json`; ID percent-encode chống path traversal); test "restart" chứng minh ProjectState sống sót qua app restart; `LocalStorage` thêm `keys(withPrefix:)` (điều kiện bắt buộc cho Store.search — công khai trong Self Review); CompositionRoot đọc preamble/routing từ Config, fail-fast khi thiếu; **xóa InMemoryStore** (thừa sau khi có FileBackedStore — một implementation Store duy nhất).
 
 ## 4. Việc đang chờ (Next Tasks) — theo thứ tự
 
-1. **M0-2 — Store v0 bền vững + nạp Config thật** (chi tiết: `NEXT_TASK.md`): FileStorage-backed Store, ProjectState sống sót qua app restart; CompositionRoot đọc preamble/routing/budgets từ ConfigurationLoader thay vì hardcode.
-2. M0-3 — AI Gateway v0: provider adapter thật (URLSession), API key qua SecretsVault (Keychain impl trên app layer), model từ routing.json.
-3. M0-4 — Kernel Decide v0: direct vs ai + reuse check qua Store.search; nối ApprovalGate/ConfidenceTier vào pha Decide.
-4. M0-5 — Chat UI v0 nối Kernel + hiển thị Execution Status events.
-5. M0-6 — M0 review tổng: tiêu chí hoàn thành milestone + baseline token đầu tiên.
+1. **M0-3 — AI Gateway v0: provider thật** (chi tiết: `NEXT_TASK.md`): Anthropic adapter qua URLSession, API key qua SecretsVault (Keychain impl trên app layer), routing/model từ config, usage thật từ API.
+2. M0-4 — Kernel Decide v0: direct vs ai + reuse check qua Store.search; nối ApprovalGate/ConfidenceTier vào pha Decide.
+3. M0-5 — Chat UI v0 nối Kernel + hiển thị Execution Status events.
+4. M0-6 — M0 review tổng: tiêu chí hoàn thành milestone + baseline token đầu tiên.
 
 ## 5. Quyết định kiến trúc đã chốt (Architecture Decisions Log)
 
@@ -89,10 +89,10 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | Mức | Mô tả | Kế hoạch |
 |---|---|---|
 | Minor | `InMemorySecretsVault` là placeholder không mã hóa, không persist | Thay bằng Keychain impl ở app layer tại M0-3; cấm dùng cho key thật |
-| Minor | `InMemoryStore` không bền vững; Store search là substring match ngây thơ | File-backed Store ở M0-2; relevance ranking ở M1 |
-| Minor | Build iOS app (`project.yml`) chưa được kiểm chứng vì môi trường không có macOS/Xcode; Swift files trong App/ + Presentation/ chưa qua compiler | Xác minh `xcodegen generate` + build lần đầu trên Mac; giữ App shell tối giản đến lúc đó |
-| Minor | Chưa chọn provider AI đầu tiên cho M0-3 | Quyết định ở M0-3; yêu cầu: adapter thuần URLSession, đúng contract AIProvider |
-| Ghi chú | Chưa có số liệu token baseline | Bắt đầu đo từ AI call thật đầu tiên (AD-15) |
+| Minor | Store search là substring match ngây thơ; FileBackedStore đọc lại toàn bộ file mỗi lần search (chưa cache/index) | Relevance ranking + tối ưu đọc ở M1, khi có số liệu thật |
+| Minor | File working-context hết hạn chỉ bị lọc khi đọc, chưa xóa vật lý | Cleanup policy ở M1 (policies.json đã có TTL) |
+| Minor | Build iOS app (`project.yml`) chưa được kiểm chứng vì môi trường không có macOS/Xcode; App/ + Presentation/ chưa qua compiler (CompositionRoot vừa sửa ở M0-2) | Xác minh `xcodegen generate` + build lần đầu trên Mac; giữ App shell tối giản đến lúc đó |
+| Ghi chú | Chưa có số liệu token baseline | Bắt đầu đo từ AI call thật đầu tiên (AD-15, M0-3) |
 
 ## 7. Rủi ro đang theo dõi
 

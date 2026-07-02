@@ -8,62 +8,69 @@
 
 ## Current Task
 
-**M0-2 — Store v0 bền vững + nạp Config thật vào CompositionRoot**
+**M0-3 — AI Gateway v0: provider adapter thật**
 
 ## Mục tiêu
 
-1. `FileBackedStore`: implementation của protocol `Store` (Core/Store/Persistence/) dùng `Infrastructure.LocalStorage` (FileStorage) để persist ProjectState dưới dạng JSON — ProjectState sống sót qua app restart.
-2. `CompositionRoot` đọc `Config/preamble.md` và `Config/routing.json` qua `ConfigurationLoader` thay vì hardcode chuỗi `"placeholder-local"`.
+1. `AnthropicProvider`: adapter đầu tiên implement `AIProvider` — gọi Anthropic Messages API bằng URLSession thuần (AD-27), đọc usage thật (input/output tokens, model) từ response vào `AIUsage`.
+2. `RoutingConfiguration` promote từ CompositionRoot vào `Core/AIGateway/Routing/` (Gateway bắt đầu tiêu thụ routing trực tiếp).
+3. `KeychainSecretsVault` trong App layer (implement `SecretsVault` bằng Keychain Services) — chỉ viết, kiểm chứng compile ở Mac.
+4. CompositionRoot: chọn provider theo nguyên tắc *graceful*: có API key trong SecretsVault → AnthropicProvider; chưa có key → PlaceholderAIProvider (app luôn chạy được, không crash vì thiếu key).
 
 ## Lý do cần làm
 
-Tiêu chí hoàn thành M0 là "tắt app mở lại vẫn thấy ProjectState" — InMemoryStore hiện tại không đáp ứng. Config wiring xóa hai chỗ hardcode đang vi phạm Configuration First ở mức chấp nhận-tạm trong bootstrap.
+Đây là bước biến walking skeleton thành hệ thống thật: AI call đầu tiên có chi phí thật → kích hoạt đo lường AD-15 và tạo **token baseline** đầu tiên của dự án. Không có provider thật thì M0-4/M0-5 chỉ demo với dữ liệu giả.
 
 ## Các file cần tạo
 
-- `Core/Store/Persistence/FileBackedStore.swift` — actor, JSON encode/decode từng record type qua LocalStorage; key theo convention `project-state/<projectID>.json`, `knowledge/<id>.json`, `working-context/<id>.json`.
-- `Tests/CoreTests/FileBackedStoreTests.swift` — roundtrip qua thư mục tạm; test khôi phục sau khi tạo instance mới (mô phỏng app restart); test WorkingContext hết hạn không được trả về.
+- `Core/AIGateway/Providers/AnthropicProvider.swift` — request/response DTO tối thiểu cho Messages API; parse usage; error rõ ràng (401/429/5xx).
+- `Core/AIGateway/Routing/RoutingConfiguration.swift` — struct Decodable (defaultModelID, tierDefaults) chuyển từ CompositionRoot vào Core.
+- `App/AppComposition/KeychainSecretsVault.swift` — Keychain impl của SecretsVault (App layer vì cần Security framework).
+- `Tests/CoreTests/AnthropicProviderTests.swift` — parse response từ JSON fixture (KHÔNG gọi mạng thật trong test); test map lỗi HTTP.
 
 ## Các file cần sửa
 
-- `App/AppComposition/CompositionRoot.swift` — dùng FileBackedStore (Application Support directory) + ConfigurationLoader cho preamble/routing.
-- `Docs/PROJECT_STATE.md`, `CHANGELOG.md`, `NEXT_TASK.md` (tạo bản mới cho M0-3) — cuối phiên.
+- `App/AppComposition/CompositionRoot.swift` — bỏ private RoutingConfiguration (dùng bản Core), logic chọn provider theo key.
+- `Config/models.json` + `Config/routing.json` — thêm model Anthropic thật cho tier light (giữ placeholder làm fallback).
+- `Docs/PROJECT_STATE.md`, `CHANGELOG.md`, `NEXT_TASK.md` (bản mới cho M0-4) — cuối phiên.
 
 ## Dependency
 
-- Đã có sẵn: `LocalStorage`/`FileStorage` (Infrastructure), `ConfigurationLoader`, các record type của Store, test hạ tầng.
-- Không thêm dependency ngoài (SwiftData bị loại cho M0: JSON file qua LocalStorage là giải pháp nhỏ nhất đủ dùng, dễ thay thế sau).
+- Đã có: `AIProvider`/`AIGateway` contract, `AIUsage`, `SecretsVault` protocol, ConfigurationLoader.
+- Không thêm SDK/dependency ngoài — URLSession thuần (AD-27). Trên Linux test dùng fixture, không network.
 
 ## Checklist
 
-- [ ] FileBackedStore pass toàn bộ StoreTests hiện có (chạy chung suite với InMemoryStore hoặc tách test dùng chung).
-- [ ] Test "restart": ghi → tạo store instance mới cùng thư mục → đọc lại đúng.
-- [ ] InMemoryStore giữ lại **chỉ** cho tests (ghi rõ trong doc comment).
-- [ ] CompositionRoot không còn literal `"placeholder-local"` và preamble hardcode.
+- [ ] AnthropicProvider parse đúng text + usage từ fixture response.
+- [ ] Lỗi HTTP map thành error có thể hiển thị thân thiện (UI contract: what happened / attempted / next).
+- [ ] Không hardcode model ID trong code — chỉ từ routing.json.
+- [ ] API key chỉ đi qua SecretsVault; **không bao giờ** xuất hiện trong log, prompt, config file (Prompt Security).
+- [ ] App chạy được khi chưa có key (Placeholder fallback) — không crash.
 - [ ] `swift build` 0 error / 0 warning; `swift test` pass toàn bộ.
-- [ ] Không tái tạo component bị cấm (SYSTEM_COMPONENTS.md §6).
-- [ ] Self Review + Architecture Review + cập nhật docs + NEXT_TASK mới.
+- [ ] Không tái tạo component bị cấm; mọi AI call vẫn chỉ qua AI Gateway.
+- [ ] Self Review + Architecture Review + cập nhật docs + NEXT_TASK mới (M0-4).
 
 ## Definition of Done
 
-ProjectState roundtrip qua đĩa được chứng minh bằng test; Config là nguồn duy nhất cho preamble/model ID; build sạch; tài liệu cập nhật; NEXT_TASK cho M0-3 đã tạo.
+Provider thật hoạt động sau AI Gateway với usage được log (AD-15); routing config sống trong Core; Keychain vault viết xong chờ kiểm chứng Mac; test parse/error pass không cần mạng; tài liệu cập nhật; NEXT_TASK M0-4 đã tạo.
 
 ## Estimated Complexity
 
-Thấp — ~2 file mới nhỏ, 1 file sửa; không đụng contract nào.
+Trung bình — 1 adapter mạng + DTO + error mapping; không đụng contract Core nào ngoài việc *thêm* RoutingConfiguration.
 
 ## Estimated AI Cost
 
-0 token runtime (chưa có AI call thật). Chi phí dev session: nhỏ — chỉ cần nạp PROJECT_STATE.md + NEXT_TASK.md + 3 file Store hiện có.
+Dev session: nhỏ (nạp PROJECT_STATE + NEXT_TASK + 3 file AIGateway). Runtime: lần đầu phát sinh chi phí thật — chỉ khi user có key; test không tốn token.
 
 ## Các rủi ro
 
-- JSON schema của ProjectState sẽ tiến hóa → migration. Chấp nhận ở M0 (chưa có dữ liệu thật); ghi nhận khi schema đổi lần đầu.
-- Đường dẫn Application Support khác nhau giữa iOS/macOS/Linux test — dùng URL inject qua init, không hardcode.
+- Test gọi mạng thật = flaky + tốn tiền → cấm; chỉ fixture. Smoke test thật thực hiện thủ công ở M0-5.
+- Keychain code không compile được trên Linux → không đưa vào SPM target; nằm ở App/ (Xcode-only), rủi ro lỗi compile tồn đến khi build Mac đầu tiên — giữ file nhỏ nhất có thể.
+- API schema thay đổi theo version header → pin `anthropic-version` trong adapter, ghi chú nguồn.
 
 ## Những phần tuyệt đối không được sửa
 
-- Protocol `Store` (contract đã chốt — thêm implementation, không đổi interface).
-- 6 thành phần Core, cấu trúc thư mục, Package.swift targets.
-- Danh sách component bị cấm (SYSTEM_COMPONENTS.md §6) — không Context Engine, không Memory/State Store riêng, không Networking layer.
+- Protocol `AIGateway`, `AIProvider`, `Store` (chỉ thêm implementation/type mới, không đổi interface).
+- `Kernel`, `ExecutionEngine` (thuộc M0-4).
+- 6 thành phần Core, cấu trúc thư mục, Package.swift targets, danh sách component bị cấm (SYSTEM_COMPONENTS.md §6).
 - `Docs/PROJECT_BLUEPRINT.md` (trừ khi có AD mới được duyệt).

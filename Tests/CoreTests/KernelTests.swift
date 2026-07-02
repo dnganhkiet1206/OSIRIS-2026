@@ -4,7 +4,10 @@ import OsirisInfrastructure
 
 final class KernelTests: XCTestCase {
     func testGoalRunsThroughLifecycleAndPersistsState() async throws {
-        let store = InMemoryStore()
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("osiris-kernel-test-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = FileBackedStore(storage: try FileStorage(baseDirectory: directory))
         let gateway = DefaultAIGateway(
             provider: PlaceholderAIProvider(),
             preamble: "",
