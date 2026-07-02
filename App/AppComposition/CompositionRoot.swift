@@ -16,12 +16,16 @@ enum CompositionRoot {
             configuration: makeGatewayConfiguration(),
             logger: logger
         )
+        // Kernel is pure (AD-33): it publishes progress through a closure;
+        // the bus stays an infrastructure detail wired here. The UI
+        // subscribes to this bus in M0-5.
+        let events = EventBus<ExecutionEvent>()
         return Kernel(
             skills: InMemorySkillRegistry(),
             engine: DefaultExecutionEngine(gateway: gateway),
             store: makeStore(),
             approvalGate: RequireUserApprovalGate(),
-            events: EventBus<ExecutionEvent>()
+            publish: { await events.publish($0) }
         )
     }
 

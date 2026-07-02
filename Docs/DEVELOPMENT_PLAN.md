@@ -39,9 +39,10 @@ M8 Production Readiness  ── ổn định lâu dài: test, security, backup, 
 1. Khung Xcode project theo `FOLDER_STRUCTURE.md`.
 2. Infrastructure tối thiểu: Configuration (file JSON + `preamble.md`), Logging có cấu trúc, Local Storage, Event Bus mỏng (AD-26).
 3. **AI Gateway v0:** đo token/cost mỗi call (AD-15), System Preamble tĩnh từ Config (AD-13, AD-23). Provider thật là Integration — hoãn đến khi Core hoàn thiện (AD-31); PlaceholderProvider là provider duy nhất trong M0.
-4. **Kernel v0:** vòng đời Intake → Decide → Execute → Verify → Persist ở dạng tuyến tính (Decide chỉ chọn Direct vs AI).
+4. **Kernel v0:** vòng đời Intake → Decide → Execute → Verify → Persist. Tách hai bước để bảo vệ ranh giới Decision/Execution (AD-32/33): *M0-4A* — Decide thuần túy (reuse detection, strategy, confidence; Kernel không side effect, không phụ thuộc Infrastructure); *M0-4B* — Execution materialize deliverable, Store là persister duy nhất ghi deliverable file + index.
 5. **Chat UI v0:** một màn hình chat + Execution Status events.
 6. **Store v0:** bản ghi ProjectState đọc/ghi local, khôi phục khi mở lại app.
+7. **Architecture Tests (AD-34):** test target quét source cưỡng chế quy tắc kiến trúc (một persister, một cổng AI, Kernel thuần túy, cấm tái tạo component đã loại bỏ) — chạy trong `swift test`, chống architecture drift từ M0.
 
 **Không làm ở M0:** Skill Registry, Knowledge/WorkingContext records, Module, Search, Dashboard, Advanced Mode.
 

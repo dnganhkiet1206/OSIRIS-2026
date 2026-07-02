@@ -39,5 +39,11 @@ let package = Package(
             dependencies: ["OsirisInfrastructure"],
             path: "Tests/InfrastructureTests"
         ),
+        // Architecture Tests (AD-34): source-scanning rules that fail when
+        // the architecture degrades. No target dependencies — they read files.
+        .testTarget(
+            name: "OsirisArchitectureTests",
+            path: "Tests/ArchitectureTests"
+        ),
     ]
 )

@@ -49,7 +49,7 @@
 ### 2.1. Kernel (Executive Brain)
 - **Hợp nhất từ:** Planner (P4) + Executive Brain (P18) + Intelligent Execution (P5) + Validation/Confidence (P5/P10/P18). *(AD-01, AD-05, AD-12)*
 - **Trách nhiệm:** Điều phối vòng đời chuẩn 5 pha (Intake → Decide → Execute → Verify → Persist); hiểu mục tiêu thật và xác định deliverable; chọn chiến lược theo thứ tự tài nguyên (data → cache → logic → tool → workflow → AI); duyệt mọi AI usage; giữ Confidence tier (High: chạy / Medium: chạy + ghi giả định / Low: hỏi lại); thực thi approval gates cho hành động rủi ro (publish, delete, chi tiêu lớn); tiếp nhận escalation từ Execution Engine khi tình huống vượt policy khai báo (AD-25).
-- **Không làm:** tự tạo deliverable; gọi provider trực tiếp; chứa logic nghiệp vụ.
+- **Không làm:** tự tạo deliverable; gọi provider trực tiếp; chứa logic nghiệp vụ; **mọi I/O** (AD-33: Kernel chỉ phụ thuộc protocol Core, không import Infrastructure; progress events qua closure inject từ composition root — cưỡng chế bằng Architecture Test AD-34).
 - **Executive State:** view phái sinh trong bộ nhớ từ `Store.ProjectState` — không persist riêng (AD-08).
 
 ### 2.2. Execution Engine
@@ -74,6 +74,7 @@
   | **Knowledge** | Cách OSIRIS hoạt động: kiến trúc, chuẩn, quy tắc routing | Searchable; cập nhật một nơi, tham chiếu mọi nơi |
   | **WorkingContext** | File/feature/lỗi/nghiên cứu của task hiện tại | Tạm thời; **TTL tự hết hạn** |
 - **Vision KHÔNG nằm ở đây** — nó là artifact tĩnh trong `Config/` (System Preamble, AD-23).
+- **Persister duy nhất (AD-32):** chỉ Store được chạm LocalStorage — kể cả deliverable file (`saveDeliverable`); Execution trả kết quả in-memory, Kernel orchestrate qua Store. Cưỡng chế bằng Architecture Test (AD-34).
 - **Search/retrieval là năng lực của Store** — phục vụ cả pha Decide (check reuse) lẫn AI Gateway (lấy context) và Global Search trên UI.
 - **Policy ghi:** chỉ lưu khi có giá trị tương lai (dùng lại? ảnh hưởng kiến trúc? giảm token?). Store phải **nhỏ và thông minh dần**, không phình to. `Archive` là flag, không phải loại bản ghi.
 - **Learning gate (AD-20):** chỉ học từ execution thành công có đo lường, user correction đã xác nhận, decision đã duyệt. Không lưu phỏng đoán.

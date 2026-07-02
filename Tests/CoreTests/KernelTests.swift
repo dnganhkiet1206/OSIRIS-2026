@@ -26,7 +26,7 @@ final class KernelTests: XCTestCase {
             engine: DefaultExecutionEngine(gateway: gateway),
             store: store,
             approvalGate: RequireUserApprovalGate(),
-            events: EventBus<ExecutionEvent>()
+            publish: { _ in }
         )
 
         let goal = Goal(projectID: ProjectID("p1"), text: "Say hello")

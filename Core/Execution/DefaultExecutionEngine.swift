@@ -12,6 +12,10 @@ public struct DefaultExecutionEngine: ExecutionEngine {
 
     public func run(_ plan: ExecutionPlan) async throws -> ExecutionResult {
         switch plan.strategy {
+        case .reuse(let existing):
+            // Mechanical materialization of the Kernel's reuse decision —
+            // zero AI cost, no Store access (AD-25).
+            return ExecutionResult(deliverable: Deliverable(content: existing))
         case .ai:
             let response = try await gateway.complete(
                 AIRequest(task: plan.goal.text, projectID: plan.goal.projectID)

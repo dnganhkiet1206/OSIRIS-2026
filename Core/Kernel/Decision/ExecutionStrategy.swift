@@ -4,6 +4,10 @@ import Foundation
 /// always wins, following the resource order: existing data → cache →
 /// application logic → tool → composition → AI (AI Is The Last Tool).
 public enum ExecutionStrategy: Sendable {
+    /// The answer already exists — materialize it, execute nothing new
+    /// (Reuse Before Create). Carries the found content so Execution stays
+    /// mechanical and never touches the Store (AD-25).
+    case reuse(existing: String)
     case direct
     case tool(ToolID)
     case composition(SkillComposition)
