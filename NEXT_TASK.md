@@ -10,54 +10,53 @@
 
 ## Current Task
 
-**M3-3 — Deliverable Templates & Executive Summary v1**
+**M3-4 — M3 Milestone Review & Acceptance**
 
-## Objective
+## Vì sao review thay vì làm tiếp phạm vi M3 còn lại (lập luận đã tự đánh giá tại M3-3)
 
-Deliverable có cấu trúc nhất quán mà không thêm component: mọi deliverable đường AI mở đầu bằng **Executive Summary ngắn + actionable next steps** (đúng phạm vi M3 trong DEVELOPMENT_PLAN). Template là **DATA trong SkillDefinition** (AD-04: prompt template sống cùng skill — KHÔNG Prompt/Deliverable/Template Registry, danh sách cấm còn nguyên). Executive OS trả về thứ đọc được trong 10 giây, không phải bức tường chữ.
+Phạm vi M3 theo DEVELOPMENT_PLAN: smart planning ✅ (M3-2) · reflection có gate ✅ (M3-1) · deliverable templates ✅ (M3-3) · auto-update state ✅ (có từ M0, reflection bồi thêm M3-1). Hai mục còn lại đều **evidence-gated**:
+- *Reuse pipeline "hoàn chỉnh"*: reuse exact-match + search 3 loại record + cache Gateway ĐÃ chạy từ M0-4/M1-2; phần "hoàn chỉnh" (relevance-ranked reuse, cross-project) mang rủi ro wrong-reuse — cần dữ liệu sử dụng thật trước khi nới (thà miss còn hơn reuse sai).
+- *Cache optimization*: `InMemoryResponseCache` chưa có số liệu hit-rate thật (chưa chạy trên thiết bị với API key) — tối ưu không số liệu là đoán.
 
-## Phạm vi
+→ Cả hai chờ baseline thật từ runbook (nợ High của user). Review milestone bây giờ, kích hoạt 2 mục này khi có evidence (ghi điều kiện vào DEVELOPMENT_PLAN).
 
-1. **Output scaffold = data:** hướng dẫn cấu trúc output (Executive Summary → nội dung → Next steps) đi vào prompt như DATA — cân nhắc: (a) mở rộng `promptTemplate` của 3 skill hiện có, hay (b) MỘT scaffold chung ở tầng assemble của Execution/Gateway cho đường `.ai/.composition`. Tự phản biện chọn 1 (gợi ý: (b) một chỗ, 0 lặp — nhưng phải chứng minh không phải "Template Engine trá hình"; nếu chỉ là hằng string nối vào prompt thì OK).
-2. **Plain AI path (không skill)** cũng nhận scaffold — user không cần biết skill tồn tại.
-3. **Presentation:** deliverable reader hiện có đọc markdown — kiểm tra Executive Summary hiển thị tự nhiên, KHÔNG viết parser/formatter mới.
-4. **Không làm:** không Template Registry/file template riêng; không AI hậu xử lý deliverable (1 goal = 1 AI call như cũ); không đổi Store schema; không chạm Reflection/WriteGate/ComplexityEstimate vừa chốt.
+## Phạm vi review (theo mẫu M1-5/M2-6)
 
-## Files cần tạo
-
-- `Tests/CoreTests/DeliverableTemplateTests.swift` (captured-prompt: scaffold vào prompt cả đường skill lẫn plain AI; composition chỉ scaffold bước cuối — bước giữa là intermediate).
-
-## Files cần sửa
-
-- Tùy quyết định (1): `Core/Execution/DefaultExecutionEngine.swift` (assembleTask) HOẶC skill definitions trong CompositionRoot; docs cuối phiên (+AD-43 nếu có quyết định mới đáng ghi).
+1. **Đánh giá trung thực tiêu chí M3** (DEVELOPMENT_PLAN §2/M3) — bảng Tiêu chí → Kết quả, PENDING ghi trung thực kèm địa chỉ.
+2. **ADR M3:** AD-41/42/43 — Decision → Evidence → Result (PROVEN bằng test nào).
+3. **Xử deadline đã hẹn:**
+   - `SkillDefinition.retryPolicy` — deadline "M3 review nếu vẫn không consumer → cân nhắc xóa field (AD-28 hai chiều)". Đến hạn: quyết định + thực thi.
+   - Tier routing (nợ Medium nửa còn lại): xác nhận điều kiện kích hoạt (≥2 model thật) và chủ sở hữu.
+   - EventBus: deadline là M4 — KHÔNG xử ở đây, chỉ xác nhận còn hẹn.
+4. **Phân loại lại nợ kỹ thuật** Critical/High/Medium/Low; retrospective ngắn (pattern lặp: default-param → clean rebuild ×4 — có đáng ghi quy trình?).
+5. **Acceptance report + git tag `M3`** (local, push khi merge) + NEXT_TASK cho M4 (YouTube Module — reference implementation, AD-21; đọc kỹ DEVELOPMENT_PLAN §2/M4 trước khi viết).
+6. **DEVELOPMENT_PLAN:** đánh dấu M3, ghi điều kiện kích hoạt 2 mục hoãn.
 
 ## Checklist
 
-- [ ] Scaffold là data/hằng số — 0 engine mới, 0 registry mới, 0 AI call thêm.
-- [ ] Đường plain AI (không skill) cũng có Executive Summary.
-- [ ] Composition: chỉ bước cuối nhận scaffold (intermediate output là nguyên liệu, không phải deliverable).
-- [ ] Reuse path trả nguyên văn — KHÔNG re-format deliverable cũ.
-- [ ] Zero regression toàn bộ test cũ (captured-prompt tests M1-1/M1-2 có thể cần cập nhật expected prompt — được phép vì đó là test NỘI DUNG prompt, không phải arch rule).
-- [ ] Đủ quy trình review + docs + NEXT_TASK (đề xuất: M3-4 — Reuse pipeline hoàn chỉnh + cache optimization, HOẶC M3 review nếu phạm vi còn lại mỏng — tự đánh giá).
+- [ ] Không sửa code trừ khi review phát hiện lỗi thật hoặc quyết định xóa `retryPolicy` được chốt.
+- [ ] ADR cũ không sửa (chỉ Superseded nếu cần); arch test chỉ THÊM.
+- [ ] Mọi PENDING có địa chỉ + chủ sở hữu (không giấu).
+- [ ] Zero regression nếu có thay đổi code (114 test + số mới nếu thêm).
 
 ## Definition of Done
 
-Goal đường AI ra deliverable có Executive Summary + next steps (test bằng captured prompt — nội dung thật cần Mac/API key, ghi trung thực); plain-AI path có scaffold; zero regression; không component/registry mới.
+Bảng tiêu chí M3 trung thực; AD-41/42/43 có evidence; deadline `retryPolicy` xử xong; nợ phân loại lại; tag `M3`; NEXT_TASK M4-0; DỪNG chờ user xác nhận trước khi vào M4.
 
 ## Estimated Complexity
 
-Thấp–trung bình — chủ yếu prompt data + test; rủi ro chính là cám dỗ xây Template Engine.
+Thấp — chủ yếu đánh giá + tài liệu; một quyết định xóa-field có thể kèm code nhỏ.
 
 ## Estimated AI Cost
 
-Dev session: nhỏ. Runtime: 0 (scaffold đi cùng request có sẵn).
+Dev session: nhỏ. Runtime: 0.
 
 ## Risk
 
-- "Template Engine trá hình" — nếu thấy cần placeholder/conditional/inheritance trong template: DỪNG, hỏi user (3 câu: đơn giản vì sao không đủ / bằng chứng thật / chi phí bảo trì).
-- Scaffold làm phình prompt — đo token thêm (phải < ~80 token), ghi vào report.
+- Tự nghiệm thu dễ dãi — dùng đúng thước DEVELOPMENT_PLAN, PENDING ghi trung thực như M0/M1/M2.
+- Xóa `retryPolicy` vội trong khi M4 module có thể cần — quyết định phải kèm lập luận chi phí giữ vs xóa (AD-28 hai chiều: thêm khi có bằng chứng, xóa khi hết lý do chờ).
 
 ## Những phần tuyệt đối không được sửa
 
-- WriteGate/Reflection (M3-1), ComplexityEstimate/confidence (M3-2) — vừa chốt, chỉ *dùng*.
-- Gateway pipeline; Store; Architecture Test rules (chỉ THÊM); ADR cũ (AD-01…AD-42).
+- WriteGate/Reflection (M3-1), ComplexityEstimate/confidence (M3-2), scaffold pipeline (M3-3) — vừa chốt.
+- Architecture Test rules (chỉ THÊM); ADR cũ (AD-01…AD-43).

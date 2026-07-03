@@ -66,4 +66,21 @@ final class ShippedConfigurationTests: XCTestCase {
         XCTAssertLessThanOrEqual(TokenEstimator.estimate(preamble), budgets.preambleMaxTokens)
         XCTAssertGreaterThan(budgets.perRequestMaxOutputTokens, 0)
     }
+
+    /// M3-3: the deliverable scaffold is Config data with a hard size
+    /// budget — structure guidance, not a second preamble.
+    func testShippedDeliverableScaffoldIsPresentAndSmall() throws {
+        let loader = ConfigurationLoader(directory: Self.configDirectory)
+        let scaffold = try loader.loadText(file: "deliverable-scaffold.md")
+
+        XCTAssertFalse(
+            scaffold.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+            "Shipped scaffold must not be empty"
+        )
+        XCTAssertTrue(scaffold.contains("Executive Summary"))
+        XCTAssertLessThanOrEqual(
+            TokenEstimator.estimate(scaffold), 80,
+            "Scaffold rides on every AI deliverable request — keep it under 80 tokens"
+        )
+    }
 }

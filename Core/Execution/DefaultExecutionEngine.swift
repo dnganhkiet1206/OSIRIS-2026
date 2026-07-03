@@ -8,10 +8,21 @@ import OsirisInfrastructure
 public struct DefaultExecutionEngine: ExecutionEngine {
     private let gateway: any AIGateway
     private let logger: any Logging
+    /// Declared output structure for AI-produced deliverables (M3-3). Data
+    /// injected by the composition root (shipped in Config/, never authored
+    /// here) — nil means no scaffold, keeping the prompt byte-identical to
+    /// pre-M3-3. Applied mechanically to final outputs only: intermediate
+    /// composition steps are raw material, not deliverables.
+    private let deliverableScaffold: String?
 
-    public init(gateway: any AIGateway, logger: any Logging = ConsoleLogger()) {
+    public init(
+        gateway: any AIGateway,
+        logger: any Logging = ConsoleLogger(),
+        deliverableScaffold: String? = nil
+    ) {
         self.gateway = gateway
         self.logger = logger
+        self.deliverableScaffold = deliverableScaffold
     }
 
     /// The previous step's output is appended whole but capped — an
@@ -31,12 +42,17 @@ public struct DefaultExecutionEngine: ExecutionEngine {
     }
 
     /// Mechanical assembly of declared data (AD-25): substitute {goal} in
-    /// the declared template, append the capped previous-step result.
-    /// Nothing is decided or rewritten here.
-    static func assembleTask(template: String?, goal: String, previous: String?) -> String {
+    /// the declared template, append the capped previous-step result, then
+    /// the declared output scaffold. Nothing is decided or rewritten here.
+    static func assembleTask(
+        template: String?, goal: String, previous: String?, scaffold: String? = nil
+    ) -> String {
         var task = template?.replacingOccurrences(of: "{goal}", with: goal) ?? goal
         if let previous {
             task += "\n\nResult of the previous step:\n\(String(previous.prefix(maxPreviousCharacters)))"
+        }
+        if let scaffold {
+            task += "\n\n\(scaffold)"
         }
         return task
     }
@@ -67,10 +83,18 @@ public struct DefaultExecutionEngine: ExecutionEngine {
             // deliverable. Every step is one measured Gateway call.
             var previous: String?
             var lastMetrics: AIRequestMetrics?
-            for step in steps {
+            for (index, step) in steps.enumerated() {
+                // Only the LAST step produces the deliverable — earlier
+                // outputs are raw material and must stay unscaffolded.
+                let isFinalStep = index == steps.count - 1
                 let response = try await gateway.complete(
                     AIRequest(
-                        task: Self.assembleTask(template: step.promptTemplate, goal: plan.goal.text, previous: previous),
+                        task: Self.assembleTask(
+                            template: step.promptTemplate,
+                            goal: plan.goal.text,
+                            previous: previous,
+                            scaffold: isFinalStep ? deliverableScaffold : nil
+                        ),
                         projectID: plan.goal.projectID,
                         preferredTier: plan.preferredTier
                     )
@@ -87,7 +111,12 @@ public struct DefaultExecutionEngine: ExecutionEngine {
         case .ai(let skill):
             let response = try await gateway.complete(
                 AIRequest(
-                    task: Self.assembleTask(template: skill?.promptTemplate, goal: plan.goal.text, previous: nil),
+                    task: Self.assembleTask(
+                        template: skill?.promptTemplate,
+                        goal: plan.goal.text,
+                        previous: nil,
+                        scaffold: deliverableScaffold
+                    ),
                     projectID: plan.goal.projectID,
                     preferredTier: plan.preferredTier
                 )

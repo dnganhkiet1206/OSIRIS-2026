@@ -54,7 +54,11 @@ enum CompositionRoot {
         let kernel = Kernel(
             skills: skillRegistry,
             tools: [CurrentDateTimeTool()],
-            engine: DefaultExecutionEngine(gateway: gateway, logger: logger),
+            engine: DefaultExecutionEngine(
+                gateway: gateway,
+                logger: logger,
+                deliverableScaffold: loadDeliverableScaffold()
+            ),
             store: store,
             approvalGate: RequireUserApprovalGate(),
             writeGate: WriteGate(policy: makeWritePolicy()),
@@ -203,6 +207,17 @@ enum CompositionRoot {
             )
         } catch {
             fatalError("Config/policies.json missing or invalid: \(error)")
+        }
+    }
+
+    /// Deliverable output structure (M3-3) is Config data, like the
+    /// preamble — never authored in Core. Editing the shipped file changes
+    /// every AI deliverable's shape without touching code.
+    private static func loadDeliverableScaffold() -> String {
+        do {
+            return try makeConfigurationLoader().loadText(file: "deliverable-scaffold.md")
+        } catch {
+            fatalError("Config/deliverable-scaffold.md missing or invalid: \(error)")
         }
     }
 

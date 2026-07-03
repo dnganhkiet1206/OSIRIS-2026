@@ -105,7 +105,8 @@ OSIRIS/
 │   ├── routing.json              # Quy tắc chọn model
 │   ├── budgets.json              # Token/context budget
 │   ├── policies.json             # Store, execution, approval policies
-│   └── features.json             # Feature flags
+│   ├── features.json             # Feature flags
+│   └── deliverable-scaffold.md   # Cấu trúc output deliverable AI (M3-3, AD-43) — ≤80 token
 │
 ├── Resources/                    # Assets — không trộn với source
 │   ├── Assets.xcassets/          # Icon, hình ảnh

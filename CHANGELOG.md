@@ -2,6 +2,14 @@
 
 ## [Unreleased — M3]
 
+### 2026-07-03 — M3-3: Deliverable Templates & Executive Summary v1 — cấu trúc là data, không phải engine (AD-43)
+
+- **Executive Summary không phải component:** là cấu trúc output KHAI BÁO — scaffold sống trong `Config/deliverable-scaffold.md` (data, cùng họ preamble; test cưỡng chế ≤80 token + phải chứa "Executive Summary" — không phải preamble thứ hai). Composition root load fail-fast và inject vào `DefaultExecutionEngine` như chuỗi khai báo — **KHÔNG hardcode trong Kernel, KHÔNG hardcode trong Execution**; đổi format mọi deliverable = sửa MỘT file Config, 0 dòng code.
+- **Execution nối máy móc, không quyết định:** scaffold append sau template + previous-step, đúng nơi sinh deliverable — đường `.ai` (kể cả plain AI không skill: user không cần biết skill tồn tại) và **BƯỚC CUỐI** composition (bước giữa là nguyên liệu, không scaffold — test 2 prompt chứng minh); `.reuse` trả nguyên văn không re-format; `.tool` không AI nên không scaffold.
+- **Zero regression by construction:** `deliverableScaffold` default `nil` → prompt byte-identical trước M3-3; không một test captured-prompt cũ nào phải sửa (dự phòng trong NEXT_TASK hóa ra không cần dùng).
+- Không Summary Engine / Report Builder / Document Generator / Formatter Engine — toàn bộ thay đổi Core là 1 optional String + 1 phép nối trong `assembleTask`. Kernel/Gateway/Store không chạm.
+- 7 test mới (assembleTask thuần ×2, captured-prompt plain-AI/skill/composition/reuse ×4, shipped-config scaffold ×1). Tổng **114/114 pass**, 0 warning, offline. Gặp lại pattern đã biết lần 4: đổi chữ ký public init default-param → `rm -rf .build`.
+
 ### 2026-07-03 — M3-2: Smart Planning v1 — tier được earn, assumption có kỷ luật (AD-42)
 
 - **`ComplexityEstimate` (pure, `Core/Kernel/Decision/`):** `simple/standard/complex` chỉ từ dữ liệu có sẵn trong goal — số từ, tín hiệu khối lượng khai báo ("detailed/comprehensive/chi tiết/toàn diện/…"), số mệnh đề (dấu câu + "and/và/then/rồi"). Deterministic tuyệt đối: cùng input cùng output (test lặp 10 lần), 0 AI, 0 ML, 0 lịch sử, 0 token.

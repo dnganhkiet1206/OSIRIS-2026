@@ -10,10 +10,10 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M3 — Intelligence Layer, đang triển khai** (M0/M1/M2 nghiệm thu — tag local, push khi merge) |
-| Task hiện tại | M3-1 ✅ · **M3-2 (Smart Planning v1) ✅ hoàn thành — AD-42** · kế tiếp: M3-3 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
+| Task hiện tại | M3-1 ✅ · M3-2 ✅ · **M3-3 (Deliverable Templates & Executive Summary v1) ✅ hoàn thành — AD-43** · kế tiếp: M3-4 Milestone Review (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **16 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 107/107 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 114/114 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -58,10 +58,12 @@ M3 — Intelligence Layer: trí nhớ đáng tin cậy + planning giải thích 
 
 - [x] **M3-2 — Smart Planning v1** (AD-42): `ComplexityEstimate` (pure, Core/Kernel/Decision) — simple/standard/complex từ số từ + tín hiệu khối lượng ("detailed/toàn diện…") + số mệnh đề, deterministic tuyệt đối (có test 10 lần cùng input); **tier được earn thay vì hardcode**: skill khai báo > estimate (`simple/standard→.light`, `complex→.standard`), Gateway chỉ tiêu thụ — nợ Medium "preferredTier chưa mang giá trị thật" TRẢ MỘT NỬA (phía Kernel xong, Gateway routing vẫn chờ ≥2 model); **Confidence Medium có consumer đầu tiên** (hết case chết): tín hiệu mơ hồ chặt ("somehow/gì đó/…") → vẫn thực thi + assumption ghi **qua đúng WriteGate M3-1** (không đường ghi mới; gate `.disabled` chặn cả assumption — test), assumption xuất hiện trong retrieval của goal liên quan sau (test khép vòng); goal thường KHÔNG sinh assumption (test chống spam); `.reuse/.tool` path không bị ảnh hưởng; 13 test mới (RecordingEngine đọc plan tại biên thật).
 
+- [x] **M3-3 — Deliverable Templates & Executive Summary v1** (AD-43): Executive Summary = cấu trúc output KHAI BÁO, không phải component — scaffold là DATA trong `Config/deliverable-scaffold.md` (test cưỡng chế ≤80 token + phải chứa "Executive Summary"), composition root inject vào Execution như chuỗi khai báo (KHÔNG hardcode trong Kernel/Execution — sửa format = sửa 1 file Config, 0 dòng code); Execution nối máy móc sau template + previous-step; áp dụng đúng nơi sinh deliverable: `.ai` + BƯỚC CUỐI composition (bước giữa = nguyên liệu, có test), plain-AI không skill cũng nhận (user không cần biết skill tồn tại); `.reuse` trả nguyên văn/`.tool` không AI — không re-format; default `nil` → prompt byte-identical trước M3-3 (zero regression by construction — 0 test cũ phải sửa); Kernel/Gateway/Store không chạm; KHÔNG Summary/Report/Formatter Engine; 7 test mới (6 template + 1 shipped-config).
+
 ## 4. Việc đang chờ (Next Tasks)
 
 1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**.
-2. **M3-3 — Deliverable Templates & Executive Summary v1** (chi tiết: `NEXT_TASK.md`).
+2. **M3-4 — M3 Milestone Review & Acceptance** (chi tiết: `NEXT_TASK.md`): phạm vi M3 còn lại (reuse "hoàn chỉnh", cache optimization) đều evidence-gated — cần dữ liệu thật từ runbook; review xử các deadline đã hẹn: `retryPolicy` delete-if-unconsumed, đánh giá lại nợ/câu treo, tag `M3`.
 
 ## 4d. M2 Closeout (nghiệm thu 2026-07-02, tag `M2`)
 
@@ -199,6 +201,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | AD-40 | Ranh giới persist: UI preferences = UserDefaults/@AppStorage, chỉ App/Presentation (arch rule cưỡng chế); platform data = Store (AD-32 nguyên vẹn) |
 | AD-41 | Reflection v1 deterministic (0 AI/0 token) sinh MemoryCandidate → WriteGate (policy từ config, điểm quyết định duy nhất, không bypass — arch rule) → Store persist; đích WC-TTL; Knowledge đóng; AI-reflection cấm đến khi trả lời 4 câu bằng chứng; AD-20 PROVEN |
 | AD-42 | Smart Planning v1 deterministic: `ComplexityEstimate` pure (số từ/tín hiệu khối lượng/số mệnh đề — 0 AI/0 token/0 lịch sử); tier được earn (skill > estimate), Gateway chỉ tiêu thụ; Confidence Medium consumer đầu tiên — assumption qua đúng WriteGate (không đường ghi thứ hai); extension-by-data mở, extension-by-algorithm đóng có chủ đích |
+| AD-43 | Executive Summary = cấu trúc output khai báo, không phải component: scaffold là data trong Config (≤80 token, test cưỡng chế), inject vào Execution, nối máy móc vào `.ai` + bước cuối composition; reuse/tool/bước giữa không scaffold; default nil = zero regression; không Summary/Report/Formatter Engine |
 
 ## 6. Nợ kỹ thuật (phân loại lại tại M1 Review — Critical/High/Medium/Low)
 
