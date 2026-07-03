@@ -21,9 +21,18 @@ final class ChatViewModel {
         let text: String
     }
 
+    struct OpenedDeliverable: Identifiable, Equatable {
+        let id: String
+        let content: String
+    }
+
     private(set) var phase: Phase = .idle
     private(set) var messages: [Message] = []
     private(set) var projects: [ProjectSummary] = []
+    /// Resume data for the current project — read-through from the
+    /// Application layer, never cached beyond view state.
+    private(set) var overview: ProjectOverview?
+    var openedDeliverable: OpenedDeliverable?
     /// The selected project (Project Isolation). "default" until the user
     /// picks or creates one; every goal runs inside the current project.
     private(set) var currentProjectID = "default"
@@ -46,6 +55,7 @@ final class ChatViewModel {
         Task { @MainActor in
             projects = (try? await projectDirectory.list()) ?? []
         }
+        loadOverview()
     }
 
     func selectProject(id: String) {
@@ -53,6 +63,26 @@ final class ChatViewModel {
         currentProjectID = id
         messages = []
         phase = .idle
+        overview = nil
+        loadOverview()
+    }
+
+    func openDeliverable(path: String) {
+        Task { @MainActor in
+            if let content = try? await projectDirectory.deliverableContent(path), let content {
+                openedDeliverable = OpenedDeliverable(id: path, content: content)
+            }
+        }
+    }
+
+    private func loadOverview() {
+        let projectID = currentProjectID
+        Task { @MainActor in
+            let loaded = (try? await projectDirectory.overview(projectID)) ?? nil
+            if projectID == currentProjectID {
+                overview = loaded
+            }
+        }
     }
 
     func createProject(named name: String) {
@@ -93,6 +123,7 @@ final class ChatViewModel {
         case .completed(let result):
             messages.append(Message(role: .osiris, text: result))
             phase = .idle
+            loadOverview()
         case .failed(let message):
             messages.append(Message(role: .osiris, text: message))
             phase = .failed

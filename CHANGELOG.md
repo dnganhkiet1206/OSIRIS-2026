@@ -2,6 +2,14 @@
 
 ## [Unreleased — M2]
 
+### 2026-07-02 — M2-2: Project Resume v1 — "resume work instantly"
+
+- Mở project → thấy ngay: goal gần nhất, số task hoàn thành, ≤5 deliverables mới nhất (preview 120 chars), bấm đọc full qua sheet. Tất cả từ ProjectState + files (State Over Chat — transcript chat là UI tạm, không persist).
+- **`ProjectOverview.assemble`**: toàn bộ logic resume (thứ tự mới-nhất-trước, cap, cắt preview, chọn lastGoal, bỏ qua file mất) trong MỘT hàm thuần ở Application — test được mọi nền tảng; composition root chỉ fetch (bài học AD-35: logic không được rơi vào vùng Xcode-only).
+- Port `ProjectDirectory` mở rộng 2 closure (`overview`, `deliverableContent`) — không method Store mới (checklist NEXT_TASK giữ vững), không type port mới.
+- Overview là read-through, refresh khi đổi project và sau mỗi goal hoàn thành; guard chống race khi đổi project giữa lúc load.
+- 4 test mới (lắp đúng dữ liệu; cap + truncate; project rỗng an toàn; file mất không phá resume). Tổng 74/74 pass, 0 warning, offline; UI mới qua `swiftc -parse`.
+
 ### 2026-07-02 — M2-1: Projects v1 — multi-project thật (AD-38)
 
 - `Store.listProjectStates()` (mới cập nhật trước) + `ProjectState.name` với decode-fallback về id — file state cũ (không có name) migrate im lặng, dữ liệu cũ nguyên vẹn (test bằng file legacy raw).

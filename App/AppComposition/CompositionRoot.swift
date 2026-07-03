@@ -66,6 +66,17 @@ enum CompositionRoot {
                 let state = ProjectState(projectID: ProjectID(UUID().uuidString), name: name)
                 try await store.save(state)
                 return ProjectSummary(id: state.projectID.rawValue, name: state.name)
+            },
+            overview: { projectID in
+                guard let state = try await store.projectState(for: ProjectID(projectID)) else {
+                    return nil
+                }
+                return try await ProjectOverview.assemble(from: state) {
+                    try await store.deliverableContent(at: $0)
+                }
+            },
+            deliverableContent: { path in
+                try await store.deliverableContent(at: path)
             }
         )
     }

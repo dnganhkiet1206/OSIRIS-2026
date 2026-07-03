@@ -10,46 +10,42 @@
 
 ## Current Task
 
-**M2-2 — Project Resume v1: mở project là thấy ngay trạng thái**
+**M2-3 — Global Search v1: tìm mọi thứ từ một ô**
 
 ## Objective
 
-"The user should resume work instantly" (BLUEPRINT/Projects). Hiện chọn project chỉ reset transcript trống — người dùng mù về những gì đã làm. M2-2: mở project → thấy goal gần nhất, các task đã hoàn thành, deliverables (đọc lại nội dung được) — tất cả từ Store (State Over Chat: nguồn sự thật là ProjectState, không phải transcript chat).
+"Search should locate: Projects, Deliverables, Knowledge… extremely fast" (BLUEPRINT/Search). `Store.search` đã có sẵn hai mode từ M1-2 — UI chỉ việc dùng: một ô search trong sidebar, gõ → kết quả nhóm theo loại (Projects khớp tên, Deliverables, Knowledge, Working Context), bấm → mở đúng chỗ (project → chuyển workspace; deliverable → sheet đọc — cả hai flow đã tồn tại từ M2-1/M2-2).
 
 ## Phạm vi
 
-1. **Application:** mở rộng `ProjectDirectory` (port đã có — thêm closures, không type mới nếu tránh được): `overview(projectID) -> ProjectOverview` (DTO: name, currentGoal?, completedTasks (giới hạn N gần nhất), deliverables [(path, preview ngắn)]) + `deliverableContent(path) -> String?` (đọc full khi user bấm). Composition nối xuống Store hiện có (`projectState(for:)` + `deliverableContent(at:)` — KHÔNG API Store mới nếu đủ; nếu cần preview rẻ → đọc content và cắt tại composition, không thêm method Store).
-2. **UI:** chọn project → detail hiển thị Resume header (goal gần nhất + đếm deliverables) phía trên transcript trống + danh sách deliverables bấm được (sheet đọc nội dung). Giữ diff Presentation nhỏ (nợ High Mac chưa trả).
-3. **Không làm:** không lưu/khôi phục transcript chat (State Over Chat — transcript là UI tạm; lịch sử thật = ProjectState + deliverables); không Search (M2-3); không Dashboard (M2-4).
+1. **Application:** mở rộng `ProjectDirectory`? KHÔNG — search là năng lực riêng: cân nhắc port mới `GlobalSearch` (một closure `search(query) -> [SearchHit]`) vs nhét vào ProjectDirectory. Một closure duy nhất → nghiêng về **thêm closure `search` vào ProjectDirectory** (đổi tên port? — KHÔNG đổi tên khi chưa có bằng chứng nhức nhối; ghi chú xem xét ở M2 review). Chốt trong phiên với Năm Câu Hỏi.
+2. **SearchHit DTO** (Application): kind (project/deliverable/knowledge/workingContext), id, title, snippet — dịch từ `StoreSearchResult` + match tên project (list + filter tên tại composition/pure helper).
+3. **Search xuyên project:** `StoreQuery(projectID: nil)` (đã hỗ trợ) + matchMode `.anyWord` (relevance); logic gộp "project name match + store results" là **hàm thuần testable** trong Application (bài học M2-2).
+4. **UI:** ô search trong sidebar (`.searchable` hoặc TextField section); kết quả nhóm theo loại; chọn project-hit → selectProject; deliverable-hit → openDeliverable (tái dùng); knowledge/WC-hit → hiển thị snippet (sheet đơn giản).
+5. **Không làm:** không index mới, không fuzzy, không search transcript (không persist), không đổi Store.
 
 ## Files cần tạo
 
-- `Presentation/Projects/ProjectResumeView.swift` (header + deliverable list + sheet đọc).
-- `Tests/ApplicationTests/ProjectOverviewTests.swift` — overview đúng dữ liệu từ Store; project rỗng → overview rỗng an toàn; preview bị cắt đúng.
+- `Presentation/Search/SearchResultsView.swift` (giữ nhỏ).
+- `Tests/ApplicationTests/GlobalSearchTests.swift` — hàm thuần gộp/dịch hit: project name match, dịch kind, thứ tự nhóm, query rỗng → rỗng.
 
 ## Files cần sửa
 
-- `Application/ProjectDirectory.swift` (+overview/deliverableContent closures + DTO).
-- `App/AppComposition/CompositionRoot.swift` (nối closures mới).
-- `Presentation/Chat/ChatView.swift` + `ChatViewModel.swift` (hiển thị resume khi đổi project).
+- `Application/ProjectDirectory.swift` (SearchHit + closure + hàm thuần gộp), `App/AppComposition/CompositionRoot.swift` (nối), `Presentation/Chat/ChatView.swift` + `ChatViewModel.swift` (search state + điều hướng kết quả).
 - Docs cuối phiên.
-
-## Dependency
-
-- Store đã có đủ API (projectState, deliverableContent). Không network, offline.
 
 ## Checklist
 
-- [ ] Không method Store mới trừ khi chứng minh cần (composition cắt preview được).
-- [ ] Không nguồn sự thật thứ hai (overview = đọc-through, không cache ngoài view-state).
-- [ ] Application vẫn chỉ import OsirisCore; Presentation chỉ OsirisApplication (arch tests).
-- [ ] Transcript chat KHÔNG persist (State Over Chat) — resume đến từ ProjectState.
+- [ ] Không method Store mới; không cache kết quả ngoài view-state.
+- [ ] Logic gộp/dịch hit là hàm thuần trong Application (test Linux được) — composition chỉ fetch.
+- [ ] Deliverable hit hiển thị theo preview body, không lộ path nội bộ làm title chính.
+- [ ] Application chỉ import OsirisCore; Presentation chỉ OsirisApplication (arch tests).
 - [ ] `swift build` 0 warning; toàn bộ test pass offline.
-- [ ] Đủ quy trình review + docs + NEXT_TASK (M2-3 — Global Search).
+- [ ] Đủ quy trình review + docs + NEXT_TASK (M2-4 — Dashboard v1: operational awareness từ metrics/state có sẵn).
 
 ## Definition of Done
 
-Chọn project → thấy goal gần nhất + deliverables, đọc lại được nội dung deliverable; test overview ở tầng Application; zero regression.
+Gõ từ khóa → thấy kết quả nhóm loại từ mọi project; bấm điều hướng đúng; test hàm gộp; zero regression.
 
 ## Estimated Complexity
 
@@ -61,9 +57,10 @@ Dev session: nhỏ. Runtime: 0.
 
 ## Risk
 
-- Diff Presentation phình khi nợ Mac chưa trả — giữ view mới nhỏ, tách file riêng.
+- UI diff tiếp tục phình khi nợ Mac chưa trả — view search tách file riêng, giữ nhỏ.
+- `.searchable` behavior khác nhau iOS/macOS — dùng TextField đơn giản trong sidebar nếu rủi ro.
 
 ## Những phần tuyệt đối không được sửa
 
-- Core (M2 là UX; Store API hiện tại đủ — thêm method Store là red flag cần lập luận).
+- Core (Store.search đủ dùng — thêm method là red flag).
 - Architecture Test rules (chỉ THÊM); ADR cũ (AD-01…AD-38).

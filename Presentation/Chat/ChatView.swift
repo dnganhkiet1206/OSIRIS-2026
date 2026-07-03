@@ -74,7 +74,13 @@ struct ChatView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 12) {
                 if model.messages.isEmpty {
-                    emptyState
+                    if let overview = model.overview, !overview.isEmpty {
+                        ProjectResumeView(overview: overview) { path in
+                            model.openDeliverable(path: path)
+                        }
+                    } else {
+                        emptyState
+                    }
                 }
                 ForEach(model.messages) { message in
                     MessageRow(message: message)
@@ -83,6 +89,21 @@ struct ChatView: View {
             .padding()
         }
         .defaultScrollAnchor(.bottom)
+        .sheet(item: Binding(
+            get: { model.openedDeliverable },
+            set: { model.openedDeliverable = $0 }
+        )) { deliverable in
+            NavigationStack {
+                ScrollView {
+                    Text(deliverable.content)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                }
+                .navigationTitle("Deliverable")
+                .navigationBarTitleDisplayMode(.inline)
+            }
+        }
     }
 
     private var emptyState: some View {
