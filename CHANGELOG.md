@@ -2,6 +2,17 @@
 
 ## [Unreleased — M1]
 
+### 2026-07-02 — M1-4: Tool Layer v1 — "AI Is The Last Tool" thành test vĩnh viễn (AD-37)
+
+- `CurrentDateTimeTool` (Core/Tools/OnDevice): tool on-device đầu tiên — goal "What is the date today?" hoàn thành qua đường `.tool` với **0 AI request, 0 token** (CountingProvider chứng minh). Deterministic với clock inject được; keywords rất hẹp (goal thường không bị cướp — có test).
+- Resource order của Decide ĐẦY ĐỦ: **reuse → tool → skill/composition → plain AI** (đúng thứ tự tài nguyên BLUEPRINT).
+- Matching data-driven: `triggerKeywords` trên protocol `Tool`; **một thuật toán matching duy nhất** (`selectByKeywords` generic private trong Kernel) dùng chung skill + tool — matchedSkill refactor sang cùng hàm, không Tool Matcher riêng.
+- Tools inject qua Kernel init (composition root) — **không Tool Registry** (AD-17 giữ trần 2 registry); `.tool(any Tool)` mang tool đã resolve — Execution không chọn/đổi/tự rơi sang AI khi tool fail (Kernel đã quyết → lỗi phải lộ, có test).
+- **Deviation có lập luận so với NEXT_TASK:** tool results KHÔNG persist — persistence tồn tại để tránh tốn lại token, tool re-run miễn phí, còn kết quả cũ ("ngày hôm qua") là câu trả lời sai nằm chờ trong reuse path. Test: goal lặp lại → tool chạy lại (fresh), vẫn 0 AI, không file.
+- Metrics tool tối thiểu: log `tool.run` (tool/duration/succeeded) qua Logger hiện có — không telemetry framework; DefaultExecutionEngine nhận logger.
+- +1 arch rule (chỉ thêm): Core/Tools là leaf adapter — không tham chiếu AIGateway/AIProvider/Skill/Store/Kernel. Tổng 14 rule.
+- 4 test mới. Tổng 66/66 pass, 0 warning, offline. Không plugin system/reflection/dynamic loading/tool graph/scheduler.
+
 ### 2026-07-02 — M1-3: Composition Execution v1 (AD-36)
 
 - **AD-36 — một khái niệm một cách biểu diễn:** xóa struct `SkillComposition` (tồn tại song song với field `compositionSteps` từ AD-28 = nguồn sự thật đôi); composition nay là `SkillDefinition` có `compositionSteps` (≤5 bước, precondition cưỡng chế). Strategy `.composition(steps: [SkillDefinition])` — Kernel resolve step IDs trong Decide nên Execution không bao giờ chạm registry (AD-25).

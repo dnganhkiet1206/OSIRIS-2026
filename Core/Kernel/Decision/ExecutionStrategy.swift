@@ -9,7 +9,10 @@ public enum ExecutionStrategy: Sendable {
     /// mechanical and never touches the Store (AD-25).
     case reuse(existing: String)
     case direct
-    case tool(ToolID)
+    /// Deterministic tool execution — zero AI, zero tokens. The Kernel
+    /// resolves the tool in Decide; the plan carries it so Execution never
+    /// selects or swaps tools (AD-25, AD-37).
+    case tool(any Tool)
     /// Sequential skill chain (AD-07, AD-36): a composition is declared as
     /// `SkillDefinition.compositionSteps` — one concept, one representation.
     /// The Kernel resolves step IDs to full definitions HERE in Decide, so

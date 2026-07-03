@@ -32,7 +32,8 @@ enum CompositionRoot {
         )
         let kernel = Kernel(
             skills: InMemorySkillRegistry(registering: GenericSkills.all),
-            engine: DefaultExecutionEngine(gateway: gateway),
+            tools: [CurrentDateTimeTool()],
+            engine: DefaultExecutionEngine(gateway: gateway, logger: logger),
             store: store,
             approvalGate: RequireUserApprovalGate(),
             publish: { [weak service] event in service?.relay(event) }

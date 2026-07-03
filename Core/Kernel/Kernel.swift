@@ -13,6 +13,10 @@ public final class Kernel: Sendable {
     public typealias EventPublisher = @Sendable (ExecutionEvent) async -> Void
 
     private let skills: any SkillRegistry
+    /// Static tool list injected by the composition root (AD-37): a handful
+    /// of tools needs no registry — the Skill Registry stays the platform's
+    /// only registry (AD-17) until evidence demands otherwise.
+    private let tools: [any Tool]
     private let engine: any ExecutionEngine
     private let store: any Store
     private let approvalGate: any ApprovalGate
@@ -20,12 +24,14 @@ public final class Kernel: Sendable {
 
     public init(
         skills: any SkillRegistry,
+        tools: [any Tool] = [],
         engine: any ExecutionEngine,
         store: any Store,
         approvalGate: any ApprovalGate,
         publish: @escaping EventPublisher
     ) {
         self.skills = skills
+        self.tools = tools
         self.engine = engine
         self.store = store
         self.approvalGate = approvalGate
@@ -45,14 +51,16 @@ public final class Kernel: Sendable {
             throw KernelError.needsClarification("Describe what you want to accomplish.")
         }
 
-        // 2. DECIDE — cheapest sufficient path: reuse, then a matching
-        // skill, then plain AI (AD-12). Tool execution joins the order in
-        // M1-4.
+        // 2. DECIDE — the full resource order, cheapest sufficient path
+        // first (AD-12): reuse → deterministic tool (zero tokens, AI Is
+        // The Last Tool) → skill/composition → plain AI.
         await publish(.planning)
         let strategy: ExecutionStrategy
         var tier: ModelTier = .light
         if let existing = try await reusableResult(for: objective, in: goal.projectID) {
             strategy = .reuse(existing: existing)
+        } else if let tool = matchedTool(for: objective) {
+            strategy = .tool(tool)
         } else {
             let skill = await matchedSkill(for: objective)
             tier = skill?.preferredModelTier ?? .light
@@ -82,10 +90,18 @@ public final class Kernel: Sendable {
         var state = try await store.projectState(for: goal.projectID)
             ?? ProjectState(projectID: goal.projectID)
         var deliverable = result.deliverable
-        if case .reuse = strategy {
+        switch strategy {
+        case .reuse:
             // Reused content already lives on disk — writing it again would
             // duplicate the deliverable and pollute future reuse detection.
-        } else {
+            break
+        case .tool:
+            // Tool results are NOT persisted (AD-37): persistence exists to
+            // avoid re-spending tokens, but a tool re-runs for free — while
+            // a stale stored answer ("yesterday's date") is a real wrong
+            // answer waiting in the reuse path.
+            break
+        default:
             let path = try await store.saveDeliverable(
                 result.deliverable.content, goal: goal.text, for: goal.projectID
             )
@@ -107,20 +123,39 @@ public final class Kernel: Sendable {
         objective.isEmpty ? .low : .high
     }
 
-    /// Skill selection is data-driven (M1-1): each skill declares its
-    /// trigger keywords, so adding a skill never changes this algorithm.
+    /// Selection is data-driven (M1-1/M1-4): skills and tools declare their
+    /// trigger keywords, so adding either never changes this algorithm —
+    /// ONE matching algorithm for both (one concept, one representation).
     /// Most keyword hits wins; ties break deterministically by id; no hits
-    /// means no skill — the plain AI path is always a correct fallback.
-    private func matchedSkill(for objective: String) async -> SkillDefinition? {
+    /// means no match — the plain AI path is always a correct fallback.
+    private func selectByKeywords<Candidate>(
+        from candidates: [(candidate: Candidate, keywords: [String]?, id: String)],
+        for objective: String
+    ) -> Candidate? {
         let lowered = objective.lowercased()
-        let candidates = await skills.allSkills().compactMap { skill -> (skill: SkillDefinition, hits: Int)? in
-            guard let keywords = skill.triggerKeywords else { return nil }
+        let scored = candidates.compactMap { entry -> (candidate: Candidate, hits: Int, id: String)? in
+            guard let keywords = entry.keywords else { return nil }
             let hits = keywords.filter { lowered.contains($0.lowercased()) }.count
-            return hits > 0 ? (skill, hits) : nil
+            return hits > 0 ? (entry.candidate, hits, entry.id) : nil
         }
-        return candidates
-            .sorted { ($0.hits, $1.skill.id.rawValue) > ($1.hits, $0.skill.id.rawValue) }
-            .first?.skill
+        return scored
+            .sorted { $0.hits != $1.hits ? $0.hits > $1.hits : $0.id < $1.id }
+            .first?.candidate
+    }
+
+    private func matchedTool(for objective: String) -> (any Tool)? {
+        selectByKeywords(
+            from: tools.map { (candidate: $0, keywords: $0.triggerKeywords, id: $0.id.rawValue) },
+            for: objective
+        )
+    }
+
+    private func matchedSkill(for objective: String) async -> SkillDefinition? {
+        let all = await skills.allSkills()
+        return selectByKeywords(
+            from: all.map { (candidate: $0, keywords: $0.triggerKeywords, id: $0.id.rawValue) },
+            for: objective
+        )
     }
 
     /// Resolves declared step IDs into full definitions during Decide, so

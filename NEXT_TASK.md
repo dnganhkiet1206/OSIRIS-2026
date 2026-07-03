@@ -1,78 +1,60 @@
 # NEXT_TASK.md
 
-> Quy trình phiên làm việc: đọc `Docs/PROJECT_STATE.md` → đọc file này → đọc các file liên quan → thiết kế → kiểm tra tái sử dụng → triển khai → Self Review → Architecture Review → refactor nếu cần → cập nhật tài liệu → cập nhật PROJECT_STATE → tạo NEXT_TASK mới → kết thúc. Không bỏ qua bước nào.
+> Quy trình phiên làm việc: đọc `Docs/PROJECT_STATE.md` → đọc file này → đọc các file liên quan → thực hiện → cập nhật tài liệu → cập nhật PROJECT_STATE → tạo NEXT_TASK mới → kết thúc.
 >
-> **Song song:** user vẫn chưa chạy `Docs/RUNBOOK_M1-0.md`. Nếu user dán kết quả runbook, xử lý trước rồi mới làm task dưới.
+> **Song song:** user vẫn chưa chạy `Docs/RUNBOOK_M1-0.md`. Kết quả runbook là INPUT quan trọng cho M1 Review — nếu có trước phiên M1-5 thì baseline/verification được nghiệm thu trọn vẹn.
 
 ## Current Milestone
 
-**M1 — Core Runtime** (DEVELOPMENT_PLAN.md §2) — task áp chót; sau đó M1-5 = M1 Review.
+**M1 — Core Runtime** — task cuối: nghiệm thu milestone.
 
 ## Current Task
 
-**M1-4 — Tool đầu tiên: đường `.tool` sống, "AI Is The Last Tool" được chứng minh bằng máy**
+**M1-5 — M1 Review: nghiệm thu Core Runtime**
 
 ## Objective
 
-Thứ tự tài nguyên của Decide hoàn chỉnh phần còn thiếu trước AI: **reuse → tool → skill/composition → plain AI**. Một goal trả lời được bằng tool on-device (ngày/giờ hiện tại) hoàn thành với **0 AI call** — nguyên tắc "AI Is The Last Tool" lần đầu được chứng minh bằng test thay vì tài liệu.
+Nghiệm thu M1 theo đúng khuôn M0 closeout (PROJECT_STATE §4b): đối chiếu Definition of Done của DEVELOPMENT_PLAN §2/M1 + §3, chốt các quyết định treo, ghi Milestone Acceptance Report, tag `M1`, và đề xuất ưu tiên M2.
 
-## Thiết kế phải chốt trong phiên (với Năm Câu Hỏi)
+## Phạm vi (REVIEW — không viết tính năng mới)
 
-1. **Tool matching data-driven** giống skill: tool cần khai báo nó phục vụ goal nào. `Tool` protocol hiện chỉ có `id` + `run`. Phương án đề xuất: struct `ToolDescriptor` (data: toolID + triggerKeywords + purpose) đăng ký cùng tool — HOẶC mở rộng protocol thêm `var triggerKeywords: [String]`. Chọn phương án ít abstraction hơn, nhất quán với triggerKeywords của skill (một cơ chế matching, không hai).
-2. **Kernel biết tools thế nào:** Kernel chưa có dependency tools. Inject `tools: [any Tool]` qua init (danh sách nhỏ, không cần Tool Registry riêng — Skill Registry là registry duy nhất theo AD-17; tool list là dependency tĩnh của composition root cho đến khi có bằng chứng cần registry).
-3. **Execution chạy tool:** `.tool(ToolID)` case hiện có — nhưng Execution không được chạm danh sách tool để resolve (AD-25 tương tự skill)! → plan phải mang tool đã resolve: đổi case thành `.tool(any Tool)`? Enum với existential — Sendable OK (Tool: Sendable). Chốt trong phiên.
-
-## Phạm vi
-
-1. **`CurrentDateTimeTool`** (Core/Tools/OnDevice/): trả ngày giờ hiện tại (format thân thiện) — deterministic-ish, không mạng, không AI. Use case thật: "hôm nay ngày mấy" không được tốn token.
-2. **Kernel Decide:** sau reuse-check, trước skill-match: tool matching bằng triggerKeywords (tái dùng đúng thuật toán hit-count/tie-break của skill nếu tách được thành hàm chung — DRY, nhưng chỉ tách khi sạch).
-3. **Execution:** case `.tool` — chạy tool máy móc, output là deliverable; lỗi tool → error rõ ràng.
-4. **Persist:** deliverable từ tool vẫn ghi file + index như mọi deliverable (qua Store, bởi Kernel).
-5. **Tests:** goal "what is the date today" → 0 provider call, deliverable chứa ngày; goal thường → không bị tool cướp (keywords hẹp); tool lỗi → thông điệp thân thiện qua ChatService (nếu chạm được — tối thiểu là error rõ ở Execution).
-
-## Files cần tạo
-
-- `Core/Tools/OnDevice/CurrentDateTimeTool.swift`
-- `Tests/CoreTests/ToolExecutionTests.swift`
+1. **Đối chiếu tiêu chí M1** (DEVELOPMENT_PLAN §2/M1): Skill Registry ✅/❓, Store đầy đủ ✅/❓, Gateway đầy đủ ✅/❓, Execution (parallel/resume — quyết định cuối cho phần hoãn AD-36), Kernel đầy đủ (Confidence 3 tier — mới có High/Low v0; approval gates — RequireUserApprovalGate wired nhưng chưa được Decide tham vấn vì chưa có risky action; đánh giá trung thực: đạt mức M1 hay ghi nợ sang M2/M3?), Tool Layer v1 ✅. Tiêu chí "task hoàn thành không cần AI call nào khi tài nguyên đáp ứng" — ✅ có test (reuse + tool).
+2. **Quyết định cuối parallel/resume:** đề xuất giữ hoãn (bằng chứng vẫn chưa xuất hiện) — ghi thành quyết định của milestone, điều kiện kích hoạt rõ ràng (parallel: khi Planner tách goal đa task ở M3; resume: khi có bằng chứng suspend làm mất tiến độ thật trên thiết bị).
+3. **Tổng kết nợ kỹ thuật** phân loại Critical/High/Medium/Low; Critical phải = 0 trước khi mở M2.
+4. **Chạy đủ review battery:** Self/Architecture/Quality/Security/Performance (số pipeline baseline có thể đo lại để so M0).
+5. **Milestone Acceptance Report** (khuôn M0): hoàn thành/chưa, chỉ số chất lượng, kiến trúc, khuyến nghị M2 (ưu tiên đề xuất: M2 = User Experience — Sidebar/Projects/Search/Dashboard — hoặc chèn M1-6 nếu review lộ thiếu sót chặn).
+6. **Tag `M1`** (local nếu push vẫn bị chặn — ghi chú như M0).
 
 ## Files cần sửa
 
-- `Core/Tools/Contracts/Tool.swift` (triggerKeywords theo phương án chốt), `Core/Kernel/Kernel.swift` (tools dependency + Decide), `Core/Kernel/Decision/ExecutionStrategy.swift` (`.tool` mang tool đã resolve), `Core/Execution/DefaultExecutionEngine.swift` (chạy tool), `App/AppComposition/CompositionRoot.swift` + toàn bộ test dựng Kernel (thêm `tools:` param).
-- `Docs/PROJECT_STATE.md`, `CHANGELOG.md`, `NEXT_TASK.md` (M1-5 = M1 Review) — cuối phiên.
-
-## Dependency
-
-- Toàn bộ vòng đời + matching đã sẵn. Không dependency ngoài, offline.
+- `Docs/PROJECT_STATE.md` (mục §4c — M1 Closeout), `CHANGELOG.md` (mục [M1]), `Docs/DEVELOPMENT_PLAN.md` (đánh dấu M1 + ghi quyết định parallel/resume), `NEXT_TASK.md` (M2-1 hoặc M1-6 tùy kết quả review).
 
 ## Checklist
 
-- [ ] Goal khớp tool: **0 provider call** (CountingProvider chứng minh) — "AI Is The Last Tool" thành test vĩnh viễn.
-- [ ] Thứ tự Decide: reuse > tool > skill > plain AI — đúng resource order BLUEPRINT.
-- [ ] Execution không resolve tool (plan mang tool sẵn); không chạm registry/Store (arch tests).
-- [ ] Không tạo Tool Registry riêng khi chưa có bằng chứng (AD-17: 2 registry là trần).
-- [ ] Tool keywords hẹp — goal thường không bị cướp khỏi skill/AI (test).
-- [ ] `swift build` 0 warning; toàn bộ test pass offline.
-- [ ] Self/Architecture Review + docs + NEXT_TASK mới (M1-5 — M1 Review: DoD, quyết định cuối parallel/resume, danh sách chuẩn bị M2).
+- [ ] Từng tiêu chí M1 đánh giá trung thực: pass / partial / pending kèm lý do — không che giấu (Confidence medium chưa dùng; approval gate chưa được tham vấn; EventBus chưa consumer; runbook M1-0 pending là của user).
+- [ ] Quyết định parallel/resume ghi vào DEVELOPMENT_PLAN với điều kiện kích hoạt.
+- [ ] Nợ Critical = 0; bảng nợ cập nhật đủ.
+- [ ] Security quét lại nhanh (key literal, log).
+- [ ] Tag M1 tạo (annotated, message tổng kết).
+- [ ] Báo cáo nghiệm thu đầy đủ trong PROJECT_STATE + chat; NEXT_TASK mới.
 
 ## Definition of Done
 
-Goal về ngày giờ hoàn thành với 0 token qua đường `.tool` đầy đủ vòng đời (persist như mọi deliverable); resource order hoàn chỉnh; zero regression; tài liệu cập nhật.
+M1 được nghiệm thu (hoặc danh sách thiếu sót chặn rõ ràng kèm M1-6); mọi quyết định treo được chốt và ghi; tag tạo; đề xuất M2 sẵn sàng chờ user duyệt.
 
 ## Estimated Complexity
 
-Trung bình — chạm Decide + Execution + nhiều call site Kernel init.
+Thấp — phiên review + tài liệu, không code mới (trừ sửa nhỏ nếu review lộ lỗi).
 
 ## Estimated AI Cost
 
-Dev session: trung bình. Runtime: 0.
+Dev session: nhỏ. Runtime: 0.
 
 ## Risk
 
-- Tool matching tham → goal AI bị trả lời bằng tool sai: keywords rất hẹp ("what time", "what date", "hôm nay ngày", "mấy giờ"), thà miss.
-- Đổi Kernel init chữ ký → sửa đồng loạt test — cơ học, ít rủi ro.
+- Review lộ thiếu sót chặn → trung thực ghi M1-6 thay vì ép nghiệm thu.
 
 ## Những phần tuyệt đối không được sửa
 
-- Gateway pipeline; composition vừa chốt M1-3; reuse.
-- Ranh giới AD-25/32/33; Architecture Test rules (chỉ THÊM).
-- ADR cũ (AD-01…AD-36).
+- Toàn bộ code trừ khi review phát hiện lỗi thật (fix có bằng chứng, không "tiện tay").
+- Architecture Test rules (chỉ THÊM); ADR cũ (AD-01…AD-37).

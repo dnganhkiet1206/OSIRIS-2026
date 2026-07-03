@@ -233,6 +233,16 @@ final class ArchitectureRulesTests: XCTestCase {
         }
     }
 
+    // MARK: Tool layer boundary (AD-37, added M1-4 — rules are only ever added)
+
+    func testToolsAreLeafAdapters() {
+        assertNoMatch(
+            sources(under: "Core/Tools/"),
+            pattern: #"\b(AIGateway|AIProvider|SkillRegistry|SkillDefinition|Store|Kernel)\b"#,
+            rule: "AD-37: tools are deterministic leaf adapters — they never know AI, skills, state or the Kernel"
+        )
+    }
+
     // MARK: Module isolation (AD-19, AD-21) — active once modules exist
 
     func testModulesImportOnlyCoreAndInfrastructure() {
