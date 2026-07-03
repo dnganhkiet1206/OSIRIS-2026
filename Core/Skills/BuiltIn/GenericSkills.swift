@@ -10,7 +10,7 @@ import Foundation
 /// goal falls back to the plain AI path, which is always correct.
 public enum GenericSkills {
     public static var all: [SkillDefinition] {
-        [summarize, draft, researchOutline]
+        [summarize, draft, researchOutline, researchThenDraft]
     }
 
     public static let summarize = SkillDefinition(
@@ -45,6 +45,23 @@ public enum GenericSkills {
         """,
         preferredModelTier: .light,
         triggerKeywords: ["draft", "soạn", "viết"]
+    )
+
+    /// Composition (AD-36): declared as compositionSteps on a parent skill —
+    /// no separate type. Its trigger keywords are the UNION of its steps'
+    /// keywords: a goal hitting several of them outscores any single skill
+    /// naturally, while a single-keyword goal tie-breaks to the single skill
+    /// (ascending id) — no matcher changes needed.
+    public static let researchThenDraft = SkillDefinition(
+        id: SkillID("core.research-then-draft"),
+        version: "1.0.0",
+        capabilityTags: [CapabilityTag("research"), CapabilityTag("content-drafting")],
+        purpose: "Research a topic first, then draft content grounded in the outline",
+        inputs: ["goal"],
+        outputs: ["draft"],
+        preferredModelTier: .light,
+        compositionSteps: [SkillID("core.research-outline"), SkillID("core.draft")],
+        triggerKeywords: ["research", "nghiên cứu", "investigate", "draft", "soạn", "viết"]
     )
 
     public static let researchOutline = SkillDefinition(

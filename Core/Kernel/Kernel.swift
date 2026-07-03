@@ -56,7 +56,13 @@ public final class Kernel: Sendable {
         } else {
             let skill = await matchedSkill(for: objective)
             tier = skill?.preferredModelTier ?? .light
-            strategy = .ai(skill: skill)
+            if let steps = skill?.compositionSteps, !steps.isEmpty {
+                // A misconfigured composition (missing step) degrades to the
+                // plain AI path — the goal still completes.
+                strategy = await resolvedComposition(steps) ?? .ai(skill: nil)
+            } else {
+                strategy = .ai(skill: skill)
+            }
         }
         let plan = ExecutionPlan(goal: goal, strategy: strategy, preferredTier: tier)
 
@@ -115,6 +121,18 @@ public final class Kernel: Sendable {
         return candidates
             .sorted { ($0.hits, $1.skill.id.rawValue) > ($1.hits, $0.skill.id.rawValue) }
             .first?.skill
+    }
+
+    /// Resolves declared step IDs into full definitions during Decide, so
+    /// the Execution Engine never touches the registry (AD-25). Returns nil
+    /// when any step is unresolvable.
+    private func resolvedComposition(_ steps: [SkillID]) async -> ExecutionStrategy? {
+        var resolved: [SkillDefinition] = []
+        for id in steps {
+            guard let skill = await skills.skill(withID: id) else { return nil }
+            resolved.append(skill)
+        }
+        return .composition(steps: resolved)
     }
 
     /// Reuse Before Create: strict match only — the full goal text must

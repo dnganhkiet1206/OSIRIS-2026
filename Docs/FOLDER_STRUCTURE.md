@@ -43,8 +43,9 @@ OSIRIS/
 │   │   └── Gates/                # Validation & approval gates
 │   ├── Execution/                # Execution Engine: nơi DUY NHẤT thi hành
 │   │   ├── TaskRunner/           # Chạy task, parallel, resume sau suspend
-│   │   ├── Composition/          # Workflow = declarative skill composition (AD-07)
 │   │   └── Recovery/             # Retry/fallback theo policy khai báo (AD-25)
+│   │                             # (composition = SkillDefinition.compositionSteps,
+│   │                             #  chạy trong DefaultExecutionEngine — AD-36)
 │   ├── Skills/                   # Skill Registry — điểm mở rộng DUY NHẤT
 │   │   ├── Registry/             # Đăng ký, tra cứu theo capability tag, versioning
 │   │   ├── Contracts/            # Skill schema tối thiểu (AD-28), Capability tags
@@ -136,7 +137,7 @@ OSIRIS/
   - Dùng `Kernel` — không dùng "Planner service" / "Executive Brain service" riêng.
   - Dùng `Store` — không dùng "StateStore" / "MemoryStore" / "MemoryManager" như component riêng.
   - Dùng `AIGateway` — không dùng "ModelRouter" / "TokenManager" / "ContextEngine" / "ContextLoader" / "ContextBuilder" như component đỉnh.
-  - Workflow là `SkillComposition` — không có "WorkflowEngine".
+  - Workflow là composition khai báo qua `SkillDefinition.compositionSteps` (AD-36) — không có "WorkflowEngine", không struct `SkillComposition` riêng.
   - Không tạo tầng "Networking" — URLSession trực tiếp (AD-27).
 - File Swift: một type chính mỗi file, tên file = tên type.
 

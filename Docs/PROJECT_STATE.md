@@ -10,10 +10,10 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M1 — Core Runtime, đang triển khai** (M0 nghiệm thu: tag `M0` local tại `dc54059`; push tag khi merge) |
-| Task hiện tại | M1-2 (Gateway Retrieval & Assembly) ✅ hoàn thành · kế tiếp: M1-3 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ chạy** |
+| Task hiện tại | M1-3 (Composition Execution v1) ✅ hoàn thành · kế tiếp: M1-4 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ chạy** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
-| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **13 Architecture Test chống drift (AD-34)** · chuỗi AD-24 đầy đủ: retrieve → assemble → budget → cache → route → đo |
-| Trạng thái codebase | ✅ **0 error / 0 warning, 58/58 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
+| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **13 Architecture Test chống drift (AD-34)** · chuỗi AD-24 đầy đủ · composition = data (AD-36) |
+| Trạng thái codebase | ✅ **0 error / 0 warning, 61/61 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -40,11 +40,13 @@ M1 — Core Runtime: Kernel đầy đủ, hệ điều hành AI thực sự vậ
 
 - [x] **M1-2 — Gateway Retrieval & Assembly** (AD-24): Gateway retrieve context qua `Store.search` (`.anyWord` mới — rank theo word-hit; `.exact` default giữ nguyên cho reuse của Kernel); assembly theo section có cấu trúc (`## Relevant context` → Working Context/Knowledge/Previous results → `## Task`) với ưu tiên Critical(preamble+task, không bao giờ cắt) > Important(WC) > Helpful(Knowledge, lấy body đầy đủ) > Optional(deliverable history); trim nguyên-snippet từ ưu tiên thấp theo `contextBudgetTokens`; snippet cap 600 chars, N≤3 (`maxContextSnippets`); **retrieval trước cache lookup → cache key phản ánh đúng context (test: context đổi = cache miss)**; metrics thêm `contextSnippetCount`; một Store instance chia sẻ Kernel+Gateway (không nguồn sự thật thứ hai); không context → prompt y hệt trước M1-2 (zero regression, có test); ContextPriority hết là dead contract; 5 test mới.
 
+- [x] **M1-3 — Composition Execution v1** (AD-36, cả 3 đề xuất được user duyệt): xóa struct `SkillComposition` — composition = `SkillDefinition.compositionSteps` (≤5 bước, precondition); composition mẫu `core.research-then-draft` với triggerKeywords = hợp keywords các bước con (goal nhiều keyword → composition thắng tự nhiên, một keyword → tie-break về skill đơn — test chứng minh); Kernel resolve steps trong Decide (Execution không chạm registry), composition hỏng degrade về plain AI; Execution chạy tuần tự máy móc — output bước trước (cap 6000 chars) nối vào bước sau, mỗi bước một `ai.request` metrics, deliverable = output bước cuối; **parallel + resume-sau-suspend hoãn có duyệt** — xét lại tại M1 review; 3 test mới (chuỗi 2 bước đúng thứ tự qua captured prompts, precedence skill đơn, degrade an toàn).
+
 ## 4. Việc đang chờ (Next Tasks)
 
 1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — Mac build, kiểm tra bằng mắt, nhập key, thu 3–4 dòng log `ai.request` → dán lại để điền baseline vào §4b.
-2. **M1-3 — Composition Execution v1** (chi tiết: `NEXT_TASK.md`): chạy `SkillComposition` tuần tự qua Gateway. *Lưu ý scope:* parallel + resume-sau-suspend hoãn có lập luận (chưa tồn tại nguồn sinh task độc lập; resume cần thiết kế state riêng) — quyết định cuối ở M1 review.
-3. M1-4 — Kernel resource-order đầy đủ + Tool Layer on-device đầu tiên.
+2. **M1-4 — Kernel resource-order đầy đủ + Tool đầu tiên** (chi tiết: `NEXT_TASK.md`): đường `.tool` sống — tool on-device đầu tiên chứng minh "AI Is The Last Tool" (goal trả lời được bằng tool = 0 AI call).
+3. M1-5 — M1 Review tổng: Definition of Done, quyết định cuối parallel/resume, chuẩn bị M2.
 
 ## 4b. M0 Closeout & Final Verification (nghiệm thu 2026-07-02, tag `M0`)
 
@@ -127,6 +129,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | AD-33 | Kernel thuần túy: chỉ phụ thuộc protocol Core, không I/O, không import Infrastructure; progress events qua closure `@Sendable (ExecutionEvent) async -> Void` inject từ composition root |
 | AD-34 | Architecture Test Suite trong `swift test` quét source cưỡng chế quy tắc kiến trúc; compiler cưỡng chế đồ thị target, test cưỡng chế quy tắc trong target; AD mới có rule kiểm được → thêm rule |
 | AD-35 | Application Layer (`OsirisApplication`, chỉ phụ thuộc OsirisCore): ChatService là cầu nối duy nhất UI ↔ Core, dịch event/error → TaskUpdate; Presentation chỉ import OsirisApplication; UI không biết provider/retry/reuse; không rename ExecutionEvent — tổng quát hóa bằng tầng dịch |
+| AD-36 | Composition = `SkillDefinition.compositionSteps` (≤5 bước); xóa struct `SkillComposition` (nguồn sự thật đôi); Kernel resolve steps trong Decide, Execution chạy tuần tự máy móc; parallel + resume hoãn có duyệt đến khi có bằng chứng — xét lại tại M1 review |
 
 ## 6. Vấn đề đã biết & Nợ kỹ thuật (Known Issues / Tech Debt)
 

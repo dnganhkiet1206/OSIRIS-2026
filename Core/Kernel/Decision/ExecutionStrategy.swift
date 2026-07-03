@@ -10,7 +10,11 @@ public enum ExecutionStrategy: Sendable {
     case reuse(existing: String)
     case direct
     case tool(ToolID)
-    case composition(SkillComposition)
+    /// Sequential skill chain (AD-07, AD-36): a composition is declared as
+    /// `SkillDefinition.compositionSteps` — one concept, one representation.
+    /// The Kernel resolves step IDs to full definitions HERE in Decide, so
+    /// the Execution Engine never touches the registry (AD-25).
+    case composition(steps: [SkillDefinition])
     /// AI execution, optionally through a skill the Kernel selected. The
     /// skill rides on this case only — a skill without an AI call is
     /// meaningless in v1, and the type makes that combination impossible.

@@ -2,6 +2,14 @@
 
 ## [Unreleased — M1]
 
+### 2026-07-02 — M1-3: Composition Execution v1 (AD-36)
+
+- **AD-36 — một khái niệm một cách biểu diễn:** xóa struct `SkillComposition` (tồn tại song song với field `compositionSteps` từ AD-28 = nguồn sự thật đôi); composition nay là `SkillDefinition` có `compositionSteps` (≤5 bước, precondition cưỡng chế). Strategy `.composition(steps: [SkillDefinition])` — Kernel resolve step IDs trong Decide nên Execution không bao giờ chạm registry (AD-25).
+- Composition mẫu `core.research-then-draft` (research-outline → draft). Matching M1-1 hoạt động cho composition **miễn phí**: triggerKeywords = hợp keywords các bước con — goal chứa nhiều keyword ⇒ composition thắng theo hit-count; goal một keyword ⇒ tie-break id chọn đúng skill đơn (test chứng minh cả hai chiều).
+- Execution chạy steps tuần tự, máy móc, đúng khai báo: không đổi thứ tự, không thêm/bỏ bước, không tối ưu luồng; output bước trước (cap 6000 chars — chống phình token) nối vào task bước sau; mỗi bước một Gateway call = một `ai.request` metrics; deliverable = output bước cuối; chuỗi rỗng/hỏng → Verify gate chặn, không deliverable nửa vời. Composition thiếu step degrade về plain AI — goal vẫn hoàn thành.
+- Không Workflow Engine/Runtime/DSL/Graph/Scheduler — composition chạy trong `DefaultExecutionEngine` (~25 dòng thêm). Parallel + Resume-sau-suspend hoãn có user duyệt (thiếu bằng chứng cần) — xét lại tại M1 review.
+- 3 test mới (chuỗi 2 bước: captured prompts chứng minh template từng bước + output bước 1 vào bước 2 + deliverable là output cuối + có persist; precedence; degrade). Tổng 61/61 pass, 0 warning, offline.
+
 ### 2026-07-02 — M1-2: Gateway Retrieval & Assembly (AD-24 hoàn chỉnh)
 
 - Pipeline Gateway đủ chuỗi AD-24: validate → **retrieve → trim → assemble** → budget → cache → (dry-run | retry) → metrics → log. Retrieval đứng TRƯỚC cache lookup nên cache key (model + prompt đã assemble) luôn phản ánh đúng context — test chứng minh: context đổi = cache miss, context giữ = cache hit.

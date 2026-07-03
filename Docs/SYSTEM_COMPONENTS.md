@@ -54,7 +54,7 @@
 
 ### 2.2. Execution Engine
 - **Hợp nhất từ:** Execution Engine (P4) + Workflow Engine/Runtime (P4/P6/P11). *(AD-07, AD-25)*
-- **Trách nhiệm:** Thi hành task/skill; task độc lập chạy song song, task phụ thuộc chạy tuần tự; retry/fallback **theo đúng policy khai báo trong Skill contract** — máy móc, không tự quyết; tình huống vượt policy quay về Kernel; chạy **Skill Composition** (workflow dạng khai báo, < 5 bước logic); phát progress events; resume sau khi iOS suspend app; không bao giờ để project ở trạng thái không nhất quán.
+- **Trách nhiệm:** Thi hành task/skill; task độc lập chạy song song, task phụ thuộc chạy tuần tự; retry/fallback **theo đúng policy khai báo trong Skill contract** — máy móc, không tự quyết; tình huống vượt policy quay về Kernel; chạy **composition** (chuỗi skill khai báo qua `SkillDefinition.compositionSteps`, ≤5 bước — AD-36; Kernel resolve steps trong Decide, Execution chạy tuần tự, output bước trước nối bước sau); phát progress events; resume sau khi iOS suspend app; không bao giờ để project ở trạng thái không nhất quán.
 - **Không làm:** mọi hình thức quyết định chiến lược (chọn model khác, đổi hướng — việc của Kernel); chứa business logic trong composition.
 
 ### 2.3. Skill Registry
@@ -153,6 +153,8 @@ Các tên sau xuất hiện trong đặc tả gốc hoặc bản v1.0 nhưng **�
 **Từ vòng review 1 (trên đặc tả gốc):** `Planner` (riêng) · `Executive Brain` (riêng) · `Intelligence Engine` · `Context Loader` · `Context Builder` · `Capability Registry` (riêng) · `Prompt Registry` · `Deliverable Registry` · `Workflow Engine` / `Workflow Runtime` (riêng) · `Model Router` (đỉnh) · `Token Manager` (đỉnh) · `Validation Engine` (riêng) · `Confidence Engine` (riêng) · `Experience Engine` (riêng) · `Executive State` (persist riêng) · `Chat Engine` (trong Core)
 
 **Từ vòng review 2 (trên v1.0):** `Context Engine` (riêng — vào AI Gateway, AD-24) · `State Store` + `Memory Store` (riêng — hợp nhất thành Store, AD-22) · `Vision` như memory tier (→ Config artifact, AD-23) · `Event Bus` như Core component (→ Infrastructure, AD-26) · `Networking` layer (→ URLSession trực tiếp, AD-27)
+
+**Từ triển khai M1:** struct `SkillComposition` (→ hợp nhất vào `SkillDefinition.compositionSteps`, AD-36 — một khái niệm một cách biểu diễn)
 
 ## 7. Các hợp nhất đã cân nhắc và bác bỏ (sàn kiến trúc — không tối ưu thêm)
 

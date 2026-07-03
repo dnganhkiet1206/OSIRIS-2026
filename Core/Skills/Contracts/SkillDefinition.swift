@@ -60,6 +60,13 @@ public struct SkillDefinition: Codable, Sendable {
         self.outputs = outputs
         self.promptTemplate = promptTemplate
         self.preferredModelTier = preferredModelTier
+        // Compositions stay short by declaration (BLUEPRINT: < 5 logical
+        // steps; below 3, prefer direct execution). Authored in code —
+        // a violation is a programmer error caught by tests.
+        precondition(
+            compositionSteps.map { (1...5).contains($0.count) } ?? true,
+            "compositionSteps must contain 1...5 steps"
+        )
         self.compositionSteps = compositionSteps
         self.retryPolicy = retryPolicy
         self.triggerKeywords = triggerKeywords

@@ -2,77 +2,77 @@
 
 > Quy trình phiên làm việc: đọc `Docs/PROJECT_STATE.md` → đọc file này → đọc các file liên quan → thiết kế → kiểm tra tái sử dụng → triển khai → Self Review → Architecture Review → refactor nếu cần → cập nhật tài liệu → cập nhật PROJECT_STATE → tạo NEXT_TASK mới → kết thúc. Không bỏ qua bước nào.
 >
-> **Song song:** user vẫn chưa chạy `Docs/RUNBOOK_M1-0.md`. Nếu user dán kết quả runbook, xử lý trước (baseline §4b / lỗi compile) rồi mới làm task dưới.
+> **Song song:** user vẫn chưa chạy `Docs/RUNBOOK_M1-0.md`. Nếu user dán kết quả runbook, xử lý trước rồi mới làm task dưới.
 
 ## Current Milestone
 
-**M1 — Core Runtime** (DEVELOPMENT_PLAN.md §2)
+**M1 — Core Runtime** (DEVELOPMENT_PLAN.md §2) — task áp chót; sau đó M1-5 = M1 Review.
 
 ## Current Task
 
-**M1-3 — Composition Execution v1: chuỗi skill tuần tự**
+**M1-4 — Tool đầu tiên: đường `.tool` sống, "AI Is The Last Tool" được chứng minh bằng máy**
 
 ## Objective
 
-`SkillComposition` (workflow = dữ liệu khai báo, AD-07) chạy được thật: Kernel chọn một composition, Execution chạy các bước tuần tự — output bước trước là input bước sau — toàn bộ qua Gateway, máy móc, không quyết định. Sau M1-3: một goal như "research rồi draft" có thể chạy 2 skill nối tiếp thành một deliverable.
+Thứ tự tài nguyên của Decide hoàn chỉnh phần còn thiếu trước AI: **reuse → tool → skill/composition → plain AI**. Một goal trả lời được bằng tool on-device (ngày/giờ hiện tại) hoàn thành với **0 AI call** — nguyên tắc "AI Is The Last Tool" lần đầu được chứng minh bằng test thay vì tài liệu.
 
-## Điều chỉnh scope so với DEVELOPMENT_PLAN (cần user duyệt trong phiên hoặc trước đó)
+## Thiết kế phải chốt trong phiên (với Năm Câu Hỏi)
 
-M1 gốc ghi "parallel + composition + resume sau suspend". Đề xuất hoãn 2 phần với lập luận:
-- **Parallel:** chưa tồn tại nguồn sinh task độc lập (một goal → một plan tuyến tính) — xây parallel bây giờ là abstraction không có người dùng. Bằng chứng cần: khi Planner tách goal thành nhiều task (M3).
-- **Resume-sau-suspend:** cần thiết kế state cho in-flight execution (ai persist? — chỉ Store được persist, nhưng Execution không được chạm Store → phải đi qua Kernel checkpoint). Đáng một thiết kế riêng, không nhét vào cuối M1-3.
-Quyết định cuối ghi ở M1 review. Nếu user không đồng ý hoãn → dừng, thảo luận trước khi code.
+1. **Tool matching data-driven** giống skill: tool cần khai báo nó phục vụ goal nào. `Tool` protocol hiện chỉ có `id` + `run`. Phương án đề xuất: struct `ToolDescriptor` (data: toolID + triggerKeywords + purpose) đăng ký cùng tool — HOẶC mở rộng protocol thêm `var triggerKeywords: [String]`. Chọn phương án ít abstraction hơn, nhất quán với triggerKeywords của skill (một cơ chế matching, không hai).
+2. **Kernel biết tools thế nào:** Kernel chưa có dependency tools. Inject `tools: [any Tool]` qua init (danh sách nhỏ, không cần Tool Registry riêng — Skill Registry là registry duy nhất theo AD-17; tool list là dependency tĩnh của composition root cho đến khi có bằng chứng cần registry).
+3. **Execution chạy tool:** `.tool(ToolID)` case hiện có — nhưng Execution không được chạm danh sách tool để resolve (AD-25 tương tự skill)! → plan phải mang tool đã resolve: đổi case thành `.tool(any Tool)`? Enum với existential — Sendable OK (Tool: Sendable). Chốt trong phiên.
 
 ## Phạm vi
 
-1. **Composition là dữ liệu:** thêm 1 composition mẫu generic (`core.research-then-draft` — steps: [research-outline, draft]) — khai báo cạnh GenericSkills.
-2. **Kernel Decide:** goal khớp composition (triggerKeywords riêng của composition? — composition hiện là `[SkillID]` thuần; cần định danh + trigger → cân nhắc: composition được mô tả bằng một SkillDefinition có `compositionSteps` (field ĐÃ CÓ sẵn từ AD-28!) — không type mới, một skill "cha" khai báo các bước. Nếu hướng này đứng vững qua Năm Câu Hỏi thì `SkillComposition` struct riêng có thể thành thừa → đánh giá và đề xuất trong phiên).
-3. **Execution chạy steps tuần tự:** mỗi step = assemble template của skill bước đó với `{goal}` + `{previous}` (output bước trước); qua Gateway từng bước; metrics từng bước được log tự nhiên (mỗi bước một `ai.request`); deliverable cuối = output bước cuối.
-4. **Giới hạn khai báo:** tối đa 5 bước (đúng quy tắc "composition ngắn" của BLUEPRINT); vượt → config/validation lỗi.
-5. **Tests:** composition 2 bước chạy đúng thứ tự (captured prompts chứng minh output bước 1 vào prompt bước 2); goal không khớp composition → hành vi cũ; 1 bước fail → lỗi rõ ràng, không deliverable nửa vời.
+1. **`CurrentDateTimeTool`** (Core/Tools/OnDevice/): trả ngày giờ hiện tại (format thân thiện) — deterministic-ish, không mạng, không AI. Use case thật: "hôm nay ngày mấy" không được tốn token.
+2. **Kernel Decide:** sau reuse-check, trước skill-match: tool matching bằng triggerKeywords (tái dùng đúng thuật toán hit-count/tie-break của skill nếu tách được thành hàm chung — DRY, nhưng chỉ tách khi sạch).
+3. **Execution:** case `.tool` — chạy tool máy móc, output là deliverable; lỗi tool → error rõ ràng.
+4. **Persist:** deliverable từ tool vẫn ghi file + index như mọi deliverable (qua Store, bởi Kernel).
+5. **Tests:** goal "what is the date today" → 0 provider call, deliverable chứa ngày; goal thường → không bị tool cướp (keywords hẹp); tool lỗi → thông điệp thân thiện qua ChatService (nếu chạm được — tối thiểu là error rõ ở Execution).
 
 ## Files cần tạo
 
-- `Tests/CoreTests/CompositionExecutionTests.swift`.
+- `Core/Tools/OnDevice/CurrentDateTimeTool.swift`
+- `Tests/CoreTests/ToolExecutionTests.swift`
 
 ## Files cần sửa
 
-- `Core/Skills/BuiltIn/GenericSkills.swift` (+composition mẫu), `Core/Kernel/Kernel.swift` (Decide nhận composition), `Core/Execution/DefaultExecutionEngine.swift` (chạy steps), có thể `Core/Execution/Composition/SkillComposition.swift` (nếu kết luận hợp nhất vào SkillDefinition.compositionSteps — đề xuất trước khi xóa).
-- `Docs/PROJECT_STATE.md`, `CHANGELOG.md`, `NEXT_TASK.md` (M1-4) — cuối phiên.
+- `Core/Tools/Contracts/Tool.swift` (triggerKeywords theo phương án chốt), `Core/Kernel/Kernel.swift` (tools dependency + Decide), `Core/Kernel/Decision/ExecutionStrategy.swift` (`.tool` mang tool đã resolve), `Core/Execution/DefaultExecutionEngine.swift` (chạy tool), `App/AppComposition/CompositionRoot.swift` + toàn bộ test dựng Kernel (thêm `tools:` param).
+- `Docs/PROJECT_STATE.md`, `CHANGELOG.md`, `NEXT_TASK.md` (M1-5 = M1 Review) — cuối phiên.
 
 ## Dependency
 
-- Skill matching (M1-1) + Gateway (M1-2) đã sẵn. Registry cần trả skill theo ID cho từng step (`skill(withID:)` đã có — nhưng Execution KHÔNG được chạm SkillRegistry (arch rule)! → Kernel resolve toàn bộ steps thành `[SkillDefinition]` NGAY trong Decide, plan mang danh sách đã resolve — Execution thuần máy móc).
+- Toàn bộ vòng đời + matching đã sẵn. Không dependency ngoài, offline.
 
 ## Checklist
 
-- [ ] Execution không chạm SkillRegistry/Store (arch tests canh — plan mang skill đã resolve).
-- [ ] Mỗi bước một `ai.request` metrics; bước fail → error rõ, không persist deliverable dở.
-- [ ] Goal không khớp composition: zero regression (test cũ pass nguyên trạng).
-- [ ] Không tạo Workflow Engine/Runtime (banned) — composition chạy trong DefaultExecutionEngine.
-- [ ] Nếu đề xuất bỏ `SkillComposition` struct: nêu lập luận + đợi thể hiện rõ trong báo cáo (xóa type là thay đổi kiến trúc nhỏ — cần bằng chứng, đã có sẵn: field `compositionSteps` trùng vai trò).
+- [ ] Goal khớp tool: **0 provider call** (CountingProvider chứng minh) — "AI Is The Last Tool" thành test vĩnh viễn.
+- [ ] Thứ tự Decide: reuse > tool > skill > plain AI — đúng resource order BLUEPRINT.
+- [ ] Execution không resolve tool (plan mang tool sẵn); không chạm registry/Store (arch tests).
+- [ ] Không tạo Tool Registry riêng khi chưa có bằng chứng (AD-17: 2 registry là trần).
+- [ ] Tool keywords hẹp — goal thường không bị cướp khỏi skill/AI (test).
 - [ ] `swift build` 0 warning; toàn bộ test pass offline.
-- [ ] Self/Architecture Review + docs + NEXT_TASK mới (M1-4).
+- [ ] Self/Architecture Review + docs + NEXT_TASK mới (M1-5 — M1 Review: DoD, quyết định cuối parallel/resume, danh sách chuẩn bị M2).
 
 ## Definition of Done
 
-Composition 2 bước chạy trọn qua vòng đời thật với captured prompts chứng minh chuỗi; giới hạn 5 bước cưỡng chế; zero regression; tài liệu cập nhật.
+Goal về ngày giờ hoàn thành với 0 token qua đường `.tool` đầy đủ vòng đời (persist như mọi deliverable); resource order hoàn chỉnh; zero regression; tài liệu cập nhật.
 
 ## Estimated Complexity
 
-Trung bình — chạm cả Decide lẫn Execution nhưng toàn bộ là data-driven.
+Trung bình — chạm Decide + Execution + nhiều call site Kernel init.
 
 ## Estimated AI Cost
 
-Dev session: trung bình. Runtime: 0 (Capturing/Placeholder provider).
+Dev session: trung bình. Runtime: 0.
 
 ## Risk
 
-- `{previous}` bơm output lớn vào prompt bước sau → token phình: cap bằng cơ chế snippet/budget hiện có của Gateway (đã có sẵn trim).
-- Hai cách mô tả composition (struct riêng vs field trên SkillDefinition) tồn tại song song = nguồn sự thật đôi — phải chốt một trong phiên.
+- Tool matching tham → goal AI bị trả lời bằng tool sai: keywords rất hẹp ("what time", "what date", "hôm nay ngày", "mấy giờ"), thà miss.
+- Đổi Kernel init chữ ký → sửa đồng loạt test — cơ học, ít rủi ro.
 
 ## Những phần tuyệt đối không được sửa
 
-- Gateway pipeline vừa chốt M1-2 (composition dùng nó nguyên trạng, mỗi bước một call).
+- Gateway pipeline; composition vừa chốt M1-3; reuse.
 - Ranh giới AD-25/32/33; Architecture Test rules (chỉ THÊM).
-- Reuse của Kernel; ADR cũ (AD-01…AD-35).
+- ADR cũ (AD-01…AD-36).
