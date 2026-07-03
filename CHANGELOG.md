@@ -1,6 +1,14 @@
 # CHANGELOG
 
-## [Unreleased — M1]
+## [M1] — 2026-07-02 (tag `M1`)
+
+### M1-5: Milestone Review & Acceptance
+
+- **M1 ĐẠT** — nghiệm thu tại PROJECT_STATE §4c: mọi tiêu chí pass hoặc partial-có-chủ-milestone; 7/7 ADR của M1 (AD-31…AD-37) PROVEN bằng code + test; AD-20 awaiting consumer (M3).
+- Bằng chứng: build 0/0 debug+release; 66/66 test (52 unit + 14 arch) offline ~1.1s; baseline nội bộ fresh 5.45ms / reuse 3.14ms (tăng ≈0.8ms so M0 = chi phí matching + retrieval, chấp nhận); security sạch; không god object (file lớn nhất 281 dòng, 35 file Swift Core+Infra+Application); không nguồn sự thật thứ hai (AD-36 đã xóa nguồn cuối); chi phí AI tích lũy $0.00.
+- Nợ kỹ thuật phân loại lại: **Critical 0 · High 1** (UI chưa qua compiler Mac — runbook của user, phải xử lý trước/đầu M2) · Medium 4 · Low 7; dọn 4 mục đã trả khỏi bảng.
+- Quyết định chốt: parallel + resume HOÃN với điều kiện kích hoạt ghi tại DEVELOPMENT_PLAN §M1.
+- Retrospective ghi nhận: (1) Architecture Tests đáng lẽ viết từ M0-1 — suite bắt ngay vi phạm tồn tại từ bootstrap; (2) runbook Mac nên chạy ngay sau M0-5 thay vì để nợ UI tích tụ; (3) pattern đã biết: đổi chữ ký public có default-param cần clean build (2 lần dính linker cache).
 
 ### 2026-07-02 — M1-4: Tool Layer v1 — "AI Is The Last Tool" thành test vĩnh viễn (AD-37)
 

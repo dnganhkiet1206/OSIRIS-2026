@@ -48,7 +48,9 @@ M8 Production Readiness  ── ổn định lâu dài: test, security, backup, 
 
 **Tiêu chí hoàn thành:** Người dùng gõ một mục tiêu → thấy execution events → nhận kết quả → tắt app mở lại vẫn thấy ProjectState. Token mỗi call được log.
 
-### M1 — Core Runtime *(gộp Milestone 0+1 gốc, trừ phần đã làm ở M0)*
+### M1 — Core Runtime *(gộp Milestone 0+1 gốc, trừ phần đã làm ở M0)* — ✅ ĐÃ NGHIỆM THU 2026-07-02 (tag `M1`; chi tiết PROJECT_STATE §4c)
+
+> **Quyết định chốt tại M1 Review (AD-36):** Parallel Execution và Resume-after-suspend HOÃN — không có bằng chứng cần trong M1. Điều kiện kích hoạt: *Parallel* khi Planner tách goal thành nhiều task độc lập (M3 — Smart Planning); *Resume* khi có bằng chứng mất tiến độ thật do iOS suspend trên thiết bị (sau khi app chạy thật từ M2). Không xây trước khi điều kiện xuất hiện.
 
 **Mục tiêu:** Kernel đầy đủ, hệ điều hành AI thực sự vận hành.
 

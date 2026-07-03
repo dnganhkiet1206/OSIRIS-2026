@@ -1,60 +1,67 @@
 # NEXT_TASK.md
 
-> Quy trình phiên làm việc: đọc `Docs/PROJECT_STATE.md` → đọc file này → đọc các file liên quan → thực hiện → cập nhật tài liệu → cập nhật PROJECT_STATE → tạo NEXT_TASK mới → kết thúc.
+> **TRẠNG THÁI: CHỜ USER DUYỆT MỞ M2.** M1 đã nghiệm thu (PROJECT_STATE §4c, tag `M1`). Task dưới đây là ĐỀ XUẤT đầu tiên của M2 — không tự ý bắt đầu.
 >
-> **Song song:** user vẫn chưa chạy `Docs/RUNBOOK_M1-0.md`. Kết quả runbook là INPUT quan trọng cho M1 Review — nếu có trước phiên M1-5 thì baseline/verification được nghiệm thu trọn vẹn.
+> **Điều kiện nên hoàn thành trước/đầu M2 (nợ High):** user chạy `Docs/RUNBOOK_M1-0.md` — M2 là milestone toàn UI; xây tiếp trên 8 file SwiftUI chưa qua compiler là rủi ro kép. Nếu kết quả runbook được dán vào phiên M2-1: xử lý lỗi compile/baseline TRƯỚC, task dưới SAU.
 
 ## Current Milestone
 
-**M1 — Core Runtime** — task cuối: nghiệm thu milestone.
+**M2 — User Experience** (DEVELOPMENT_PLAN.md §2/M2: Sidebar, Projects, Settings, Search, Dashboard, Advanced Mode, Accessibility)
 
-## Current Task
+## Current Task (đề xuất)
 
-**M1-5 — M1 Review: nghiệm thu Core Runtime**
+**M2-1 — Projects v1: multi-project thật từ Store đến UI**
 
 ## Objective
 
-Nghiệm thu M1 theo đúng khuôn M0 closeout (PROJECT_STATE §4b): đối chiếu Definition of Done của DEVELOPMENT_PLAN §2/M1 + §3, chốt các quyết định treo, ghi Milestone Acceptance Report, tag `M1`, và đề xuất ưu tiên M2.
+Project là đơn vị cô lập nền tảng của OSIRIS (Project Isolation) nhưng hiện `ChatService.submit` hardcode `projectID: "default"` — mọi goal đổ vào một project. M2-1 làm multi-project thật: tạo/chọn project, mỗi project có transcript + state + deliverables riêng, sidebar liệt kê projects. Đây là nền của mọi UX sau (Search, Dashboard đều theo project).
 
-## Phạm vi (REVIEW — không viết tính năng mới)
+## Phạm vi
 
-1. **Đối chiếu tiêu chí M1** (DEVELOPMENT_PLAN §2/M1): Skill Registry ✅/❓, Store đầy đủ ✅/❓, Gateway đầy đủ ✅/❓, Execution (parallel/resume — quyết định cuối cho phần hoãn AD-36), Kernel đầy đủ (Confidence 3 tier — mới có High/Low v0; approval gates — RequireUserApprovalGate wired nhưng chưa được Decide tham vấn vì chưa có risky action; đánh giá trung thực: đạt mức M1 hay ghi nợ sang M2/M3?), Tool Layer v1 ✅. Tiêu chí "task hoàn thành không cần AI call nào khi tài nguyên đáp ứng" — ✅ có test (reuse + tool).
-2. **Quyết định cuối parallel/resume:** đề xuất giữ hoãn (bằng chứng vẫn chưa xuất hiện) — ghi thành quyết định của milestone, điều kiện kích hoạt rõ ràng (parallel: khi Planner tách goal đa task ở M3; resume: khi có bằng chứng suspend làm mất tiến độ thật trên thiết bị).
-3. **Tổng kết nợ kỹ thuật** phân loại Critical/High/Medium/Low; Critical phải = 0 trước khi mở M2.
-4. **Chạy đủ review battery:** Self/Architecture/Quality/Security/Performance (số pipeline baseline có thể đo lại để so M0).
-5. **Milestone Acceptance Report** (khuôn M0): hoàn thành/chưa, chỉ số chất lượng, kiến trúc, khuyến nghị M2 (ưu tiên đề xuất: M2 = User Experience — Sidebar/Projects/Search/Dashboard — hoặc chèn M1-6 nếu review lộ thiếu sót chặn).
-6. **Tag `M1`** (local nếu push vẫn bị chặn — ghi chú như M0).
+1. **Store:** cần liệt kê projects — `listProjectStates()` (đọc qua prefix `project-state/` — pattern đã có; KHÔNG thêm record type mới).
+2. **Application:** ChatService nhận `projectID` từ UI mỗi submit (bỏ hardcode); API mỏng cho danh sách/tạo project (qua Kernel? — KHÔNG: đọc danh sách là query thuần, không phải goal execution — cân nhắc trong phiên: ChatService thêm `listProjects()`/`createProject(name:)` gọi Store trực tiếp? ChatService được phép chạm Store? AD-35 nói Application là cầu nối UI↔Core — Store là Core; nhưng ranh giới hiện tại: ChatService chỉ biết Kernel. Mở rộng ChatService biết Store = thêm quyền lực cho Application. Phương án thay thế: Kernel expose query? Kernel là decision engine, không phải query service. **Chốt trong phiên với Năm Câu Hỏi + cập nhật arch test nếu mở ranh giới** — nghiêng về: Application được chạm Store cho *đọc* (query), mọi *ghi* vẫn qua vòng đời Kernel; nếu chọn hướng này → ghi AD-38).
+3. **ProjectState:** thêm `name` (display) — field mới có migration mặc định (id làm name fallback).
+4. **UI:** sidebar liệt kê projects + nút tạo; chọn project → transcript riêng (ChatViewModel giữ transcript theo project hoặc reset khi đổi — v1: reset + hiển thị state từ Store là M2-2 History; chốt phạm vi nhỏ).
+5. **Tests:** listProjectStates; hai project không rò transcript/deliverable (đã có isolation test ở Store — thêm mức ChatService); tạo project → xuất hiện trong list.
+
+## Files cần tạo
+
+- `Tests/CoreTests/ProjectListingTests.swift` (+ ApplicationTests nếu ChatService đổi).
 
 ## Files cần sửa
 
-- `Docs/PROJECT_STATE.md` (mục §4c — M1 Closeout), `CHANGELOG.md` (mục [M1]), `Docs/DEVELOPMENT_PLAN.md` (đánh dấu M1 + ghi quyết định parallel/resume), `NEXT_TASK.md` (M2-1 hoặc M1-6 tùy kết quả review).
+- `Core/Store/Store.swift` + `FileBackedStore.swift` (listProjectStates; ProjectState.name).
+- `Application/ChatService.swift` (projectID per submit + API project).
+- `Presentation/Chat/*` + `App/` (sidebar projects, chọn/tạo).
+- Docs cuối phiên (kể cả AD-38 nếu mở ranh giới đọc cho Application).
 
 ## Checklist
 
-- [ ] Từng tiêu chí M1 đánh giá trung thực: pass / partial / pending kèm lý do — không che giấu (Confidence medium chưa dùng; approval gate chưa được tham vấn; EventBus chưa consumer; runbook M1-0 pending là của user).
-- [ ] Quyết định parallel/resume ghi vào DEVELOPMENT_PLAN với điều kiện kích hoạt.
-- [ ] Nợ Critical = 0; bảng nợ cập nhật đủ.
-- [ ] Security quét lại nhanh (key literal, log).
-- [ ] Tag M1 tạo (annotated, message tổng kết).
-- [ ] Báo cáo nghiệm thu đầy đủ trong PROJECT_STATE + chat; NEXT_TASK mới.
+- [ ] Không nguồn sự thật thứ hai (danh sách project = đọc từ Store, không cache riêng trong UI ngoài view-state).
+- [ ] Ghi vẫn CHỈ qua vòng đời Kernel/Store (arch tests; nếu Application được quyền đọc Store → cập nhật rule có chủ đích, ghi AD — không nới lỏng ngầm).
+- [ ] Project Isolation giữ vững (test 2 project).
+- [ ] `swift build` 0 warning; toàn bộ test pass offline.
+- [ ] Đủ quy trình review + docs + NEXT_TASK (M2-2).
 
 ## Definition of Done
 
-M1 được nghiệm thu (hoặc danh sách thiếu sót chặn rõ ràng kèm M1-6); mọi quyết định treo được chốt và ghi; tag tạo; đề xuất M2 sẵn sàng chờ user duyệt.
+Tạo/chọn project từ UI; goal chạy đúng project; deliverables/state cô lập theo project (test); zero regression.
 
 ## Estimated Complexity
 
-Thấp — phiên review + tài liệu, không code mới (trừ sửa nhỏ nếu review lộ lỗi).
+Trung bình — một quyết định ranh giới (Application đọc Store) cần chốt cẩn thận.
 
 ## Estimated AI Cost
 
-Dev session: nhỏ. Runtime: 0.
+Dev session: trung bình. Runtime: 0.
 
 ## Risk
 
-- Review lộ thiếu sót chặn → trung thực ghi M1-6 thay vì ép nghiệm thu.
+- Mở ranh giới Application→Store cẩu thả sẽ xói mòn AD-35 — nếu chốt mở, giới hạn READ-only bằng arch rule mới thay vì bỏ rule.
+- UI code vẫn chưa compile được ở môi trường này (nợ High) — giữ Presentation diff nhỏ.
 
 ## Những phần tuyệt đối không được sửa
 
-- Toàn bộ code trừ khi review phát hiện lỗi thật (fix có bằng chứng, không "tiện tay").
-- Architecture Test rules (chỉ THÊM); ADR cũ (AD-01…AD-37).
+- Vòng đời 5 pha, resource order, Gateway pipeline (M2 là UX — Core đứng yên trừ mở rộng Store đọc có chủ đích).
+- Architecture Test rules (chỉ THÊM/siết — kể cả khi mở ranh giới, thêm rule mới thay vì xóa rule cũ).
+- ADR cũ (AD-01…AD-37).

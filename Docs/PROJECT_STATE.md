@@ -10,10 +10,10 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M1 — Core Runtime, đang triển khai** (M0 nghiệm thu: tag `M0` local tại `dc54059`; push tag khi merge) |
-| Task hiện tại | M1-4 (Tool Layer v1) ✅ hoàn thành · kế tiếp: M1-5 — M1 Review (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ chạy** |
+| Task hiện tại | **M1 ĐÃ NGHIỆM THU** (M1-5 Review, tag `M1` — xem §4c) · kế tiếp: chờ user duyệt mở M2 (`NEXT_TASK.md` = M2-1) · **[USER] runbook M1-0 vẫn chờ chạy — nợ High, nên xử lý trước/đầu M2** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **14 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning, 66/66 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline · "AI Is The Last Tool" là test vĩnh viễn |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 66/66 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -46,8 +46,29 @@ M1 — Core Runtime: Kernel đầy đủ, hệ điều hành AI thực sự vậ
 
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — Mac build, kiểm tra bằng mắt, nhập key, thu 3–4 dòng log `ai.request` → dán lại để điền baseline vào §4b.
-2. **M1-5 — M1 Review tổng** (chi tiết: `NEXT_TASK.md`): nghiệm thu M1 theo Definition of Done; quyết định cuối parallel/resume (AD-36); tổng kết nợ kỹ thuật; đề xuất ưu tiên M2.
+1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**: 8 file SwiftUI tích tụ 6 milestone chưa qua compiler; nên chạy trước hoặc song song đầu M2 (M2 là milestone toàn UI).
+2. **Chờ user duyệt mở M2** — đề xuất M2-1 tại `NEXT_TASK.md`: Projects v1 (multi-project thật — hiện ChatService hardcode projectID "default").
+
+## 4c. M1 Closeout (nghiệm thu 2026-07-02, tag `M1`)
+
+**Tiêu chí M1 (DEVELOPMENT_PLAN §2/M1) — đánh giá trung thực:**
+
+| Tiêu chí | Kết quả |
+|---|---|
+| Skill Registry: schema AD-28 + 3–5 skill tổng quát | ✅ 4 skill (3 đơn + 1 composition); *chỉnh skill qua app UI: chưa — M2+* |
+| Store đầy đủ: 3 record type + search | ✅ (exact + anyWord relevance); *write gate/learning gate (AD-20): contract chờ consumer — Reflection thuộc M3* |
+| Gateway đầy đủ: retrieve→assemble→budget→cache→route→đo | ✅; *compression = trim v1; tier routing chờ ≥2 model thật* |
+| Execution: composition + retry khai báo | ✅ composition (AD-36); Gateway retry ✅; *per-skill RetryPolicy field chưa consumed*; **parallel + resume: HOÃN CÓ DUYỆT** — điều kiện kích hoạt ghi tại DEVELOPMENT_PLAN |
+| Kernel: resource order + Confidence + gates | ✅ reuse→tool→skill→AI (test); *Confidence: High/Low dùng, Medium chờ; ApprovalGate wired nhưng chưa được tham vấn — chưa tồn tại risky action (publish/delete thuộc M2+/M6)* |
+| Tool Layer v1 | ✅ 0-AI-call có test (AD-37) |
+| "Task hoàn thành 0 AI call khi tài nguyên đáp ứng" | ✅ test vĩnh viễn (reuse + tool) |
+| "Mọi AI call qua Gateway" | ✅ cưỡng chế bằng arch rule |
+
+**ADR M1 — Decision → Evidence → Result:** AD-31 (provider cắm vào, Gateway diff = 0 dòng ở M0-6) ✅ PROVEN · AD-32/33 (arch tests + purity) ✅ PROVEN · AD-34 (suite bắt vi phạm thật ngay lần đầu) ✅ PROVEN · AD-35 (ChatService tests + import rules) ✅ PROVEN · AD-36 (composition tests 2 chiều precedence) ✅ PROVEN · AD-37 (0-AI + staleness tests) ✅ PROVEN · AD-20 (learning gate) ⏳ AWAITING CONSUMER (M3) · Superseded mới: không.
+
+**Chất lượng:** build 0/0 debug+release · 66/66 test (52 unit + 14 arch), offline, ~1.1s · baseline nội bộ: fresh **5.45ms** / reuse **3.14ms** (M0: 4.65/2.54 — +≈0.8ms là chi phí matching tool+skill và Gateway retrieval, chấp nhận ở mức ms) · security scan sạch · không god object (file lớn nhất 281 dòng) · chi phí AI tích lũy: **$0.00**.
+
+**Kết luận: M1 ĐẠT.** Các mục partial đều là *contract chờ consumer* (không phải lỗ hổng đang chảy máu), có chủ sở hữu milestone rõ. Rủi ro lớn nhất mang sang M2: UI chưa qua compiler Mac (nợ High — runbook).
 
 ## 4b. M0 Closeout & Final Verification (nghiệm thu 2026-07-02, tag `M0`)
 
@@ -133,22 +154,26 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | AD-36 | Composition = `SkillDefinition.compositionSteps` (≤5 bước); xóa struct `SkillComposition` (nguồn sự thật đôi); Kernel resolve steps trong Decide, Execution chạy tuần tự máy móc; parallel + resume hoãn có duyệt đến khi có bằng chứng — xét lại tại M1 review |
 | AD-37 | Tool Layer v1: triggerKeywords trên protocol Tool; MỘT thuật toán matching chung skill+tool; tools inject qua Kernel init (không Tool Registry — AD-17); `.tool(any Tool)` đã resolve; tool results không persist (re-run miễn phí, stale = sai); tool fail không rơi sang AI; metrics tool.run tối thiểu; arch rule: Core/Tools là leaf adapter |
 
-## 6. Vấn đề đã biết & Nợ kỹ thuật (Known Issues / Tech Debt)
+## 6. Nợ kỹ thuật (phân loại lại tại M1 Review — Critical/High/Medium/Low)
+
+**Critical: 0.**
 
 | Mức | Mô tả | Kế hoạch |
 |---|---|---|
-| Minor | Chưa có UI nhập API key — key chỉ vào được vault bằng tay/dev | Settings tối thiểu (1 SecureField → vault) ở M1-0 hoặc M2; điều kiện của token baseline |
-| Minor | `InMemorySecretsVault` (Infrastructure) giờ không có người dùng production (Keychain vault đã thay ở App) — giữ cho test tương lai của consumer SecretsVault | Xóa nếu đến M2 vẫn không có test nào dùng |
-| Minor | Store search là substring match ngây thơ; FileBackedStore đọc lại toàn bộ file mỗi lần search (chưa cache/index) | Relevance ranking + tối ưu đọc ở M1, khi có số liệu thật |
-| Minor | File working-context hết hạn chỉ bị lọc khi đọc, chưa xóa vật lý | Cleanup policy ở M1 (policies.json đã có TTL) |
-| Minor | `InMemoryResponseCache` không giới hạn kích thước, không TTL | Eviction khi có bằng chứng cần (đo ở M1); interface đã là seam thay thế |
-| Minor | Routing theo tier chưa hoạt động — Gateway luôn dùng `defaultModelID`; `AIRequest.preferredTier` là contract đã khai báo chưa tiêu thụ | Kích hoạt khi có ≥ 2 model thật trong catalog (sau AD-31) |
-| Minor | Skill matching bằng keyword contains — goal chứa từ khóa trong ngữ cảnh phủ định ("don't summarize") vẫn khớp | Chấp nhận v1 (fallback rẻ, template sai không phá kết quả); nâng cấp khi có bằng chứng từ sử dụng thật |
-| Minor | Reuse có phạm vi theo project — goal giống nhau ở project khác vẫn gọi AI (đúng Project Isolation, nhưng chưa có cross-project reuse có kiểm soát) | Cân nhắc ở M3 (Reuse pipeline hoàn chỉnh) với policy rõ ràng |
-| Minor | Scanner của Architecture Test cắt `//` theo dòng — chuỗi literal chứa `//` (URL) có thể tạo false negative | Chấp nhận cho guardrail; nâng cấp parser khi có false negative thật |
-| Minor | Build iOS app (`project.yml`) chưa được kiểm chứng vì môi trường không có macOS/Xcode; App/ + Presentation/ chưa qua compiler (ChatView/ChatViewModel mới ở M0-5) — logic đáng test đã dồn về ChatService (SPM, đã test) | Xác minh `xcodegen generate` + build simulator lần đầu trên Mac (mục của M0-6) |
-| Ghi chú | `EventBus` (Infrastructure) hiện chưa có consumer production — Kernel publish thẳng vào ChatService (một consumer duy nhất ở M0) | Bus tham gia khi có nhiều consumer thật: Dashboard (M2), Modules (M4). Giữ làm contract, không xóa (quy tắc ổn định kiến trúc) |
-| Ghi chú | Chưa có số liệu token baseline | Đo từ AI call thật đầu tiên (AD-15) — thuộc M0-6 theo AD-31 |
+| **High** | 8 file SwiftUI (App/ + Presentation/) tích tụ 6 milestone chưa qua compiler (môi trường không có Mac); mới qua `swiftc -parse` | **[USER] chạy `Docs/RUNBOOK_M1-0.md`** trước hoặc song song đầu M2 — M2 là milestone toàn UI, xây tiếp trên nền chưa compile là rủi ro kép |
+| Medium | Token/latency/cost baseline provider thật chưa có (cần API key) | Phần C của runbook; không giả số liệu |
+| Medium | Store write gate / learning gate (AD-20) là contract chưa enforce bằng code | M3 (Reflection/memory update là consumer đầu tiên) |
+| Medium | Tier routing chưa hoạt động (`preferredTier` chưa được Gateway tiêu thụ — 1 model thật) | Kích hoạt khi có ≥2 model thật trong catalog |
+| Medium | `SkillDefinition.retryPolicy` (per-skill) chưa được consumed — Gateway retry là mức duy nhất đang chạy | Kích hoạt cùng tool/AI failure patterns thật (M2+); nếu M3 vẫn không có consumer → cân nhắc xóa field (AD-28 hai chiều) |
+| Low | Store search đọc lại toàn bộ file mỗi lần (chưa cache/index); relevance = word-hit v1 | Tối ưu ở M3/M7 khi có số liệu thật |
+| Low | Working-context hết hạn chỉ lọc khi đọc, chưa xóa vật lý | Cleanup policy M1→M3 (policies.json đã có TTL) |
+| Low | `InMemoryResponseCache` không bound/TTL | Eviction khi có bằng chứng; interface là seam |
+| Low | Keyword matching khớp cả ngữ cảnh phủ định ("don't summarize") | Chấp nhận v1 — fallback rẻ; nâng cấp theo sử dụng thật |
+| Low | Reuse per-project (đúng Project Isolation; chưa có cross-project reuse có kiểm soát) | M3 với policy rõ |
+| Low | Arch-test scanner cắt `//` theo dòng — string literal chứa URL có thể false-negative | Nâng parser khi có ca thật |
+| Low | `InMemorySecretsVault` + `EventBus` chưa có consumer production | Vault: xóa nếu hết M2 không dùng; Bus: consumer thật ở Dashboard (M2)/Modules (M4) — giữ làm contract |
+
+*(Đã xử lý & gỡ khỏi bảng: UI nhập API key — SettingsView M1-0; InMemoryStore — xóa M0-2; reuse-snippet — trả M0-4B; ContextPriority/`Kernel.skills` dead contract — tiêu thụ M1-2/M1-1.)*
 
 ## 7. Rủi ro đang theo dõi
 
