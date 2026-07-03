@@ -132,7 +132,9 @@
 
 ## 5. MODULES — nghiệp vụ (plugin)
 
-**Module contract (AD-21):** mỗi module tự chứa `Manifest / UI / Skills / Templates / Config / Docs / Tests`; đăng ký skill vào Skill Registry với capability tags; giao tiếp qua Event Bus + capability, không phụ thuộc module khác; 4 trạng thái: installed / enabled / disabled (≈0 tài nguyên) / archived (không nạp runtime); tái dùng 100% Core — module cần sửa Core là red flag kiến trúc.
+**Module Contract v1 — ĐÃ SHIP tại M4-0 (AD-44):** module = `ModuleManifest` (id/version/purpose/**skills**) — thuần DATA, target `OsirisModules` chỉ import OsirisCore; skill namespace theo module id (precondition cưỡng chế); composition root là nơi DUY NHẤT biết module nào được cài, đăng ký skills vào MỘT Skill Registry chung; module không bao giờ thấy Kernel/Gateway/Store/Infrastructure (arch rules); Core không bao giờ biết module cụ thể (arch rule cấm cả tên module trong Core). **Tái dùng 100% Core — module cần sửa Core là red flag kiến trúc.**
+
+*Tầm nhìn đầy đủ (AD-21) — thêm theo bằng chứng khi module thật cần:* UI/Templates/Config/Docs riêng theo module; 4 trạng thái installed/enabled/disabled/archived; giao tiếp qua Event Bus + capability (chưa module nào cần event — đếm bằng chứng cho quyết định EventBus tại M4 review).
 
 | Module | Milestone | Capabilities chính (dạng tag) |
 |---|---|---|

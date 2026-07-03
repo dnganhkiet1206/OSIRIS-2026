@@ -9,15 +9,15 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M3 — Intelligence Layer: ĐÃ NGHIỆM THU 2026-07-03** (tag `M3` local; M0/M1/M2/M3 đều chờ push tag khi merge) |
-| Task hiện tại | **M3-4 (Milestone Review) ✅ — M3 ĐẠT (code-complete)** · kế tiếp: M4-0 YouTube Module bootstrap (xem `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN · **[USER] runbook M1-0 vẫn chờ — nợ High, ngày càng đắt** |
+| Giai đoạn | **M4 — YouTube Module (reference implementation), đang triển khai** (M0→M3 nghiệm thu; tag local chờ push khi merge) |
+| Task hiện tại | **M4-0 (Module Contract v1 + YouTube skeleton) ✅ hoàn thành — AD-44** · kế tiếp: M4-1 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High, ngày càng đắt** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **16 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 114/114 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 121/121 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
-M3 đã nghiệm thu. Kế tiếp: M4 — YouTube Module (reference implementation, AD-21) khi user xác nhận. Song song: user chạy `Docs/RUNBOOK_M1-0.md` (Mac build + key + baseline thật) — nợ High; 2 mục M3 hoãn (reuse-nới, cache-tối-ưu) kích hoạt bằng chính dữ liệu từ runbook.
+M4 — YouTube Module: module nghiệp vụ production-quality đầu tiên = khuôn mẫu bắt buộc cho mọi module sau (AD-21); contract v1 đã ship tại M4-0 (AD-44). Song song: user chạy `Docs/RUNBOOK_M1-0.md` — nợ High; 2 mục M3 hoãn (reuse-nới, cache-tối-ưu) kích hoạt bằng chính dữ liệu từ runbook + sử dụng M4.
 
 ## 3. Việc đã hoàn thành (Completed)
 
@@ -60,10 +60,12 @@ M3 đã nghiệm thu. Kế tiếp: M4 — YouTube Module (reference implementati
 
 - [x] **M3-3 — Deliverable Templates & Executive Summary v1** (AD-43): Executive Summary = cấu trúc output KHAI BÁO, không phải component — scaffold là DATA trong `Config/deliverable-scaffold.md` (test cưỡng chế ≤80 token + phải chứa "Executive Summary"), composition root inject vào Execution như chuỗi khai báo (KHÔNG hardcode trong Kernel/Execution — sửa format = sửa 1 file Config, 0 dòng code); Execution nối máy móc sau template + previous-step; áp dụng đúng nơi sinh deliverable: `.ai` + BƯỚC CUỐI composition (bước giữa = nguyên liệu, có test), plain-AI không skill cũng nhận (user không cần biết skill tồn tại); `.reuse` trả nguyên văn/`.tool` không AI — không re-format; default `nil` → prompt byte-identical trước M3-3 (zero regression by construction — 0 test cũ phải sửa); Kernel/Gateway/Store không chạm; KHÔNG Summary/Report/Formatter Engine; 7 test mới (6 template + 1 shipped-config).
 
+- [x] **M4-0 — Module Contract v1 + YouTube Module skeleton** (AD-44): `ModuleManifest` (Core/Modules/Contracts) — id/version/purpose/skills, thuần DATA, registry thứ hai theo AD-17 là DESCRIPTOR không phải engine; skill namespace theo module id (precondition structural — không collision); target SPM `OsirisModules` CHỈ depend OsirisCore (compiler: Core không thể biết module); composition root là nơi DUY NHẤT biết module cài đặt (`installedModules`), merge skills vào MỘT registry chung; **YouTube module v0** (`youtube.idea-generation`, `youtube.script-outline` — thuần data, overlapping-phrase keywords thắng generic skill 2-1 có test); **3 arch rule mới/siết** (18 tổng): Modules chỉ import OsirisCore (siết từ Core+Infra), Modules-are-data-only (cấm Kernel/Gateway/Store/Execution/I-O), Core/App/Infra/Presentation cấm nhắc tên module cụ thể; **KHÔNG Plugin Engine/Module Manager/Extension Framework**; bằng chứng "thêm module không sửa Core": `git status Core/` = chỉ THÊM file contract mới, 0 file sửa; EventBus evidence bắt đầu đếm: module v1 KHÔNG cần events; 5 test module mới + zero regression; 121/121.
+
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**.
-2. **M4-0 — YouTube Module bootstrap** (chi tiết: `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN mở M4.
+1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High** (M4 chạy trên nền thật → giá trị runbook tăng thêm).
+2. **M4-1 — YouTube Module: mảng nghiệp vụ đầu tiên đầy đủ** (chi tiết: `NEXT_TASK.md`).
 
 ## 4e. M3 Closeout (nghiệm thu 2026-07-03, tag `M3`)
 
@@ -235,6 +237,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | AD-41 | Reflection v1 deterministic (0 AI/0 token) sinh MemoryCandidate → WriteGate (policy từ config, điểm quyết định duy nhất, không bypass — arch rule) → Store persist; đích WC-TTL; Knowledge đóng; AI-reflection cấm đến khi trả lời 4 câu bằng chứng; AD-20 PROVEN |
 | AD-42 | Smart Planning v1 deterministic: `ComplexityEstimate` pure (số từ/tín hiệu khối lượng/số mệnh đề — 0 AI/0 token/0 lịch sử); tier được earn (skill > estimate), Gateway chỉ tiêu thụ; Confidence Medium consumer đầu tiên — assumption qua đúng WriteGate (không đường ghi thứ hai); extension-by-data mở, extension-by-algorithm đóng có chủ đích |
 | AD-43 | Executive Summary = cấu trúc output khai báo, không phải component: scaffold là data trong Config (≤80 token, test cưỡng chế), inject vào Execution, nối máy móc vào `.ai` + bước cuối composition; reuse/tool/bước giữa không scaffold; default nil = zero regression; không Summary/Report/Formatter Engine |
+| AD-44 | Module Contract v1: module LÀ manifest — thuần data (id/version/purpose/skills); target OsirisModules chỉ depend OsirisCore; skill namespace structural theo module id; composition root duy nhất biết module cài đặt; 3 lớp cưỡng chế (compiler + 2 nhóm arch rule); Core không bao giờ biết module cụ thể; không Plugin Engine/Module Manager |
 
 ## 6. Nợ kỹ thuật (phân loại lại tại M1 Review — Critical/High/Medium/Low)
 

@@ -15,6 +15,7 @@ let package = Package(
         .library(name: "OsirisCore", targets: ["OsirisCore"]),
         .library(name: "OsirisInfrastructure", targets: ["OsirisInfrastructure"]),
         .library(name: "OsirisApplication", targets: ["OsirisApplication"]),
+        .library(name: "OsirisModules", targets: ["OsirisModules"]),
     ],
     targets: [
         // Dependency direction is enforced by target boundaries:
@@ -37,10 +38,25 @@ let package = Package(
             dependencies: ["OsirisCore"],
             path: "Application"
         ),
+        // Modules (AD-44): data behind the Module Contract. Depends on
+        // OsirisCore ONLY — the compiler makes "module knows Core types"
+        // one-way; Architecture Tests keep it to contract data types.
+        // Core never depends on this target: Core cannot know modules.
+        .target(
+            name: "OsirisModules",
+            dependencies: ["OsirisCore"],
+            path: "Modules",
+            exclude: ["README.md"]
+        ),
         .testTarget(
             name: "OsirisCoreTests",
             dependencies: ["OsirisCore"],
             path: "Tests/CoreTests"
+        ),
+        .testTarget(
+            name: "OsirisModuleTests",
+            dependencies: ["OsirisModules", "OsirisCore", "OsirisInfrastructure"],
+            path: "Tests/ModuleTests"
         ),
         .testTarget(
             name: "OsirisInfrastructureTests",

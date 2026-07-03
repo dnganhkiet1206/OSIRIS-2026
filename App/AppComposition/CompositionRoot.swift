@@ -2,6 +2,7 @@ import Foundation
 import OsirisApplication
 import OsirisCore
 import OsirisInfrastructure
+import OsirisModules
 
 /// The single place where the object graph is wired (composition root).
 /// Nothing else constructs Core components directly. Behavior comes from
@@ -50,7 +51,14 @@ enum CompositionRoot {
         // multi-consumer audience (M2-4): chat status and the dashboard's
         // activity strip. Value re-assessed at M4 when modules subscribe.
         let events = EventBus<ExecutionEvent>()
-        let skillRegistry = InMemorySkillRegistry(registering: GenericSkills.all)
+        // Modules contribute skills as data through their manifests
+        // (AD-44); one registry, one matching algorithm — module skills
+        // and built-ins are indistinguishable to the Kernel. This list is
+        // the ONLY place that knows which modules are installed.
+        let installedModules: [ModuleManifest] = [YouTubeModule.manifest]
+        let skillRegistry = InMemorySkillRegistry(
+            registering: GenericSkills.all + installedModules.flatMap(\.skills)
+        )
         let kernel = Kernel(
             skills: skillRegistry,
             tools: [CurrentDateTimeTool()],

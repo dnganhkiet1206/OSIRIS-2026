@@ -263,21 +263,50 @@ final class ArchitectureRulesTests: XCTestCase {
         )
     }
 
-    // MARK: Module isolation (AD-19, AD-21) — active once modules exist
+    // MARK: Module isolation (AD-19, AD-21, AD-44) — strengthened at M4-0:
+    // modules were allowed OsirisCore+OsirisInfrastructure before any module
+    // existed; the Module Contract narrows this to OsirisCore only.
 
-    func testModulesImportOnlyCoreAndInfrastructure() {
-        let allowed: Set<String> = ["OsirisCore", "OsirisInfrastructure"]
+    func testModulesImportOnlyCore() {
         let regex = try! NSRegularExpression(pattern: #"(?m)^import (Osiris\w+)"#)
         for source in sources(under: "Modules/") {
             let range = NSRange(source.content.startIndex..., in: source.content)
             for match in regex.matches(in: source.content, range: range) {
                 let name = (source.content as NSString).substring(with: match.range(at: 1))
-                XCTAssertTrue(
-                    allowed.contains(name),
-                    "AD-19: modules never import each other — \(source.relativePath) imports \(name)"
+                XCTAssertEqual(
+                    name, "OsirisCore",
+                    "AD-44: modules see only the Module Contract surface (OsirisCore data types) — \(source.relativePath) imports \(name)"
                 )
             }
         }
+    }
+
+    // MARK: Modules are data behind the contract (AD-44, added M4-0)
+
+    func testModulesAreDataOnly() {
+        assertNoMatch(
+            sources(under: "Modules/"),
+            pattern: #"\b(Kernel|AIGateway|AIProvider|ExecutionEngine|ExecutionPlan|WriteGate|MemoryCandidate|EventBus|LocalStorage|FileStorage|URLSession|FileManager|UserDefaults)\b"#,
+            rule: "AD-44: a module is data behind the Module Contract — it never touches the Kernel, Gateway, Store machinery, Execution, Infrastructure or I/O"
+        )
+        // `Store` needs word-boundary care separate from the list above
+        // because FileBackedStore would also match \bStore\b via substring
+        // patterns; keep it explicit and exact.
+        assertNoMatch(
+            sources(under: "Modules/"),
+            pattern: #"\bStore\b"#,
+            rule: "AD-44: modules never see the Store"
+        )
+    }
+
+    // MARK: Core never knows concrete modules (AD-44, added M4-0)
+
+    func testOnlyModulesAndCompositionRootKnowConcreteModules() {
+        assertNoMatch(
+            sources(notUnder: ["Modules/", "App/"]),
+            pattern: #"(?i)youtube"#,
+            rule: "AD-44: Core/Application/Infrastructure/Presentation never reference a concrete module — only Modules/ and the composition root do"
+        )
     }
 }
 

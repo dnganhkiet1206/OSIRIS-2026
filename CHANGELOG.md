@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [Unreleased — M4]
+
+### 2026-07-03 — M4-0: Module Contract v1 + YouTube Module skeleton — module là data, không phải plugin (AD-44)
+
+- **Module Contract v1 nhỏ nhất có thể:** `ModuleManifest` (Core/Modules/Contracts) = id/version/purpose/**skills** — hết. Registry thứ hai được phép theo AD-17 và nó là DESCRIPTOR thuần data, không phải engine. Skills là kênh đóng góp duy nhất v1 (skill đã chở đủ mọi thứ theo AD-28); kênh mới chỉ thêm khi module thật không ship được nếu thiếu. Namespace skill theo module id là precondition structural — không thể collision với `core.*` hay module khác.
+- **Ranh giới 3 lớp cưỡng chế:** (1) compiler — target SPM `OsirisModules` CHỈ depend OsirisCore, Core không depend Modules (Core về mặt cấu trúc KHÔNG THỂ biết module); (2) arch rule siết: Modules chỉ import OsirisCore (trước đây cho phép cả Infrastructure — siết là hợp lệ, chỉ nới mới cấm) + rule mới Modules-are-data-only (cấm Kernel/Gateway/Store/Execution/EventBus/I-O); (3) rule mới: Core/Application/Infrastructure/Presentation cấm nhắc tên module cụ thể (`youtube` chỉ được xuất hiện trong Modules/ và composition root). 18 arch rule tổng.
+- **YouTube module v0 (reference, AD-21):** 2 skill thuần data (`youtube.idea-generation`, `youtube.script-outline`); overlapping-phrase keywords ("video script" + "script" = 2 hit) thắng generic skill 1-hit một cách deterministic — cùng cơ chế composition M1-3, không đổi matcher. Composition root: `installedModules` là nơi DUY NHẤT biết module nào được cài; merge skills vào MỘT registry.
+- **Bằng chứng "thêm module không sửa Core":** diff Core/ = chỉ THÊM `Core/Modules/Contracts/ModuleManifest.swift` (chính contract — deliverable một-lần của M4-0), 0 file Core bị SỬA; module #2 sẽ là 0 dòng Core, 0 dòng contract.
+- EventBus evidence (deadline M4): module đầu tiên KHÔNG cần events — điểm dữ liệu đầu tiên cho quyết định giữ/xóa.
+- 5 test module mới (manifest namespaced, no-collision, end-to-end qua lifecycle nguyên trạng, generic không bị hijack, precedence 2-1). Tổng **121/121 pass**, 0 warning, offline.
+
 ## [M3] — 2026-07-03 (tag `M3`)
 
 ### M3-4: Milestone Review & Acceptance

@@ -50,6 +50,8 @@ OSIRIS/
 │   │   ├── Registry/             # Đăng ký, tra cứu theo capability tag, versioning
 │   │   ├── Contracts/            # Skill schema tối thiểu (AD-28), Capability tags
 │   │   └── BuiltIn/              # Skill tổng quát (Research, Summarize, Document…)
+│   ├── Modules/
+│   │   └── Contracts/            # ModuleManifest — Module Contract v1 (AD-44), thuần data
 │   ├── Store/                    # Nguồn sự thật DUY NHẤT (AD-22)
 │   │   ├── ProjectState/         # Goal, tasks, progress, decisions, issues,
 │   │   │                         #   deliverable index (derived từ file)
@@ -98,6 +100,10 @@ OSIRIS/
 │   ├── Configuration/            # Nạp/ghi config, feature flags
 │   └── Events/                   # Event Bus: pub/sub mỏng (AD-26), progress events
 │   # KHÔNG có Networking/ — URLSession dùng trực tiếp tại consumer (AD-27)
+│
+├── Modules/                      # SPM target OsirisModules — CHỈ import OsirisCore (AD-44)
+│   └── YouTube/                  # Reference module (AD-21): manifest + skills thuần data
+│       └── YouTubeModule.swift   # ModuleManifest "youtube" + 2 skill v0
 │
 ├── Config/                       # CẤU HÌNH NGOÀI SOURCE (editable không cần sửa code)
 │   ├── preamble.md               # Vision + System Preamble tĩnh < 400 token (AD-13, AD-23)
