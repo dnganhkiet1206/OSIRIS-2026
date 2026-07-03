@@ -10,7 +10,7 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M1 — Core Runtime, đang triển khai** (M0 nghiệm thu: tag `M0` local tại `dc54059`; push tag khi merge) |
-| Task hiện tại | **M2 — User Experience, đang triển khai** · M2-4 (Dashboard v1) ✅ hoàn thành · kế tiếp: M2-5 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
+| Task hiện tại | **M2 — User Experience, đang triển khai** · M2-5 (Advanced Mode + Accessibility) ✅ hoàn thành · kế tiếp: M2-6 = M2 Review (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **14 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 66/66 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
@@ -52,10 +52,12 @@ M1 — Core Runtime: Kernel đầy đủ, hệ điều hành AI thực sự vậ
 
 - [x] **M2-4 — Dashboard v1** (AD-39): operational awareness đúng BLUEPRINT (Now / Today's usage / System / Recent activity — không chart, không %, không analytics); `DefaultAIGateway.onMetrics` — MỘT callback optional (seam quan sát duy nhất, test cũ pass nguyên trạng); `DashboardModel` (Application): metrics **session-only** (không persist — M7 quyết lịch sử), activity strip newest-first cap 10, tất cả logic testable; **EventBus có 2 consumer production đầu tiên** (chat relay + dashboard) — trả nợ từ M0-5, tái đánh giá giá trị tại M4; 5 test mới (gồm seam fire cả cache-hit).
 
+- [x] **M2-5 — Advanced Mode gate + Accessibility pass** (AD-40): toggle trong Settings, ẩn mặc định — `@AppStorage` nằm trọn trong Presentation (không cần port); **AD-40 định nghĩa ranh giới hai loại persist** (UI-pref = UserDefaults ở App/Presentation; platform data = Store) + arch rule mới cưỡng chế (15 rule); AdvancedView read-only: Skills inventory (`SkillInfo.from` — pure mapping, composition badge) + System (provider/version) — không dev-tool platform, không hành động phá hoại; accessibility: label cho nút icon-only, status combine, không fixed font; 3 test mapping + 1 arch rule.
+
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**: SwiftUI tích tụ chưa qua compiler; càng sớm càng rẻ.
-2. **M2-5 — Advanced Mode gate + Accessibility pass** (chi tiết: `NEXT_TASK.md`), sau đó M2-6 = M2 Review.
+1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**: SwiftUI tích tụ chưa qua compiler; càng sớm càng rẻ (M2 sắp nghiệm thu — mục simulator sẽ lại PENDING nếu chưa chạy).
+2. **M2-6 — M2 Review** (chi tiết: `NEXT_TASK.md`): nghiệm thu M2 theo DoD; xử các câu treo (tên port ProjectDirectory; InMemorySecretsVault hết M2 không dùng → xóa; ChatViewModel 4 deps — root restructure?); tag `M2`; đề xuất M3.
 
 ## 4c. M1 Closeout (nghiệm thu 2026-07-02, tag `M1`)
 
@@ -163,6 +165,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | AD-37 | Tool Layer v1: triggerKeywords trên protocol Tool; MỘT thuật toán matching chung skill+tool; tools inject qua Kernel init (không Tool Registry — AD-17); `.tool(any Tool)` đã resolve; tool results không persist (re-run miễn phí, stale = sai); tool fail không rơi sang AI; metrics tool.run tối thiểu; arch rule: Core/Tools là leaf adapter |
 | AD-38 | Quản lý project = state management (không phải goal execution): closure-port `ProjectDirectory` từ composition root xuống Store; execution results vẫn chỉ qua vòng đời Kernel; ProjectState.name decode-fallback về id |
 | AD-39 | Gateway.onMetrics: MỘT callback optional phát metrics mỗi request — Gateway không aggregate/persist; DashboardModel session-only (M7 quyết lịch sử); EventBus 2 consumer đầu tiên, tái đánh giá tại M4 |
+| AD-40 | Ranh giới persist: UI preferences = UserDefaults/@AppStorage, chỉ App/Presentation (arch rule cưỡng chế); platform data = Store (AD-32 nguyên vẹn) |
 
 ## 6. Nợ kỹ thuật (phân loại lại tại M1 Review — Critical/High/Medium/Low)
 

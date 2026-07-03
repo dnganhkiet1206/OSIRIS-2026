@@ -7,13 +7,15 @@ import OsirisApplication
 /// gets restructured properly).
 struct ChatView: View {
     private enum SidebarItem: Hashable {
-        case chat, search, dashboard, project(String), settings
+        case chat, search, dashboard, advanced, project(String), settings
     }
 
     @State private var model: ChatViewModel
     @State private var selection: SidebarItem? = .chat
     @State private var isNamingProject = false
     @State private var newProjectName = ""
+    /// UI preference only (AD-40) — never platform data.
+    @AppStorage("osiris.advancedMode") private var advancedMode = false
     private let settings: ProviderSettings
 
     init(model: ChatViewModel, settings: ProviderSettings) {
@@ -41,6 +43,10 @@ struct ChatView: View {
                         Label("New Project", systemImage: "plus")
                     }
                 }
+                if advancedMode {
+                    Label("Advanced", systemImage: "wrench.and.screwdriver")
+                        .tag(SidebarItem.advanced)
+                }
                 Label("Settings", systemImage: "gearshape")
                     .tag(SidebarItem.settings)
             }
@@ -53,6 +59,8 @@ struct ChatView: View {
                 SearchResultsView(model: model) { selection = .chat }
             case .dashboard:
                 DashboardView(model: model)
+            case .advanced:
+                AdvancedView(model: model)
             default:
                 VStack(spacing: 0) {
                     transcript
@@ -148,6 +156,7 @@ struct ChatView: View {
                 Image(systemName: "arrow.up.circle.fill")
                     .font(.title2)
             }
+            .accessibilityLabel("Send goal")
             .disabled(model.draft.trimmingCharacters(in: .whitespaces).isEmpty || model.isWorking)
         }
         .padding()

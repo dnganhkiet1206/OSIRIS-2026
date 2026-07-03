@@ -15,6 +15,8 @@ struct AppDependencies {
     let projects: ProjectDirectory
     let settings: ProviderSettings
     let dashboard: DashboardModel
+    /// Read-only skill inventory for the Advanced panel (M2-5).
+    let skillList: @Sendable () async -> [SkillInfo]
 }
 
 enum CompositionRoot {
@@ -48,8 +50,9 @@ enum CompositionRoot {
         // multi-consumer audience (M2-4): chat status and the dashboard's
         // activity strip. Value re-assessed at M4 when modules subscribe.
         let events = EventBus<ExecutionEvent>()
+        let skillRegistry = InMemorySkillRegistry(registering: GenericSkills.all)
         let kernel = Kernel(
-            skills: InMemorySkillRegistry(registering: GenericSkills.all),
+            skills: skillRegistry,
             tools: [CurrentDateTimeTool()],
             engine: DefaultExecutionEngine(gateway: gateway, logger: logger),
             store: store,
@@ -63,7 +66,8 @@ enum CompositionRoot {
             chat: service,
             projects: makeProjectDirectory(store: store),
             settings: settings,
-            dashboard: dashboard
+            dashboard: dashboard,
+            skillList: { await skillRegistry.allSkills().map(SkillInfo.from) }
         )
     }
 

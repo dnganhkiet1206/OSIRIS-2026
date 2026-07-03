@@ -13,7 +13,8 @@ struct OsirisApp: App {
                 model: ChatViewModel(
                     service: dependencies.chat,
                     projects: dependencies.projects,
-                    dashboard: dependencies.dashboard
+                    dashboard: dependencies.dashboard,
+                    skillList: dependencies.skillList
                 ),
                 settings: dependencies.settings
             )

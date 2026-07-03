@@ -233,6 +233,16 @@ final class ArchitectureRulesTests: XCTestCase {
         }
     }
 
+    // MARK: UI preference boundary (AD-40, added M2-5 — rules are only ever added)
+
+    func testUIPreferencesStayInPresentationAndApp() {
+        assertNoMatch(
+            sources(under: "Core/") + sources(under: "Application/") + sources(under: "Infrastructure/"),
+            pattern: #"\b(UserDefaults|AppStorage)\b"#,
+            rule: "AD-40: UserDefaults/@AppStorage are UI preferences — App/Presentation only; platform data lives in the Store"
+        )
+    }
+
     // MARK: Tool layer boundary (AD-37, added M1-4 — rules are only ever added)
 
     func testToolsAreLeafAdapters() {

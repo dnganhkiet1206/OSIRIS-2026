@@ -46,13 +46,27 @@ final class ChatViewModel {
     private let service: ChatService
     private let projectDirectory: ProjectDirectory
     private let dashboard: DashboardModel
+    private let skillList: @Sendable () async -> [SkillInfo]
 
     private(set) var dashboardSnapshot: DashboardSnapshot?
+    private(set) var skillInfos: [SkillInfo] = []
 
-    init(service: ChatService, projects: ProjectDirectory, dashboard: DashboardModel) {
+    init(
+        service: ChatService,
+        projects: ProjectDirectory,
+        dashboard: DashboardModel,
+        skillList: @escaping @Sendable () async -> [SkillInfo] = { [] }
+    ) {
         self.service = service
         self.projectDirectory = projects
         self.dashboard = dashboard
+        self.skillList = skillList
+    }
+
+    func loadSkills() {
+        Task { @MainActor in
+            skillInfos = await skillList()
+        }
     }
 
     func loadDashboard() {

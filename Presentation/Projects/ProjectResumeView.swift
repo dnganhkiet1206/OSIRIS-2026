@@ -42,6 +42,7 @@ struct ProjectResumeView: View {
                         .buttonStyle(.plain)
                         .padding(8)
                         .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
+                        .accessibilityLabel("Open deliverable: \(deliverable.preview)")
                     }
                 }
             }

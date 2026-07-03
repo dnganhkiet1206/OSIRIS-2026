@@ -9,6 +9,8 @@ struct SettingsView: View {
     @State private var draftKey = ""
     @State private var status: ProviderStatus = .offline
     @State private var feedback: String?
+    /// UI preference only (AD-40) — never platform data.
+    @AppStorage("osiris.advancedMode") private var advancedMode = false
 
     var body: some View {
         Form {
@@ -26,6 +28,12 @@ struct SettingsView: View {
                 Text("AI Provider")
             } footer: {
                 Text("Changes apply after the app restarts. Without a key, OSIRIS runs in offline mode.")
+            }
+
+            Section {
+                Toggle("Advanced Mode", isOn: $advancedMode)
+            } footer: {
+                Text("Shows read-only developer panels in the sidebar. Off by default — normal use never needs it.")
             }
 
             if let feedback {

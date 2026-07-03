@@ -2,6 +2,13 @@
 
 ## [Unreleased — M2]
 
+### 2026-07-02 — M2-5: Advanced Mode gate + Accessibility pass (AD-40)
+
+- **AD-40 — ranh giới hai loại persist:** UI preferences (`@AppStorage`/UserDefaults) chỉ ở App/Presentation, không bao giờ là input cho Kernel/Gateway/Store; platform data vẫn chỉ qua Store (AD-32 nguyên vẹn). Cưỡng chế bằng arch rule mới (tổng 15). Nhờ đó Advanced Mode toggle nằm trọn trong Presentation — zero port.
+- Advanced Mode: toggle trong Settings (ẩn mặc định, footer giải thích); sidebar hiện mục Advanced khi bật; `AdvancedView` read-only: Skills inventory (id/version/purpose/composition badge — `SkillInfo.from` pure mapping từ registry qua closure trong AppDependencies) + System (provider status, app version). Không dev-tool platform, không hành động phá hoại; viewer đầy đủ chờ nhu cầu thật.
+- Accessibility pass: `accessibilityLabel` cho nút icon-only (Send goal, Open deliverable), ExecutionStatus combine element; rà soát không fixed font size (Dynamic Type tự do); xác minh mắt thường thuộc Mac runbook.
+- 3 test SkillInfo mapping + arch rule mới. Tổng 87/87 pass, 0 warning, offline; UI qua `swiftc -parse`.
+
 ### 2026-07-02 — M2-4: Dashboard v1 — operational awareness (AD-39)
 
 - Dashboard đúng BLUEPRINT: Now (project, current goal, last completed, count) / Today's usage (requests, tokens in·out, cost, cache hits) / System (provider Connected/Offline) / Recent activity (≤6 dòng). **Không chart, không trends, không analytics, không %.**
