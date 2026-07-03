@@ -30,7 +30,10 @@ final class ModuleContractTests: XCTestCase {
                 skill.id.rawValue.hasPrefix("youtube."),
                 "Module skills are structurally namespaced — \(skill.id.rawValue)"
             )
-            XCTAssertNotNil(skill.promptTemplate, "v1 module skills are prompt-driven data")
+            XCTAssertTrue(
+                skill.promptTemplate != nil || !(skill.compositionSteps ?? []).isEmpty,
+                "Module skills are data: prompt-driven or a declared composition (AD-36) — \(skill.id.rawValue)"
+            )
             XCTAssertNotNil(skill.triggerKeywords, "Unmatched skills would be dead data")
         }
     }

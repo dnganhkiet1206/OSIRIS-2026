@@ -10,10 +10,10 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M4 — YouTube Module (reference implementation), đang triển khai** (M0→M3 nghiệm thu; tag local chờ push khi merge) |
-| Task hiện tại | **M4-0 (Module Contract v1 + YouTube skeleton) ✅ hoàn thành — AD-44** · kế tiếp: M4-1 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High, ngày càng đắt** |
+| Task hiện tại | M4-0 ✅ · **M4-1 (Idea → Script pipeline, composition xuyên namespace) ✅ hoàn thành** · kế tiếp: M4-2 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High, ngày càng đắt** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **16 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 121/121 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 127/127 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -62,10 +62,12 @@ M4 — YouTube Module: module nghiệp vụ production-quality đầu tiên = kh
 
 - [x] **M4-0 — Module Contract v1 + YouTube Module skeleton** (AD-44): `ModuleManifest` (Core/Modules/Contracts) — id/version/purpose/skills, thuần DATA, registry thứ hai theo AD-17 là DESCRIPTOR không phải engine; skill namespace theo module id (precondition structural — không collision); target SPM `OsirisModules` CHỈ depend OsirisCore (compiler: Core không thể biết module); composition root là nơi DUY NHẤT biết module cài đặt (`installedModules`), merge skills vào MỘT registry chung; **YouTube module v0** (`youtube.idea-generation`, `youtube.script-outline` — thuần data, overlapping-phrase keywords thắng generic skill 2-1 có test); **3 arch rule mới/siết** (18 tổng): Modules chỉ import OsirisCore (siết từ Core+Infra), Modules-are-data-only (cấm Kernel/Gateway/Store/Execution/I-O), Core/App/Infra/Presentation cấm nhắc tên module cụ thể; **KHÔNG Plugin Engine/Module Manager/Extension Framework**; bằng chứng "thêm module không sửa Core": `git status Core/` = chỉ THÊM file contract mới, 0 file sửa; EventBus evidence bắt đầu đếm: module v1 KHÔNG cần events; 5 test module mới + zero regression; 121/121.
 
+- [x] **M4-1 — Idea → Script pipeline, composition xuyên namespace**: `youtube.script-generation` (full script, tier `.standard` khai báo — skill nặng nhất module, AD-42 hoạt động cho module data); 2 composition thuần data: `youtube.idea-to-script` (idea → script) và `youtube.research-to-script` (**bước 1 = `core.research-outline` — built-in, resolve xuyên namespace CHỈ bằng SkillID qua registry chung: cross-namespace PROVEN bằng test captured-prompt**); **tinh chỉnh guideline data (không đổi matcher):** union keywords của composition được TUYỂN CHỌN — bỏ keyword rộng nhất ("script") để composition chỉ thắng khi goal chứa CẢ HAI domain; goal thuần script/idea về single skill (test 1-AI-call); composition thiếu built-in step degrade về plain AI đúng luật M1-3 (test); scaffold M3-3 áp dụng nguyên trạng cho pipeline module (bước giữa raw, bước cuối có Executive Summary — test); **0 dòng sửa Core, 0 dòng sửa contract** — toàn bộ M4-1 là data + test; 6 test mới; 127/127.
+
 ## 4. Việc đang chờ (Next Tasks)
 
 1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High** (M4 chạy trên nền thật → giá trị runbook tăng thêm).
-2. **M4-1 — YouTube Module: mảng nghiệp vụ đầu tiên đầy đủ** (chi tiết: `NEXT_TASK.md`).
+2. **M4-2 — YouTube Module: SEO + Publishing Package** (chi tiết: `NEXT_TASK.md`) — hai mảng thuần prompt-data tiếp theo; câu hỏi tool-channel cho Channel Analysis để dành đến khi có bằng chứng (M4-3+).
 
 ## 4e. M3 Closeout (nghiệm thu 2026-07-03, tag `M3`)
 

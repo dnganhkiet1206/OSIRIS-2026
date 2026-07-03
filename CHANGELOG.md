@@ -2,6 +2,15 @@
 
 ## [Unreleased — M4]
 
+### 2026-07-03 — M4-1: Idea → Script pipeline — workflow là data, xuyên namespace là miễn phí
+
+- **`youtube.script-generation`**: full script ready-to-record, tier `.standard` KHAI BÁO — skill nặng nhất module tự nói lên điều đó (AD-42 hoạt động nguyên trạng cho module data).
+- **2 composition thuần data:** `youtube.idea-to-script` (idea → script, output bước 1 nuôi bước 2 — test thứ tự bằng captured prompts) và `youtube.research-to-script` — **bước 1 là `core.research-outline`, built-in resolve XUYÊN NAMESPACE chỉ bằng SkillID qua registry chung**. Không API đặc biệt, không `if YouTube`, không Workflow/Pipeline Engine, không Module Runtime — Kernel resolve steps y như M1-3.
+- **Guideline data mới (không đổi matcher):** union keywords của composition được TUYỂN CHỌN — bỏ keyword rộng nhất để composition chỉ thắng khi goal chứa CẢ HAI domain. Goal thuần script → single skill, 1 AI call (test); goal thuần idea → tie-break về idea-generation (test); goal hai domain → composition thắng 3-2 (test).
+- Composition thiếu built-in step (module cài mà không có built-ins) degrade về plain AI đúng luật M1-3 — goal vẫn hoàn thành (test). Scaffold M3-3 áp dụng nguyên trạng: bước giữa raw, bước cuối Executive Summary (test).
+- Sửa 1 assertion test M4-0 (giả định "mọi skill có promptTemplate" — tổng quát hóa thành template HOẶC compositionSteps khi composition đầu tiên vào manifest, đúng AD-36).
+- **0 dòng sửa Core, 0 dòng sửa contract.** 6 test mới. Tổng **127/127 pass**, 0 warning, offline.
+
 ### 2026-07-03 — M4-0: Module Contract v1 + YouTube Module skeleton — module là data, không phải plugin (AD-44)
 
 - **Module Contract v1 nhỏ nhất có thể:** `ModuleManifest` (Core/Modules/Contracts) = id/version/purpose/**skills** — hết. Registry thứ hai được phép theo AD-17 và nó là DESCRIPTOR thuần data, không phải engine. Skills là kênh đóng góp duy nhất v1 (skill đã chở đủ mọi thứ theo AD-28); kênh mới chỉ thêm khi module thật không ship được nếu thiếu. Namespace skill theo module id là precondition structural — không thể collision với `core.*` hay module khác.

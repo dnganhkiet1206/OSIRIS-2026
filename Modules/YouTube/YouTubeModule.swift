@@ -13,9 +13,9 @@ import OsirisCore
 public enum YouTubeModule {
     public static let manifest = ModuleManifest(
         id: ModuleID("youtube"),
-        version: "0.1.0",
+        version: "0.2.0",
         purpose: "YouTube content operations — reference module proving the Module Contract",
-        skills: [ideaGeneration, scriptOutline]
+        skills: [ideaGeneration, scriptOutline, scriptGeneration, ideaToScript, researchToScript]
     )
 
     static let ideaGeneration = SkillDefinition(
@@ -52,5 +52,65 @@ public enum YouTubeModule {
         """,
         preferredModelTier: .light,
         triggerKeywords: ["video script", "script", "kịch bản video", "kịch bản"]
+    )
+
+    /// Full ready-to-record script — declares .standard tier: long-form
+    /// spoken content is the module's heaviest single task (the declared
+    /// tier outranks the estimate, AD-42).
+    static let scriptGeneration = SkillDefinition(
+        id: SkillID("youtube.script-generation"),
+        version: "1.0.0",
+        capabilityTags: [CapabilityTag("youtube"), CapabilityTag("script-generation")],
+        purpose: "Write a complete, ready-to-record video script",
+        inputs: ["goal"],
+        outputs: ["script"],
+        promptTemplate: """
+        Write the complete, ready-to-record YouTube script for the request \
+        below: spoken-word style, an opening hook, clear section \
+        transitions, and a closing call to action. Deliver the full \
+        script, not an outline.
+
+        Request: {goal}
+        """,
+        preferredModelTier: .standard,
+        triggerKeywords: ["full script", "write the script", "viết kịch bản đầy đủ", "script"]
+    )
+
+    /// Composition keyword unions are CURATED, not blind (refines M1-3):
+    /// the broad single keyword ("script") is left out so the composition
+    /// only outscores its children when BOTH domains appear in the goal —
+    /// a pure script goal stays on the single skill, a pure idea goal
+    /// tie-breaks back to idea-generation (ascending id, M1-1).
+    static let ideaToScript = SkillDefinition(
+        id: SkillID("youtube.idea-to-script"),
+        version: "1.0.0",
+        capabilityTags: [CapabilityTag("youtube"), CapabilityTag("ideation"), CapabilityTag("script-generation")],
+        purpose: "Generate video ideas, then write the full script for the strongest one",
+        inputs: ["goal"],
+        outputs: ["script"],
+        preferredModelTier: .standard,
+        compositionSteps: [SkillID("youtube.idea-generation"), SkillID("youtube.script-generation")],
+        triggerKeywords: [
+            "video idea", "video ideas", "ý tưởng video",
+            "full script", "write the script", "viết kịch bản đầy đủ",
+        ]
+    )
+
+    /// Cross-namespace composition (AD-44 proof): step 1 is a BUILT-IN
+    /// skill referenced purely by ID — modules compose with the platform
+    /// through the shared registry, no special API, no module branching.
+    static let researchToScript = SkillDefinition(
+        id: SkillID("youtube.research-to-script"),
+        version: "1.0.0",
+        capabilityTags: [CapabilityTag("youtube"), CapabilityTag("research"), CapabilityTag("script-generation")],
+        purpose: "Research a topic first, then write a script grounded in the outline",
+        inputs: ["goal"],
+        outputs: ["script"],
+        preferredModelTier: .standard,
+        compositionSteps: [SkillID("core.research-outline"), SkillID("youtube.script-generation")],
+        triggerKeywords: [
+            "research", "nghiên cứu", "investigate",
+            "full script", "write the script", "viết kịch bản đầy đủ",
+        ]
     )
 }

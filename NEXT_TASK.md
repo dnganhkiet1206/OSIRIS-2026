@@ -10,41 +10,40 @@
 
 ## Current Task
 
-**M4-1 — YouTube content pipeline v1: Idea → Script, composition xuyên namespace**
+**M4-2 — YouTube: SEO + Publishing Package (2 mảng thuần prompt-data)**
 
 ## Objective
 
-Biến skeleton thành mảng nghiệp vụ dùng được đầu tiên và chứng minh nốt mảnh ghép mở rộng còn lại: **module composition tham chiếu skill built-in thuần bằng data** (compositionSteps = [SkillID] — đã là ID-based, về lý thuyết xuyên namespace miễn phí; M4-1 biến "lý thuyết" thành test).
+Phủ tiếp 2 capability của M4 bằng đúng khuôn M4-1 — chứng minh khuôn mẫu LẶP LẠI ĐƯỢC (điều kiện để mọi module M5 copy): `youtube.seo-package` (title options / description / tags / hashtags từ một video topic hoặc script) và `youtube.publishing-package` (composition tổng hợp: script → SEO → checklist đăng — cân nhắc steps từ skill có sẵn). Zero Core, zero contract — nếu cần gì hơn data, DỪNG hỏi user.
 
 ## Phạm vi
 
-1. **`youtube.script-generation`** — skill mới: script đầy đủ (không phải outline) từ một chủ đề/idea; template nghiệp vụ thật; keywords không giẫm `youtube.script-outline` (outline vs full script — cân nhắc keywords cẩn thận, test precedence).
-2. **`youtube.idea-to-script`** — composition trong manifest: steps tham chiếu MIX (`youtube.idea-generation` → `youtube.script-generation`); nếu thấy giá trị hơn, một composition dùng `core.research-outline` làm bước 1 để chứng minh xuyên namespace core↔module. Trigger = hợp keywords bước con (cơ chế M1-3 nguyên trạng).
-3. **Kiểm tra scaffold M3-3 trên module path:** bước cuối composition module nhận Executive Summary scaffold (test có sẵn pattern — thêm 1 assert là đủ).
-4. **Không làm:** chưa Channel Analysis/SEO/Thumbnail/Shorts/Publishing (M4-2+); không UI module; không đổi contract trừ khi bằng chứng buộc (khi đó DỪNG hỏi user — contract vừa ship, đổi sớm là red flag).
+1. **`youtube.seo-package`** — skill prompt-data: output có cấu trúc (titles/description/tags); keywords: "seo", "title", "tags", "mô tả video"… — kiểm tra không giẫm generic + skill youtube hiện có (precedence test).
+2. **`youtube.publishing-package`** — composition ≤3 bước từ skill CÓ SẴN (vd script-generation → seo-package; hoặc thêm checklist prompt-skill nhỏ nếu cần bước 3 — Năm Câu Hỏi trước khi thêm); union keywords tuyển chọn theo guideline M4-1.
+3. **Đường AI Cost:** mỗi composition thêm bước = thêm AI call — ghi rõ trong docs skill purpose để user hiểu chi phí; không auto-chain quá 3 bước (BLUEPRINT: composition <5, dưới 3 ưu tiên direct).
+4. **Không làm:** Channel Analysis / Thumbnail / Shorts (M4-3+); đặc biệt Channel Analysis cần DỮ LIỆU THẬT từ kênh — sẽ đặt câu hỏi tool-contribution-channel cho contract, để dành đến khi đó với bằng chứng đầy đủ.
 
 ## Files cần tạo/sửa
 
-- `Modules/YouTube/YouTubeModule.swift` (thêm skills + composition vào manifest).
-- `Tests/ModuleTests/` (mở rộng ModuleContractTests hoặc file mới cho pipeline).
-- Docs cuối phiên (+AD mới CHỈ nếu có quyết định kiến trúc thật).
+- `Modules/YouTube/YouTubeModule.swift` (skills + manifest version bump).
+- `Tests/ModuleTests/` (precedence + pipeline tests theo khuôn M4-1).
+- Docs cuối phiên.
 
 ## Checklist
 
-- [ ] Module vẫn thuần data — 0 dòng sửa Core, 0 dòng sửa contract.
-- [ ] Composition xuyên namespace có test (steps resolve qua registry chung — Kernel không biết gì mới).
-- [ ] Precedence outline vs full-script vs generic draft: deterministic, có test.
-- [ ] Composition hỏng (thiếu step) degrade về plain AI — hành vi M1-3 giữ nguyên cho module.
-- [ ] Zero regression 121 test cũ.
-- [ ] Đủ quy trình review + docs + NEXT_TASK (M4-2 — mảng nghiệp vụ kế: đề xuất SEO + Publishing Package, hoặc theo giá trị user).
+- [ ] 0 dòng sửa Core, 0 dòng sửa contract, 0 dòng sửa matcher.
+- [ ] Precedence có test cho mọi cặp keywords giao nhau.
+- [ ] Composition mới ≤3 bước, union tuyển chọn, có test thứ tự + degrade.
+- [ ] Zero regression 127 test cũ.
+- [ ] Đủ quy trình review + docs + NEXT_TASK (M4-3 — đề xuất: Channel Analysis + câu hỏi tool-channel, HOẶC M4 review nếu đủ bằng chứng khuôn mẫu).
 
 ## Definition of Done
 
-Goal một câu kiểu "video ideas rồi viết script về X" chạy end-to-end qua composition module (test offline, captured prompts đúng thứ tự); xuyên namespace PROVEN; zero regression; contract không đổi.
+2 mảng mới chạy end-to-end offline qua lifecycle nguyên trạng; khuôn M4-1 lặp lại không phát sinh nhu cầu sửa gì ngoài data; zero regression.
 
 ## Estimated Complexity
 
-Thấp–trung bình — chủ yếu data + test; rủi ro chính là keywords giẫm nhau.
+Thấp — data + test theo khuôn có sẵn; rủi ro chính vẫn là keyword overlap.
 
 ## Estimated AI Cost
 
@@ -52,11 +51,11 @@ Dev session: nhỏ. Runtime: 0 (test offline).
 
 ## Risk
 
-- Keyword overlap giữa 3 skill script-ish (outline/generation/draft) — precedence test bắt buộc, thà nhường generic còn hơn hijack sai.
-- Cám dỗ thêm field mới vào contract (vd module-level template) — Năm Câu Hỏi + hỏi user trước.
+- Keyword giao nhau tăng theo số skill (n²) — mỗi skill mới phải rà bảng keywords toàn registry; nếu bắt đầu đau, đó là BẰNG CHỨNG cho matcher nâng cấp (ghi nhận, không tự ý làm).
+- Composition dài để "cho đủ" — mỗi bước phải trả lời được nó thêm giá trị gì.
 
 ## Những phần tuyệt đối không được sửa
 
-- Core 6 thành phần; `ModuleManifest` contract (vừa ship M4-0).
+- Core 6 thành phần; `ModuleManifest` contract; matcher `selectByKeywords`.
 - WriteGate/Reflection/ComplexityEstimate/scaffold (M3).
 - Architecture Test rules (chỉ THÊM/siết); ADR cũ (AD-01…AD-44).
