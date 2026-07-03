@@ -2,6 +2,15 @@
 
 ## [Unreleased — M4]
 
+### 2026-07-03 — M4-2: SEO + Publishing Package — package là deliverable, không phải hệ thống
+
+- **`youtube.seo-package`**: metadata một video (3 title ≤60 ký tự, description 2 đoạn, 10 tags, 3 hashtags) — skill prompt-data, 1 AI call.
+- **`youtube.publishing-package`**: gói xuất bản hoàn chỉnh = MỘT deliverable có cấu trúc từ pipeline hiện có — dùng độc lập (1 AI call, tie-break về single skill có test) hoặc làm bước cuối composition; template tự ground vào script ở previous material khi có. Không Publishing Engine / SEO Engine / Metadata Engine.
+- **`youtube.script-to-package`**: composition script → package — package grounded trong script THẬT qua previous-step chaining (test captured prompt); deliverable = package cuối.
+- **Guideline union tinh chỉnh lần 2 (phát hiện qua test fail-first):** tie 2-2 giữa composition và `script-generation` khiến goal hai-domain rơi về single skill sai. Quy tắc thật rút ra: *"tuyển chọn union sao cho MỌI tie resolve về single skill — kiểm từng cặp overlap với tie-break id trong đầu, pin bằng test"*. Ở đây GIỮ "script" trong union (3 hit thắng 2) vì mọi id tie đều sort trước composition — ngược hướng với case M4-1. Vẫn thuần data, 0 dòng matcher.
+- Module tiếp tục 0 state / 0 session / 0 OAuth / 0 upload / 0 cache / 0 persistence — không nhu cầu nào như vậy xuất hiện trong 2 mảng này.
+- **0 dòng Core, 0 dòng contract.** 3 test mới. Tổng **130/130 pass**, 0 warning, offline.
+
 ### 2026-07-03 — M4-1: Idea → Script pipeline — workflow là data, xuyên namespace là miễn phí
 
 - **`youtube.script-generation`**: full script ready-to-record, tier `.standard` KHAI BÁO — skill nặng nhất module tự nói lên điều đó (AD-42 hoạt động nguyên trạng cho module data).

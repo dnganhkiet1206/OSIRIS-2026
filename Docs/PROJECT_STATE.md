@@ -10,10 +10,10 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M4 — YouTube Module (reference implementation), đang triển khai** (M0→M3 nghiệm thu; tag local chờ push khi merge) |
-| Task hiện tại | M4-0 ✅ · **M4-1 (Idea → Script pipeline, composition xuyên namespace) ✅ hoàn thành** · kế tiếp: M4-2 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High, ngày càng đắt** |
+| Task hiện tại | M4-0 ✅ · M4-1 ✅ · **M4-2 (SEO + Publishing Package) ✅ hoàn thành** · kế tiếp: M4-3 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High, ngày càng đắt** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **16 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 127/127 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 130/130 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -64,10 +64,12 @@ M4 — YouTube Module: module nghiệp vụ production-quality đầu tiên = kh
 
 - [x] **M4-1 — Idea → Script pipeline, composition xuyên namespace**: `youtube.script-generation` (full script, tier `.standard` khai báo — skill nặng nhất module, AD-42 hoạt động cho module data); 2 composition thuần data: `youtube.idea-to-script` (idea → script) và `youtube.research-to-script` (**bước 1 = `core.research-outline` — built-in, resolve xuyên namespace CHỈ bằng SkillID qua registry chung: cross-namespace PROVEN bằng test captured-prompt**); **tinh chỉnh guideline data (không đổi matcher):** union keywords của composition được TUYỂN CHỌN — bỏ keyword rộng nhất ("script") để composition chỉ thắng khi goal chứa CẢ HAI domain; goal thuần script/idea về single skill (test 1-AI-call); composition thiếu built-in step degrade về plain AI đúng luật M1-3 (test); scaffold M3-3 áp dụng nguyên trạng cho pipeline module (bước giữa raw, bước cuối có Executive Summary — test); **0 dòng sửa Core, 0 dòng sửa contract** — toàn bộ M4-1 là data + test; 6 test mới; 127/127.
 
+- [x] **M4-2 — SEO + Publishing Package**: `youtube.seo-package` (metadata: titles/description/tags/hashtags) + `youtube.publishing-package` — **package là DELIVERABLE, không phải hệ thống**: skill một-prompt dùng độc lập (1 AI call) HOẶC làm bước cuối composition `youtube.script-to-package` (package grounded trong script thật qua previous-step chaining — test); không Publishing/SEO/Metadata Engine; module vẫn 0 state/session/OAuth/upload/cache/persistence; **guideline union tinh chỉnh lần 2 (vẫn thuần data):** quy tắc thật = "tuyển chọn union sao cho MỌI tie về single skill, kiểm từng cặp overlap bằng test với tie-break id trong đầu" (ở đây GIỮ "script" trong union vì các id tie đều sort trước composition — ngược với case M4-1 bỏ "script"); phát hiện qua test fail-first (tie 2-2 → single thắng sai domain); 0 dòng Core, 0 dòng contract; 3 test mới; 130/130.
+
 ## 4. Việc đang chờ (Next Tasks)
 
 1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High** (M4 chạy trên nền thật → giá trị runbook tăng thêm).
-2. **M4-2 — YouTube Module: SEO + Publishing Package** (chi tiết: `NEXT_TASK.md`) — hai mảng thuần prompt-data tiếp theo; câu hỏi tool-channel cho Channel Analysis để dành đến khi có bằng chứng (M4-3+).
+2. **M4-3 — Channel Analysis + câu hỏi tool-contribution-channel** (chi tiết: `NEXT_TASK.md`) — ca đầu tiên cần dữ liệu thật từ ngoài: quyết định mở rộng contract (field optional `tools`) sẽ được đặt với bằng chứng cụ thể; HOẶC M4 review nếu đánh giá khuôn mẫu đã đủ bằng chứng.
 
 ## 4e. M3 Closeout (nghiệm thu 2026-07-03, tag `M3`)
 

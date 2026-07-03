@@ -13,9 +13,13 @@ import OsirisCore
 public enum YouTubeModule {
     public static let manifest = ModuleManifest(
         id: ModuleID("youtube"),
-        version: "0.2.0",
+        version: "0.3.0",
         purpose: "YouTube content operations — reference module proving the Module Contract",
-        skills: [ideaGeneration, scriptOutline, scriptGeneration, ideaToScript, researchToScript]
+        skills: [
+            ideaGeneration, scriptOutline, scriptGeneration,
+            seoPackage, publishingPackage,
+            ideaToScript, researchToScript, scriptToPackage,
+        ]
     )
 
     static let ideaGeneration = SkillDefinition(
@@ -96,6 +100,47 @@ public enum YouTubeModule {
         ]
     )
 
+    static let seoPackage = SkillDefinition(
+        id: SkillID("youtube.seo-package"),
+        version: "1.0.0",
+        capabilityTags: [CapabilityTag("youtube"), CapabilityTag("seo")],
+        purpose: "SEO metadata for one video: title options, description, tags, hashtags",
+        inputs: ["goal"],
+        outputs: ["seo-metadata"],
+        promptTemplate: """
+        Produce the SEO metadata for the video described below: 3 title \
+        options (under 60 characters each), a 2-paragraph description with \
+        the hook up front, 10 search tags, and 3 hashtags. Ground everything \
+        in the actual topic — no generic filler.
+
+        Request: {goal}
+        """,
+        preferredModelTier: .light,
+        triggerKeywords: ["seo", "tags", "hashtags", "video description", "video title", "mô tả video", "tiêu đề video"]
+    )
+
+    /// A publishing package is a DELIVERABLE, not a system: one structured
+    /// output, standalone or as the final step of a pipeline (the template
+    /// grounds itself in previous-step material when present).
+    static let publishingPackage = SkillDefinition(
+        id: SkillID("youtube.publishing-package"),
+        version: "1.0.0",
+        capabilityTags: [CapabilityTag("youtube"), CapabilityTag("publishing-package")],
+        purpose: "Ready-to-publish package: titles, description, tags, hashtags, publish checklist",
+        inputs: ["goal"],
+        outputs: ["publishing-package"],
+        promptTemplate: """
+        Produce the complete, ready-to-publish YouTube package for the video \
+        described below — grounded in the script in the previous material if \
+        present: 3 title options, video description, 10 tags, 3 hashtags, \
+        and a short publish checklist (thumbnail, end screen, pinned comment).
+
+        Request: {goal}
+        """,
+        preferredModelTier: .light,
+        triggerKeywords: ["publishing package", "publish package", "ready to publish", "gói xuất bản"]
+    )
+
     /// Cross-namespace composition (AD-44 proof): step 1 is a BUILT-IN
     /// skill referenced purely by ID — modules compose with the platform
     /// through the shared registry, no special API, no module branching.
@@ -111,6 +156,28 @@ public enum YouTubeModule {
         triggerKeywords: [
             "research", "nghiên cứu", "investigate",
             "full script", "write the script", "viết kịch bản đầy đủ",
+        ]
+    )
+
+    /// Script → publishing package: the package is grounded in the actual
+    /// script, not the bare topic. Curated union (M4-1 guideline, refined):
+    /// curate so every tie resolves to the SINGLE skill — here "script"
+    /// stays IN the union (dual-domain goals need 3 hits to beat
+    /// script-generation's 2) because all tie-breaks (script-generation,
+    /// publishing-package) already sort before this id. Every overlap case
+    /// is pinned by a test.
+    static let scriptToPackage = SkillDefinition(
+        id: SkillID("youtube.script-to-package"),
+        version: "1.0.0",
+        capabilityTags: [CapabilityTag("youtube"), CapabilityTag("script-generation"), CapabilityTag("publishing-package")],
+        purpose: "Write the full script, then assemble the publishing package grounded in it (2 AI calls)",
+        inputs: ["goal"],
+        outputs: ["publishing-package"],
+        preferredModelTier: .standard,
+        compositionSteps: [SkillID("youtube.script-generation"), SkillID("youtube.publishing-package")],
+        triggerKeywords: [
+            "full script", "write the script", "script", "viết kịch bản đầy đủ",
+            "publishing package", "publish package", "ready to publish", "gói xuất bản",
         ]
     )
 }

@@ -10,52 +10,50 @@
 
 ## Current Task
 
-**M4-2 — YouTube: SEO + Publishing Package (2 mảng thuần prompt-data)**
+**M4-3 — Channel Analysis v1 + quyết định tool-contribution-channel (có bằng chứng đầu tiên)**
 
 ## Objective
 
-Phủ tiếp 2 capability của M4 bằng đúng khuôn M4-1 — chứng minh khuôn mẫu LẶP LẠI ĐƯỢC (điều kiện để mọi module M5 copy): `youtube.seo-package` (title options / description / tags / hashtags từ một video topic hoặc script) và `youtube.publishing-package` (composition tổng hợp: script → SEO → checklist đăng — cân nhắc steps từ skill có sẵn). Zero Core, zero contract — nếu cần gì hơn data, DỪNG hỏi user.
+Channel Analysis là capability M4 ĐẦU TIÊN không sống được bằng prompt thuần: phân tích kênh cần DỮ LIỆU THẬT (danh sách video, views, CTR…). Đây chính là bằng chứng cụ thể mà M4-0/M4-1 đã hẹn cho câu hỏi: **mở rộng `ModuleManifest` thêm kênh đóng góp `tools`?** Task này (1) đặt và TRẢ LỜI câu hỏi contract với bằng chứng, (2) ship lát cắt mỏng nhất chứng minh.
 
 ## Phạm vi
 
-1. **`youtube.seo-package`** — skill prompt-data: output có cấu trúc (titles/description/tags); keywords: "seo", "title", "tags", "mô tả video"… — kiểm tra không giẫm generic + skill youtube hiện có (precedence test).
-2. **`youtube.publishing-package`** — composition ≤3 bước từ skill CÓ SẴN (vd script-generation → seo-package; hoặc thêm checklist prompt-skill nhỏ nếu cần bước 3 — Năm Câu Hỏi trước khi thêm); union keywords tuyển chọn theo guideline M4-1.
-3. **Đường AI Cost:** mỗi composition thêm bước = thêm AI call — ghi rõ trong docs skill purpose để user hiểu chi phí; không auto-chain quá 3 bước (BLUEPRINT: composition <5, dưới 3 ưu tiên direct).
-4. **Không làm:** Channel Analysis / Thumbnail / Shorts (M4-3+); đặc biệt Channel Analysis cần DỮ LIỆU THẬT từ kênh — sẽ đặt câu hỏi tool-contribution-channel cho contract, để dành đến khi đó với bằng chứng đầy đủ.
+1. **Phân tích trước khi code (BẮT BUỘC — đây là thay đổi contract đầu tiên):** trả lời Năm Câu Hỏi cho field optional `tools: [any Tool]` trên ModuleManifest (hoặc phương án khác nếu lập luận thắng — vd tool vẫn inject ở composition root, module chỉ khai báo SKILL dùng dữ liệu user dán vào). **So sánh ít nhất 2 phương án, chọn cái ít máy móc hơn.** Lưu ý: `any Tool` trong manifest kéo Tool protocol vào contract surface — cân nhắc Codable bị mất (manifest hiện Codable thuần data). Nếu quyết mở rộng contract → AD-45 + DỪNG trình user TRƯỚC KHI code nếu thay đổi lớn hơn 1 field optional.
+2. **Lát cắt v1 (chọn theo kết quả (1)):** phương án tối thiểu có thể là `youtube.channel-analysis` skill nhận dữ liệu kênh do user DÁN VÀO goal (0 tool, 0 API, phân tích = prompt trên dữ liệu có sẵn — "AI Is The Last Tool" không vi phạm vì không có nguồn deterministic); tool/API thật để M6 (Automation) khi có MCP/network policy rõ.
+3. **EventBus evidence tiếp tục đếm:** module thứ 3 mảng liên tiếp không cần events.
+4. **Không làm:** YouTube API client/OAuth (M6+, cần user quyết privacy/network); Thumbnail/Shorts (M4-4+ hoặc M4 review quyết).
 
 ## Files cần tạo/sửa
 
-- `Modules/YouTube/YouTubeModule.swift` (skills + manifest version bump).
-- `Tests/ModuleTests/` (precedence + pipeline tests theo khuôn M4-1).
-- Docs cuối phiên.
+- Tùy quyết định (1); tối thiểu: `Modules/YouTube/YouTubeModule.swift`, tests, docs (+AD-45 nếu contract đổi).
 
 ## Checklist
 
-- [ ] 0 dòng sửa Core, 0 dòng sửa contract, 0 dòng sửa matcher.
-- [ ] Precedence có test cho mọi cặp keywords giao nhau.
-- [ ] Composition mới ≤3 bước, union tuyển chọn, có test thứ tự + degrade.
-- [ ] Zero regression 127 test cũ.
-- [ ] Đủ quy trình review + docs + NEXT_TASK (M4-3 — đề xuất: Channel Analysis + câu hỏi tool-channel, HOẶC M4 review nếu đủ bằng chứng khuôn mẫu).
+- [ ] Quyết định contract có văn bản Năm Câu Hỏi + 2 phương án trong report.
+- [ ] Nếu contract KHÔNG đổi: 0 dòng Core, 0 dòng contract như M4-1/M4-2.
+- [ ] Precedence keywords rà toàn registry (giờ 12+ skill — bảng overlap trong report).
+- [ ] Zero regression 130 test cũ.
+- [ ] Đủ quy trình review + docs + NEXT_TASK (đề xuất: M4-4 Milestone Review — khuôn mẫu đã lặp 3 lần, đủ bằng chứng đánh giá; Thumbnail/Shorts là data thuần có thể vào M5 cùng module mới).
 
 ## Definition of Done
 
-2 mảng mới chạy end-to-end offline qua lifecycle nguyên trạng; khuôn M4-1 lặp lại không phát sinh nhu cầu sửa gì ngoài data; zero regression.
+Câu hỏi tool-channel được trả lời bằng lập luận + bằng chứng (không phải "để sau" mơ hồ); lát cắt Channel Analysis v1 chạy end-to-end offline; zero regression; contract chỉ đổi nếu Năm Câu Hỏi thắng VÀ user duyệt.
 
 ## Estimated Complexity
 
-Thấp — data + test theo khuôn có sẵn; rủi ro chính vẫn là keyword overlap.
+Trung bình — trọng tâm là quyết định kiến trúc, không phải khối lượng code.
 
 ## Estimated AI Cost
 
-Dev session: nhỏ. Runtime: 0 (test offline).
+Dev session: trung bình. Runtime: 0.
 
 ## Risk
 
-- Keyword giao nhau tăng theo số skill (n²) — mỗi skill mới phải rà bảng keywords toàn registry; nếu bắt đầu đau, đó là BẰNG CHỨNG cho matcher nâng cấp (ghi nhận, không tự ý làm).
-- Composition dài để "cho đủ" — mỗi bước phải trả lời được nó thêm giá trị gì.
+- Mở contract sớm vì "chắc sẽ cần" — kỷ luật: chỉ mở khi lát cắt v1 KHÔNG THỂ ship thiếu nó.
+- Channel Analysis phình thành Analytics Engine — v1 là MỘT skill phân tích dữ liệu được cung cấp.
 
 ## Những phần tuyệt đối không được sửa
 
-- Core 6 thành phần; `ModuleManifest` contract; matcher `selectByKeywords`.
-- WriteGate/Reflection/ComplexityEstimate/scaffold (M3).
+- Core 6 thành phần; matcher; WriteGate/Reflection/ComplexityEstimate/scaffold.
+- `ModuleManifest` — CHỈ được đổi qua đúng quy trình mục (1) + user duyệt.
 - Architecture Test rules (chỉ THÊM/siết); ADR cũ (AD-01…AD-44).
