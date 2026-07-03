@@ -2,6 +2,14 @@
 
 ## [Unreleased — M2]
 
+### 2026-07-02 — M2-4: Dashboard v1 — operational awareness (AD-39)
+
+- Dashboard đúng BLUEPRINT: Now (project, current goal, last completed, count) / Today's usage (requests, tokens in·out, cost, cache hits) / System (provider Connected/Offline) / Recent activity (≤6 dòng). **Không chart, không trends, không analytics, không %.**
+- **AD-39 — seam quan sát duy nhất:** `DefaultAIGateway.onMetrics` callback optional (default nil — toàn bộ test Gateway cũ pass nguyên trạng); Gateway không aggregate, không persist. `DashboardModel` (Application) cộng dồn **session-only** — không database metrics, không lịch sử (M7 quyết bằng dữ liệu thật); fallback estimated khi provider không báo actual tokens; đo cả cache-hit.
+- **EventBus có consumer production đầu tiên sau 7 milestone:** Kernel publish → bus → 2 subscription (ChatService relay + DashboardModel activity). Đánh giá trung thực ghi vào AD-39: với 2 consumer tĩnh, giá trị hôm nay ≈ closure fan-out — giá trị thật ở consumer động; tái đánh giá tại M4, xóa nếu modules không dùng.
+- Sửa trong phiên: NSLock trong async context (2 warning) → tách đọc-dưới-lock thành hàm sync.
+- 5 test mới (accumulate + estimated fallback; activity newest-first cap 10; snapshot đọc state + provider status; state mất an toàn; seam fire mỗi request kể cả cache-hit). Tổng 83/83 pass, 0 warning, offline; UI qua `swiftc -parse`.
+
 ### 2026-07-02 — M2-3: Global Search v1
 
 - Sidebar có mục Search: một ô, kết quả nhóm loại xuyên mọi project — Projects (khớp tên, case-insensitive) → Deliverables → Knowledge → Working notes. Project-hit chuyển workspace; deliverable-hit mở reader (tái dùng flow có sẵn); knowledge/note hiển thị snippet tại chỗ.

@@ -45,10 +45,21 @@ final class ChatViewModel {
 
     private let service: ChatService
     private let projectDirectory: ProjectDirectory
+    private let dashboard: DashboardModel
 
-    init(service: ChatService, projects: ProjectDirectory) {
+    private(set) var dashboardSnapshot: DashboardSnapshot?
+
+    init(service: ChatService, projects: ProjectDirectory, dashboard: DashboardModel) {
         self.service = service
         self.projectDirectory = projects
+        self.dashboard = dashboard
+    }
+
+    func loadDashboard() {
+        let projectID = currentProjectID
+        Task { @MainActor in
+            dashboardSnapshot = await dashboard.snapshot(projectID: projectID)
+        }
     }
 
     func loadProjects() {

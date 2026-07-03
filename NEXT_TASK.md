@@ -6,61 +6,59 @@
 
 ## Current Milestone
 
-**M2 — User Experience** (DEVELOPMENT_PLAN.md §2/M2)
+**M2 — User Experience** (DEVELOPMENT_PLAN.md §2/M2) — task áp chót; sau đó M2-6 = M2 Review.
 
 ## Current Task
 
-**M2-4 — Dashboard v1: nhận thức vận hành, không phải trang thống kê**
+**M2-5 — Advanced Mode gate + Accessibility pass**
 
 ## Objective
 
-Dashboard theo đúng BLUEPRINT: *chỉ* Current Goal, Current Task, Progress, Recent Activity, Token Usage hôm nay, System Status — không hơn. Đây cũng là lúc **EventBus có consumer production đầu tiên** (trả nợ Low đã ghi từ M0-5): Kernel publish → cả ChatService (như cũ) lẫn Dashboard (recent activity) — đúng lý do tồn tại của bus (nhiều consumer).
+Hoàn tất hai mục còn lại của phạm vi M2: (1) **Advanced Mode** — ẩn mặc định, bật qua Settings, expose các panel dev tối thiểu từ dữ liệu ĐÃ CÓ (không xây viewer mới phức tạp); (2) **Accessibility pass** — Dynamic Type/labels/contrast ở mức code-level cho toàn bộ UI hiện có (xác minh mắt thường thuộc Mac runbook).
 
 ## Phạm vi
 
-1. **Token Usage cần nguồn dữ liệu:** metrics hiện chỉ ra log — Dashboard cần đọc được. Phương án phải chốt trong phiên (Năm Câu Hỏi): (a) Gateway ghi metrics vào Store (Knowledge record dạng `metrics/`? — NO, Knowledge là "cách hệ thống hoạt động"); (b) một `MetricsRecorder` in-memory session-level trong Application nhận `AIRequestMetrics` qua callback từ composition (giống relay pattern) — session-only, khớp "Today's Resource Usage", không persist (không thêm record type Store khi chưa có bằng chứng cần lịch sử dài hạn — M7 mới cần). **Nghiêng về (b)** — rẻ nhất, đủ cho Dashboard v1; ghi nợ "persist metrics history" cho M7.
-   - Cần seam: `DefaultAIGateway` thêm `onMetrics: (@Sendable (AIRequestMetrics) -> Void)?` (optional, default nil — zero regression)? Đây là đổi Core (Gateway) — được phép vì có bằng chứng (Dashboard cần đọc số đo, AD-15 nói đo để dùng); giữ nhỏ: một callback, không MetricsStore, không telemetry framework.
-2. **EventBus vào wiring:** composition: Kernel publish → bus; bus consumers: ChatService.relay + DashboardModel. (EventBus generic đã sẵn từ M0-1 — lần đầu dùng thật.)
-3. **Application:** `DashboardSnapshot` DTO + port closures (`dashboard()` đọc ProjectState hiện tại + số liệu session) — pure assemble function testable như các task trước.
-4. **UI:** `DashboardView` — 4-6 dòng thông tin, không chart, không %. Sidebar thêm mục Dashboard.
-5. **System Status:** provider mode (Connected/Offline — từ ProviderSettings.currentStatus có sẵn) + test suite... không, System Status v1 = provider mode + counts (projects). Giữ tối giản.
+1. **Advanced Mode toggle:** Settings thêm switch "Advanced Mode" — trạng thái lưu qua... `features.json` là bundle read-only trên iOS! → runtime setting: UserDefaults? UserDefaults là storage ngoài LocalStorage — vi phạm "chỉ Store persist"? UserDefaults cho UI preference thuần (không phải dữ liệu platform) — **cân nhắc trong phiên**: (a) UserDefaults cho UI-pref (đơn giản, chuẩn iOS; ghi rõ ranh giới: UI preferences ≠ platform data — cần AD nhỏ); (b) đổi qua Store WorkingContext — sai ngữ nghĩa (TTL). Nghiêng (a) + AD-40 định nghĩa ranh giới "UI preferences sống ở UserDefaults, platform data sống ở Store".
+2. **Advanced panels (chỉ khi bật):** sidebar section Advanced gồm: **Session Metrics** (tái dùng DashboardSnapshot.usage — chi tiết hơn: per-request? KHÔNG — chỉ tổng, thêm contextSnippets/retry đã có trong metrics? giữ tổng session), **Skills** (danh sách skill từ registry — cần closure port mới `listSkills` qua Application? Kernel giữ registry... registry inject ở composition — composition có sẵn `InMemorySkillRegistry` instance → port closure `skills()` trả `[SkillInfo]` DTO), **About/Health** (version, test count?, provider mode). Giữ mỗi panel là read-only list đơn giản.
+3. **Accessibility:** accessibilityLabel cho các nút icon-only (send, new project, deliverable rows), Dynamic Type không bị chặn (không fixed font size — rà soát), contrast dùng semantic colors (đã dùng). Diff nhỏ, rải rác các view.
+4. **Không làm:** Memory/Log viewer đầy đủ (cần data pipeline riêng — để sau khi có nhu cầu thật); không đổi Core.
 
 ## Files cần tạo
 
-- `Application/DashboardModel.swift` (hoặc gộp DTO vào file port hiện có nếu nhỏ), `Presentation/Dashboard/DashboardView.swift`, `Tests/ApplicationTests/DashboardTests.swift`.
+- `Presentation/Advanced/AdvancedView.swift` (+ panel con nếu cần, giữ nhỏ), `Tests/ApplicationTests/SkillListingTests.swift` (nếu thêm port skills).
 
 ## Files cần sửa
 
-- `Core/AIGateway/DefaultAIGateway.swift` (+onMetrics callback — một dòng gọi trong log path), `App/AppComposition/CompositionRoot.swift` (bus + metrics wiring), `Presentation/Chat/ChatView.swift` (sidebar), ViewModel nếu cần.
-- Docs cuối phiên (+AD-39 nếu chốt metrics-callback).
+- `Application/ProviderSettings.swift` hoặc file port phù hợp (+advancedMode get/set closure, +skills list closure), `App/AppComposition/CompositionRoot.swift`, `Presentation/Settings/SettingsView.swift` (toggle), `Presentation/Chat/ChatView.swift` (section Advanced khi bật), các view (accessibility labels).
+- Docs cuối phiên (+AD-40 nếu chốt UserDefaults cho UI-pref).
 
 ## Checklist
 
-- [ ] Dashboard KHÔNG trở thành analytics page (đúng BLUEPRINT — 6 mục, không chart).
-- [ ] Metrics session-level, không persist (nợ M7 ghi rõ); Gateway thay đổi tối thiểu (1 callback optional, test cũ pass nguyên trạng).
-- [ ] EventBus có ≥2 consumer thật — gỡ dòng nợ "EventBus chưa có consumer".
-- [ ] Assemble logic thuần trong Application (pattern M2-2/M2-3).
+- [ ] Advanced Mode ẩn mặc định; tắt = sidebar sạch như cũ.
+- [ ] Ranh giới UI-pref vs platform-data ghi thành AD (không lặng lẽ thêm nguồn persist).
+- [ ] Panel = read-only, không hành động phá hoại.
+- [ ] Mọi nút icon-only có accessibilityLabel.
 - [ ] `swift build` 0 warning; toàn bộ test pass offline.
-- [ ] Đủ quy trình review + docs + NEXT_TASK (M2-5 — Accessibility pass + M2 Review chuẩn bị).
+- [ ] Đủ quy trình review + docs + NEXT_TASK (M2-6 — M2 Review: DoD, tên port ProjectDirectory, InMemorySecretsVault, tag M2).
 
 ## Definition of Done
 
-Dashboard hiển thị goal/task/progress/activity/token-hôm-nay/status từ dữ liệu thật; EventBus đa consumer; test assemble + metrics recorder; zero regression.
+Advanced Mode bật/tắt hoạt động với ≥2 panel read-only từ dữ liệu có sẵn; accessibility labels phủ các nút icon-only; zero regression.
 
 ## Estimated Complexity
 
-Trung bình — một seam Core nhỏ (callback) + wiring bus.
+Thấp–Trung bình.
 
 ## Estimated AI Cost
 
-Dev session: trung bình. Runtime: 0.
+Dev session: nhỏ. Runtime: 0.
 
 ## Risk
 
-- Metrics callback mở cửa telemetry creep — giữ đúng 1 callback, không aggregation trong Gateway.
-- Bus wiring đổi đường publish của Kernel — giữ test ChatService nguyên trạng làm guard.
+- Advanced panels creep thành dev-tool platform — giữ read-only list, không tương tác.
+- UserDefaults mở tiền lệ persist tùy tiện — AD-40 phải định nghĩa ranh giới chặt.
 
 ## Những phần tuyệt đối không được sửa
 
-- Pipeline Gateway ngoài việc THÊM callback optional; Kernel/Execution/Store.
-- Architecture Test rules (chỉ THÊM); ADR cũ (AD-01…AD-38).
+- Core (không lý do gì đụng); Gateway/Kernel/Store.
+- Architecture Test rules (chỉ THÊM); ADR cũ (AD-01…AD-39).

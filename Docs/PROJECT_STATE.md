@@ -10,7 +10,7 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M1 — Core Runtime, đang triển khai** (M0 nghiệm thu: tag `M0` local tại `dc54059`; push tag khi merge) |
-| Task hiện tại | **M2 — User Experience, đang triển khai** · M2-3 (Global Search v1) ✅ hoàn thành · kế tiếp: M2-4 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
+| Task hiện tại | **M2 — User Experience, đang triển khai** · M2-4 (Dashboard v1) ✅ hoàn thành · kế tiếp: M2-5 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **14 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 66/66 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
@@ -50,10 +50,12 @@ M1 — Core Runtime: Kernel đầy đủ, hệ điều hành AI thực sự vậ
 
 - [x] **M2-3 — Global Search v1**: một ô search từ sidebar, kết quả nhóm theo loại xuyên mọi project (Projects khớp tên case-insensitive → Deliverables → Knowledge → Working notes); `SearchHit.assemble` là hàm thuần testable (composition chỉ fetch — pattern M2-2); deliverable titled bằng preview, **không lộ path nội bộ**; project-hit chuyển workspace, deliverable-hit mở reader (tái dùng flow M2-1/M2-2); search closure thêm vào port `ProjectDirectory` (Năm Câu Hỏi: 1 closure không đáng port mới; tên port xem lại ở M2 review); không method Store mới (StoreQuery projectID:nil + .anyWord có sẵn từ M1-2); 4 test mới.
 
+- [x] **M2-4 — Dashboard v1** (AD-39): operational awareness đúng BLUEPRINT (Now / Today's usage / System / Recent activity — không chart, không %, không analytics); `DefaultAIGateway.onMetrics` — MỘT callback optional (seam quan sát duy nhất, test cũ pass nguyên trạng); `DashboardModel` (Application): metrics **session-only** (không persist — M7 quyết lịch sử), activity strip newest-first cap 10, tất cả logic testable; **EventBus có 2 consumer production đầu tiên** (chat relay + dashboard) — trả nợ từ M0-5, tái đánh giá giá trị tại M4; 5 test mới (gồm seam fire cả cache-hit).
+
 ## 4. Việc đang chờ (Next Tasks)
 
 1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**: SwiftUI tích tụ chưa qua compiler; càng sớm càng rẻ.
-2. **M2-4 — Dashboard v1** (chi tiết: `NEXT_TASK.md`): operational awareness từ state/metrics có sẵn — Current Goal/Task, Progress, Token Usage, System Status. EventBus có consumer thật đầu tiên (trả nợ Low).
+2. **M2-5 — Advanced Mode gate + Accessibility pass** (chi tiết: `NEXT_TASK.md`), sau đó M2-6 = M2 Review.
 
 ## 4c. M1 Closeout (nghiệm thu 2026-07-02, tag `M1`)
 
@@ -160,6 +162,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | AD-36 | Composition = `SkillDefinition.compositionSteps` (≤5 bước); xóa struct `SkillComposition` (nguồn sự thật đôi); Kernel resolve steps trong Decide, Execution chạy tuần tự máy móc; parallel + resume hoãn có duyệt đến khi có bằng chứng — xét lại tại M1 review |
 | AD-37 | Tool Layer v1: triggerKeywords trên protocol Tool; MỘT thuật toán matching chung skill+tool; tools inject qua Kernel init (không Tool Registry — AD-17); `.tool(any Tool)` đã resolve; tool results không persist (re-run miễn phí, stale = sai); tool fail không rơi sang AI; metrics tool.run tối thiểu; arch rule: Core/Tools là leaf adapter |
 | AD-38 | Quản lý project = state management (không phải goal execution): closure-port `ProjectDirectory` từ composition root xuống Store; execution results vẫn chỉ qua vòng đời Kernel; ProjectState.name decode-fallback về id |
+| AD-39 | Gateway.onMetrics: MỘT callback optional phát metrics mỗi request — Gateway không aggregate/persist; DashboardModel session-only (M7 quyết lịch sử); EventBus 2 consumer đầu tiên, tái đánh giá tại M4 |
 
 ## 6. Nợ kỹ thuật (phân loại lại tại M1 Review — Critical/High/Medium/Low)
 
@@ -178,7 +181,9 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | Low | Keyword matching khớp cả ngữ cảnh phủ định ("don't summarize") | Chấp nhận v1 — fallback rẻ; nâng cấp theo sử dụng thật |
 | Low | Reuse per-project (đúng Project Isolation; chưa có cross-project reuse có kiểm soát) | M3 với policy rõ |
 | Low | Arch-test scanner cắt `//` theo dòng — string literal chứa URL có thể false-negative | Nâng parser khi có ca thật |
-| Low | `InMemorySecretsVault` + `EventBus` chưa có consumer production | Vault: xóa nếu hết M2 không dùng; Bus: consumer thật ở Dashboard (M2)/Modules (M4) — giữ làm contract |
+| Low | `InMemorySecretsVault` chưa có consumer production | Xóa nếu hết M2 không dùng |
+| Low | EventBus: 2 consumer tĩnh hiện tại ≈ closure fan-out — giá trị thật chờ consumer động | Tái đánh giá tại M4 (Modules); xóa nếu modules không dùng (AD-39) |
+| Low | Metrics chỉ session-only — restart mất "Today's usage" | Chấp nhận theo thiết kế; persist history là câu hỏi M7 với dữ liệu thật |
 
 *(Đã xử lý & gỡ khỏi bảng: UI nhập API key — SettingsView M1-0; InMemoryStore — xóa M0-2; reuse-snippet — trả M0-4B; ContextPriority/`Kernel.skills` dead contract — tiêu thụ M1-2/M1-1.)*
 

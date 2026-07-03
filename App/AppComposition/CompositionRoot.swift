@@ -14,6 +14,7 @@ struct AppDependencies {
     let chat: ChatService
     let projects: ProjectDirectory
     let settings: ProviderSettings
+    let dashboard: DashboardModel
 }
 
 enum CompositionRoot {
@@ -31,26 +32,51 @@ enum CompositionRoot {
         // (context retrieval, AD-24) and the project directory (AD-38) —
         // a second instance would be a second source of truth.
         let store = makeStore()
+        let settings = makeProviderSettings()
+        let dashboard = DashboardModel(
+            stateFor: { try await store.projectState(for: ProjectID($0)) },
+            providerConnected: { settings.currentStatus() == .connected }
+        )
         let gateway = DefaultAIGateway(
             provider: selectedProvider.provider,
             configuration: makeGatewayConfiguration(defaultModelID: selectedProvider.modelID),
             store: store,
-            logger: logger
+            logger: logger,
+            onMetrics: { dashboard.recordMetrics($0) }
         )
+        // The Event Bus carries execution events to its first REAL
+        // multi-consumer audience (M2-4): chat status and the dashboard's
+        // activity strip. Value re-assessed at M4 when modules subscribe.
+        let events = EventBus<ExecutionEvent>()
         let kernel = Kernel(
             skills: InMemorySkillRegistry(registering: GenericSkills.all),
             tools: [CurrentDateTimeTool()],
             engine: DefaultExecutionEngine(gateway: gateway, logger: logger),
             store: store,
             approvalGate: RequireUserApprovalGate(),
-            publish: { [weak service] event in service?.relay(event) }
+            publish: { await events.publish($0) }
         )
+        subscribe(events) { [weak service] in service?.relay($0) }
+        subscribe(events) { dashboard.recordEvent($0) }
         service.configure(kernel: kernel)
         return AppDependencies(
             chat: service,
             projects: makeProjectDirectory(store: store),
-            settings: makeProviderSettings()
+            settings: settings,
+            dashboard: dashboard
         )
+    }
+
+    /// App-lifetime subscription: one consumer, one stream.
+    private static func subscribe(
+        _ bus: EventBus<ExecutionEvent>,
+        _ handle: @escaping @Sendable (ExecutionEvent) -> Void
+    ) {
+        Task {
+            for await event in await bus.events() {
+                handle(event)
+            }
+        }
     }
 
     /// Project management port (AD-38): state management, not goal

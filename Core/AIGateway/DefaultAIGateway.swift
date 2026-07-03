@@ -22,6 +22,10 @@ public struct DefaultAIGateway: AIGateway {
     private let store: (any Store)?
     private let cache: any ResponseCache
     private let logger: any Logging
+    /// Single observation seam (AD-39): every measured request is handed to
+    /// this callback (session-level consumers like the Dashboard). The
+    /// Gateway never aggregates, never persists — observers decide.
+    private let onMetrics: (@Sendable (AIRequestMetrics) -> Void)?
 
     /// Per-snippet cap: few and short beats many and noisy (~150 tokens).
     private let maxSnippetCharacters = 600
@@ -31,13 +35,15 @@ public struct DefaultAIGateway: AIGateway {
         configuration: GatewayConfiguration,
         store: (any Store)? = nil,
         cache: any ResponseCache = InMemoryResponseCache(),
-        logger: any Logging
+        logger: any Logging,
+        onMetrics: (@Sendable (AIRequestMetrics) -> Void)? = nil
     ) {
         self.provider = provider
         self.configuration = configuration
         self.store = store
         self.cache = cache
         self.logger = logger
+        self.onMetrics = onMetrics
     }
 
     public func complete(_ request: AIRequest) async throws -> AIResponse {
@@ -258,6 +264,7 @@ public struct DefaultAIGateway: AIGateway {
     }
 
     private func log(_ metrics: AIRequestMetrics) {
+        onMetrics?(metrics)
         logger.log(LogEvent(
             level: metrics.succeeded ? .info : .error,
             message: "ai.request",

@@ -10,7 +10,11 @@ struct OsirisApp: App {
     var body: some Scene {
         WindowGroup {
             ChatView(
-                model: ChatViewModel(service: dependencies.chat, projects: dependencies.projects),
+                model: ChatViewModel(
+                    service: dependencies.chat,
+                    projects: dependencies.projects,
+                    dashboard: dependencies.dashboard
+                ),
                 settings: dependencies.settings
             )
         }
