@@ -9,15 +9,15 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M3 — Intelligence Layer, đang triển khai** (M0/M1/M2 nghiệm thu — tag local, push khi merge) |
-| Task hiện tại | M3-1 ✅ · M3-2 ✅ · **M3-3 (Deliverable Templates & Executive Summary v1) ✅ hoàn thành — AD-43** · kế tiếp: M3-4 Milestone Review (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
+| Giai đoạn | **M3 — Intelligence Layer: ĐÃ NGHIỆM THU 2026-07-03** (tag `M3` local; M0/M1/M2/M3 đều chờ push tag khi merge) |
+| Task hiện tại | **M3-4 (Milestone Review) ✅ — M3 ĐẠT (code-complete)** · kế tiếp: M4-0 YouTube Module bootstrap (xem `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN · **[USER] runbook M1-0 vẫn chờ — nợ High, ngày càng đắt** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **16 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 114/114 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
-M3 — Intelligence Layer: trí nhớ đáng tin cậy + planning giải thích được, 0 token thêm (DEVELOPMENT_PLAN §2/M3). Song song: user chạy `Docs/RUNBOOK_M1-0.md` (Mac build + key + baseline thật) — nợ High.
+M3 đã nghiệm thu. Kế tiếp: M4 — YouTube Module (reference implementation, AD-21) khi user xác nhận. Song song: user chạy `Docs/RUNBOOK_M1-0.md` (Mac build + key + baseline thật) — nợ High; 2 mục M3 hoãn (reuse-nới, cache-tối-ưu) kích hoạt bằng chính dữ liệu từ runbook.
 
 ## 3. Việc đã hoàn thành (Completed)
 
@@ -63,7 +63,40 @@ M3 — Intelligence Layer: trí nhớ đáng tin cậy + planning giải thích 
 ## 4. Việc đang chờ (Next Tasks)
 
 1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**.
-2. **M3-4 — M3 Milestone Review & Acceptance** (chi tiết: `NEXT_TASK.md`): phạm vi M3 còn lại (reuse "hoàn chỉnh", cache optimization) đều evidence-gated — cần dữ liệu thật từ runbook; review xử các deadline đã hẹn: `retryPolicy` delete-if-unconsumed, đánh giá lại nợ/câu treo, tag `M3`.
+2. **M4-0 — YouTube Module bootstrap** (chi tiết: `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN mở M4.
+
+## 4e. M3 Closeout (nghiệm thu 2026-07-03, tag `M3`)
+
+**Tiêu chí M3 (DEVELOPMENT_PLAN §2/M3) — đánh giá trung thực:**
+
+| Tiêu chí | Kết quả |
+|---|---|
+| Smart planning: ước lượng complexity trước khi chạy | ✅ M3-2 (AD-42) — deterministic, tier được earn, test lặp chứng minh |
+| Reuse pipeline hoàn chỉnh (search deliverable/memory/cache trước khi tạo) | ✅ cơ chế đầy đủ từ M0-4/M1-2 (exact reuse + search 3 loại record + cache); phần NỚI (relevance-ranked reuse, cross-project) **HOÃN CÓ LẬP LUẬN** — wrong-reuse đắt hơn miss, cần dữ liệu sử dụng thật |
+| Response cache + prompt cache tối ưu | ⚠️ cache hoạt động, key phản ánh context (test M1-2); TỐI ƯU **HOÃN** — chưa có hit-rate thật, tối ưu không số liệu là đoán |
+| Reflection sau task, có gate AD-20 | ✅ M3-1 (AD-41) — AD-20 PROVEN sau 4 milestone chờ |
+| Deliverable indexing & templates (Executive Summary, next steps) | ✅ indexing từ M0-4B (AD-10); templates M3-3 (AD-43) — scaffold là Config data |
+| Tự động cập nhật State/Memory sau execution | ✅ recordCompletion (M0) + reflection memory qua gate (M3-1) |
+| **Tiêu chí hoàn thành: AI call/token giảm CÓ ĐO LƯỜNG vs baseline M1** | ⚠️ **cơ chế giảm chứng minh bằng test vĩnh viễn** (reuse = 0 call, tool = 0 call, cache-hit, composition degrade an toàn); **số token thật PENDING** — cần API key + thiết bị (runbook), không giả số liệu |
+| Chất lượng deliverable qua Verify gate ổn định | ✅ Verify gate từ M0 + scaffold cấu trúc M3-3 |
+
+**ADR M3 — Decision → Evidence → Result:** AD-41 (6 test: gate chặn/mở đúng policy, no-bypass, vòng giá trị retrieval) ✅ PROVEN · AD-42 (13 test: determinism, tier earn, skill outrank, assumption qua gate, disabled chặn) ✅ PROVEN · AD-43 (7 test: scaffold mọi đường AI, bước giữa không scaffold, reuse nguyên văn, ≤80 token) ✅ PROVEN · Superseded: không.
+
+**Xử deadline & xóa theo bằng chứng (AD-28 hai chiều — "không giữ vì có thể sẽ cần"):**
+- `SkillDefinition.retryPolicy`: **XÓA** — hẹn từ M1 review, đến hạn M3 review vẫn 0 consumer (grep: chỉ khai báo/gán, không nơi nào đọc); retry thật là policy Gateway từ Config.
+- `ExecutionPlan.retryPolicy`: **XÓA** — cùng bằng chứng (không ai đọc `plan.retryPolicy` từ M0).
+- `ExecutionStrategy.direct/.hybrid`: **XÓA** — chưa bao giờ được construct trong 4 milestone; chỉ tồn tại trong 2 switch cho đủ case (dead case = cognitive load thuần).
+- **Bằng chứng xóa đúng:** 114/114 test pass sau xóa mà KHÔNG sửa một test nào.
+- EventBus: giữ nguyên hẹn — deadline M4 (modules subscribe hay xóa).
+- `ApprovalGate`: wired từ M0, chưa từng được tham vấn (chưa tồn tại risky action) — **hẹn cứng M6 (Automation)**: nếu M6 mở mà vẫn không có risky action thật → xóa.
+
+**Intelligence Layer — kiểm tra "AI tự học quá sớm": KHÔNG có dấu hiệu.** Reflection deterministic (0 AI, test); WriteGate policy từ Config, default `.disabled`, không bypass (arch rule + test); ComplexityEstimate/Confidence là hằng số trong code, không lịch sử, không tự điều chỉnh (test lặp 10 lần); AI-reflection vẫn bị CẤM theo AD-41 (4 câu bằng chứng chưa trả lời). Mọi "trí thông minh" hiện tại đều đọc được, giải thích được, tắt được bằng config.
+
+**Kiến trúc:** không ứng viên hợp nhất (Core 6 không đổi từ v1.1, mỗi thành phần có test riêng chứng minh vai trò); không API mở quá sớm (extension-by-algorithm đóng có chủ đích — AD-42); API NÊN mở tương lai: per-skill `outputScaffold` (khi module cần format riêng — M4), heuristic constants → Config (khi có ca thật cần chỉnh).
+
+**Chất lượng:** build 0/0 debug+release · **114/114 test** offline ~1.2s · baseline M3: fresh **4.98ms** / reuse **3.20ms** (M2: 5.53/3.49, M1: 5.45/3.14 — dao động trong biên độ đo, không trend xấu) · chi phí AI tích lũy **$0.00** · retrospective: pattern "đổi chữ ký public init default-param → `rm -rf .build`" lặp lần 5 — nay là BƯỚC CHUẨN trong quy trình, không phải sự cố.
+
+**Kết luận: M3 ĐẠT (code-complete).** Hai mục hoãn có điều kiện kích hoạt ghi tại DEVELOPMENT_PLAN; mục "đo token thật" PENDING có địa chỉ (runbook — nợ High của user, càng để càng đắt vì 4 milestone UI chưa qua compiler Mac).
 
 ## 4d. M2 Closeout (nghiệm thu 2026-07-02, tag `M2`)
 
@@ -213,7 +246,8 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | Medium | Token/latency/cost baseline provider thật chưa có (cần API key) | Phần C của runbook; không giả số liệu |
 | ~~Medium~~ | ~~Store write gate / learning gate (AD-20) chưa enforce~~ — **ĐÃ TRẢ tại M3-1** (WriteGate + arch rule không-bypass) | ✅ |
 | Medium | Tier routing: phía Kernel ĐÃ XONG tại M3-2 (`preferredTier` mang giá trị thật từ estimate/skill — AD-42); còn lại phía Gateway chưa tiêu thụ tier khi route (1 model thật) | Kích hoạt khi có ≥2 model thật trong catalog |
-| Medium | `SkillDefinition.retryPolicy` (per-skill) chưa được consumed — Gateway retry là mức duy nhất đang chạy | Kích hoạt cùng tool/AI failure patterns thật (M2+); nếu M3 vẫn không có consumer → cân nhắc xóa field (AD-28 hai chiều) |
+| ~~Medium~~ | ~~`SkillDefinition.retryPolicy` chưa được consumed~~ — **ĐÃ XÓA tại M3-4 đúng hẹn** (cùng `ExecutionPlan.retryPolicy` và `.direct/.hybrid` — 0 consumer, 114/114 pass không sửa test) | ✅ |
+| Low | `ApprovalGate` wired từ M0, chưa từng được tham vấn (chưa có risky action) | **Hẹn cứng M6 (Automation):** không có risky action thật → xóa |
 | Low | Store search đọc lại toàn bộ file mỗi lần (chưa cache/index); relevance = word-hit v1 | Tối ưu ở M3/M7 khi có số liệu thật |
 | Low | Working-context hết hạn chỉ lọc khi đọc, chưa xóa vật lý | Cleanup policy M1→M3 (policies.json đã có TTL) |
 | Low | `InMemoryResponseCache` không bound/TTL | Eviction khi có bằng chứng; interface là seam |

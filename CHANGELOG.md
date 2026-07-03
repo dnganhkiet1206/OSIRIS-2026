@@ -1,6 +1,14 @@
 # CHANGELOG
 
-## [Unreleased — M3]
+## [M3] — 2026-07-03 (tag `M3`)
+
+### M3-4: Milestone Review & Acceptance
+
+- **M3 ĐẠT (code-complete)** — nghiệm thu tại PROJECT_STATE §4e. AD-41/42/43 đều PROVEN bằng test (6+13+7). Tiêu chí "AI call/token giảm có đo lường": cơ chế chứng minh bằng test vĩnh viễn (reuse/tool = 0 call, cache-hit); số token thật PENDING trung thực (runbook).
+- **Xóa theo bằng chứng, đúng hẹn (AD-28 hai chiều):** `SkillDefinition.retryPolicy` (hẹn từ M1 review, 0 consumer), `ExecutionPlan.retryPolicy` (0 nơi đọc từ M0), `ExecutionStrategy.direct/.hybrid` (chưa bao giờ construct trong 4 milestone). Bằng chứng xóa đúng: **114/114 pass mà không sửa một test nào**. RetryPolicy type giữ — Gateway config là consumer thật.
+- **Kiểm tra "AI tự học quá sớm": không dấu hiệu** — mọi heuristic là hằng số đọc được, gate default disabled, AI-reflection vẫn cấm (AD-41). Hai mục M3 hoãn có điều kiện kích hoạt: reuse-nới + cache-tối-ưu chờ số liệu thật từ runbook (ghi tại DEVELOPMENT_PLAN).
+- Deadline còn hẹn: EventBus → M4 (modules subscribe hay xóa); `ApprovalGate` → M6 (risky action thật hay xóa).
+- Bằng chứng: build 0/0 debug+release; 114/114 offline ~1.2s; baseline fresh 4.98ms / reuse 3.20ms (M2: 5.53/3.49 — trong biên độ đo); AI spend tích lũy $0.00. Retrospective: "public init đổi default-param → clean rebuild" lặp lần 5 → nâng thành bước chuẩn quy trình.
 
 ### 2026-07-03 — M3-3: Deliverable Templates & Executive Summary v1 — cấu trúc là data, không phải engine (AD-43)
 

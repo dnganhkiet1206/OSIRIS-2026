@@ -19,7 +19,7 @@ enum Reflection {
         switch strategy {
         case .ai, .composition:
             break
-        case .reuse, .tool, .direct, .hybrid:
+        case .reuse, .tool:
             return nil
         }
         guard let path = deliverablePath else { return nil }

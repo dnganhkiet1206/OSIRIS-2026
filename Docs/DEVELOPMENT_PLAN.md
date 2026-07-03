@@ -72,13 +72,15 @@ M8 Production Readiness  ── ổn định lâu dài: test, security, backup, 
 
 **Tiêu chí hoàn thành:** Người dùng mới hiểu app trong phút đầu tiên, không cần hướng dẫn; mọi màn hình đạt UI contract (không lộ reasoning, lỗi thân thiện).
 
-### M3 — Intelligence Layer *(giữ Milestone 3 gốc, đã gọn hóa theo AD-05/AD-10/AD-20)*
+### M3 — Intelligence Layer *(giữ Milestone 3 gốc, đã gọn hóa theo AD-05/AD-10/AD-20)* — ✅ ĐÃ NGHIỆM THU 2026-07-03 (tag `M3`; chi tiết PROJECT_STATE §4e)
+
+> **Hoãn có điều kiện kích hoạt (chốt tại M3-4):** (1) *Reuse pipeline nới* (relevance-ranked reuse, cross-project) — kích hoạt khi có dữ liệu sử dụng thật cho thấy miss-rate đáng kể; wrong-reuse đắt hơn miss nên không nới bằng phỏng đoán. (2) *Cache optimization* (bound/TTL/eviction) — kích hoạt khi có số liệu hit-rate thật từ thiết bị (runbook M1-0 + sử dụng M4). Không xây trước khi điều kiện xuất hiện.
 
 **Mục tiêu:** Quyết định tốt hơn trước khi gọi model — rẻ hơn mà chất lượng cao hơn.
 
 **Phạm vi:** Smart planning (ước lượng complexity/cost trước khi chạy) · Reuse pipeline hoàn chỉnh (search deliverable/memory/cache trước khi tạo) · Response cache + prompt cache tối ưu · Reflection sau task (cải thiện lần sau, có gate AD-20) · Deliverable indexing & templates (Executive Summary, actionable next steps) · Tự động cập nhật Project State/Memory sau mỗi execution.
 
-**Tiêu chí hoàn thành:** Số AI call và token trung bình cho cùng loại task **giảm có đo lường** so với baseline M1; chất lượng deliverable qua Verify gate ổn định.
+**Tiêu chí hoàn thành:** Số AI call và token trung bình cho cùng loại task **giảm có đo lường** so với baseline M1; chất lượng deliverable qua Verify gate ổn định. *(Nghiệm thu: cơ chế giảm chứng minh bằng test vĩnh viễn — reuse/tool = 0 call, cache-hit; số token provider thật PENDING runbook, không giả số liệu.)*
 
 ### M4 — YouTube Module (Reference Implementation)
 

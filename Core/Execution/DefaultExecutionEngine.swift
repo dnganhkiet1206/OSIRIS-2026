@@ -125,13 +125,6 @@ public struct DefaultExecutionEngine: ExecutionEngine {
                 deliverable: Deliverable(content: response.text),
                 aiMetrics: response.metrics
             )
-        case .direct, .hybrid:
-            // M0 placeholder: only .direct is meaningfully used; the others
-            // are wired in M1. Returning the goal echo keeps the pipeline
-            // observable end-to-end without cost.
-            return ExecutionResult(
-                deliverable: Deliverable(content: "Completed directly: \(plan.goal.text)")
-            )
         }
     }
 }

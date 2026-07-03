@@ -18,8 +18,9 @@ public struct CapabilityTag: Hashable, Codable, Sendable {
 ///
 /// Schema per AD-28 — required fields only; everything else is optional and
 /// added when evidence demands it. Prompt templates live here, versioned with
-/// the skill (AD-04). Retry/fallback is declared policy executed mechanically
-/// by the Execution Engine (AD-25).
+/// the skill (AD-04). AD-28 works both ways: a per-skill retryPolicy field
+/// waited from M1 to M3 review without a consumer and was removed — retry
+/// remains Gateway-owned policy from Config.
 public struct SkillDefinition: Codable, Sendable {
     // Required (AD-28)
     public let id: SkillID
@@ -33,7 +34,6 @@ public struct SkillDefinition: Codable, Sendable {
     public var promptTemplate: String?
     public var preferredModelTier: ModelTier?
     public var compositionSteps: [SkillID]?
-    public var retryPolicy: RetryPolicy?
     /// Data-driven matching (added M1-1 per AD-28): the skill declares what
     /// goals it serves, so adding a skill never requires a Kernel change.
     /// Keep keywords narrow — a fallback is cheaper than a wrong match.
@@ -49,7 +49,6 @@ public struct SkillDefinition: Codable, Sendable {
         promptTemplate: String? = nil,
         preferredModelTier: ModelTier? = nil,
         compositionSteps: [SkillID]? = nil,
-        retryPolicy: RetryPolicy? = nil,
         triggerKeywords: [String]? = nil
     ) {
         self.id = id
@@ -68,7 +67,6 @@ public struct SkillDefinition: Codable, Sendable {
             "compositionSteps must contain 1...5 steps"
         )
         self.compositionSteps = compositionSteps
-        self.retryPolicy = retryPolicy
         self.triggerKeywords = triggerKeywords
     }
 }

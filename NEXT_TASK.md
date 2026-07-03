@@ -2,61 +2,61 @@
 
 > Quy trình phiên làm việc: đọc `Docs/PROJECT_STATE.md` → đọc file này → đọc các file liên quan → thiết kế → kiểm tra tái sử dụng → triển khai → Self Review → Architecture Review → refactor nếu cần → cập nhật tài liệu → cập nhật PROJECT_STATE → tạo NEXT_TASK mới → kết thúc. Không bỏ qua bước nào.
 >
-> **Song song:** nợ High — user chưa chạy `Docs/RUNBOOK_M1-0.md`. Nếu kết quả được dán vào phiên: xử lý trước, task dưới sau.
+> **Song song:** nợ High — user chưa chạy `Docs/RUNBOOK_M1-0.md`. Nếu kết quả được dán vào phiên: xử lý trước, task dưới sau. Lưu ý: M4 là milestone module ĐẦU TIÊN chạy trên nền thật — giá trị runbook tăng thêm một bậc.
 
 ## Current Milestone
 
-**M3 — Intelligence Layer** (DEVELOPMENT_PLAN.md §2/M3)
+**M4 — YouTube Module (Reference Implementation)** (DEVELOPMENT_PLAN.md §2/M4, AD-21) — CHỜ USER XÁC NHẬN MỞ
 
 ## Current Task
 
-**M3-4 — M3 Milestone Review & Acceptance**
+**M4-0 — Module Contract v1 + YouTube Module skeleton (walking skeleton của M4)**
 
-## Vì sao review thay vì làm tiếp phạm vi M3 còn lại (lập luận đã tự đánh giá tại M3-3)
+## Objective
 
-Phạm vi M3 theo DEVELOPMENT_PLAN: smart planning ✅ (M3-2) · reflection có gate ✅ (M3-1) · deliverable templates ✅ (M3-3) · auto-update state ✅ (có từ M0, reflection bồi thêm M3-1). Hai mục còn lại đều **evidence-gated**:
-- *Reuse pipeline "hoàn chỉnh"*: reuse exact-match + search 3 loại record + cache Gateway ĐÃ chạy từ M0-4/M1-2; phần "hoàn chỉnh" (relevance-ranked reuse, cross-project) mang rủi ro wrong-reuse — cần dữ liệu sử dụng thật trước khi nới (thà miss còn hơn reuse sai).
-- *Cache optimization*: `InMemoryResponseCache` chưa có số liệu hit-rate thật (chưa chạy trên thiết bị với API key) — tối ưu không số liệu là đoán.
+Trước khi viết module nghiệp vụ đầu tiên phải TỒN TẠI định nghĩa "module là gì" — và định nghĩa đó phải mỏng: **module = gói DATA (skills + templates + manifest), không phải gói CODE**. M4-0 chốt Module contract v1 (Module Manifest — registry thứ hai được phép theo AD-17) và dựng YouTube module skeleton với 1–2 skill nghiệp vụ thật (vd `youtube.idea-generation`, `youtube.script-outline`) chứng minh: **thêm module = thêm data, 0 dòng sửa Core** (chuẩn AD-31 đã đặt cho provider).
 
-→ Cả hai chờ baseline thật từ runbook (nợ High của user). Review milestone bây giờ, kích hoạt 2 mục này khi có evidence (ghi điều kiện vào DEVELOPMENT_PLAN).
+## Phạm vi
 
-## Phạm vi review (theo mẫu M1-5/M2-6)
+1. **Module Manifest schema tối thiểu** (kiểu AD-28: bắt buộc ít nhất có thể — id/version/purpose/skills; mọi field khác chờ bằng chứng): module khai báo skills nó đóng góp; đọc từ đâu (bundle folder `Modules/YouTube/`? code-authored như GenericSkills?) — tự phản biện, chọn phương án ÍT máy móc nhất đủ cho 1 module; KHÔNG dynamic loading/reflection/script engine.
+2. **Đăng ký qua Skill Registry hiện có:** module skills vào CHUNG `InMemorySkillRegistry` tại composition root — không ModuleRegistry chứa logic, manifest chỉ là data descriptor (AD-17: đúng 2 registry, cái thứ hai là MANIFEST, không phải engine).
+3. **1–2 YouTube skill thuần data** với promptTemplate + triggerKeywords nghiệp vụ thật; kiểm tra không giẫm keywords generic skills (tie-break test).
+4. **EventBus deadline M4 bắt đầu đếm:** module có subscribe events không? Ghi nhận ngay từ M4-0 — bằng chứng cho quyết định giữ/xóa ở M4 review.
+5. **Không làm:** không đủ 9 mảng nghiệp vụ YouTube (đó là cả M4); không UI module riêng; không Module lifecycle/sandbox/permission system (chưa có bằng chứng cần).
 
-1. **Đánh giá trung thực tiêu chí M3** (DEVELOPMENT_PLAN §2/M3) — bảng Tiêu chí → Kết quả, PENDING ghi trung thực kèm địa chỉ.
-2. **ADR M3:** AD-41/42/43 — Decision → Evidence → Result (PROVEN bằng test nào).
-3. **Xử deadline đã hẹn:**
-   - `SkillDefinition.retryPolicy` — deadline "M3 review nếu vẫn không consumer → cân nhắc xóa field (AD-28 hai chiều)". Đến hạn: quyết định + thực thi.
-   - Tier routing (nợ Medium nửa còn lại): xác nhận điều kiện kích hoạt (≥2 model thật) và chủ sở hữu.
-   - EventBus: deadline là M4 — KHÔNG xử ở đây, chỉ xác nhận còn hẹn.
-4. **Phân loại lại nợ kỹ thuật** Critical/High/Medium/Low; retrospective ngắn (pattern lặp: default-param → clean rebuild ×4 — có đáng ghi quy trình?).
-5. **Acceptance report + git tag `M3`** (local, push khi merge) + NEXT_TASK cho M4 (YouTube Module — reference implementation, AD-21; đọc kỹ DEVELOPMENT_PLAN §2/M4 trước khi viết).
-6. **DEVELOPMENT_PLAN:** đánh dấu M3, ghi điều kiện kích hoạt 2 mục hoãn.
+## Files cần tạo
+
+- Module manifest + YouTube skills (vị trí theo quyết định (1) — cập nhật FOLDER_STRUCTURE nếu tạo thư mục mới).
+- `Tests/CoreTests/ModuleContractTests.swift` (hoặc tên phù hợp): module skills được match đúng, không phá generic skills, thêm module không sửa Core (bằng chứng kiểu AD-31: diff Core = 0).
 
 ## Checklist
 
-- [ ] Không sửa code trừ khi review phát hiện lỗi thật hoặc quyết định xóa `retryPolicy` được chốt.
-- [ ] ADR cũ không sửa (chỉ Superseded nếu cần); arch test chỉ THÊM.
-- [ ] Mọi PENDING có địa chỉ + chủ sở hữu (không giấu).
-- [ ] Zero regression nếu có thay đổi code (114 test + số mới nếu thêm).
+- [ ] Module = data; 0 dòng thay đổi trong Core/ (trừ khi review chứng minh thiếu seam — khi đó DỪNG, hỏi user trước).
+- [ ] Không component mới trong Core 6; không registry logic mới.
+- [ ] Business skill KHÔNG vào `Core/Skills/BuiltIn/` (GenericSkills chỉ chứa domain-neutral — ranh giới đã ghi trong file đó).
+- [ ] Tie-break/precedence với generic skills có test.
+- [ ] Zero regression 114 test cũ.
+- [ ] Đủ quy trình review + docs + NEXT_TASK (M4-1 — mảng nghiệp vụ YouTube tiếp theo).
 
 ## Definition of Done
 
-Bảng tiêu chí M3 trung thực; AD-41/42/43 có evidence; deadline `retryPolicy` xử xong; nợ phân loại lại; tag `M3`; NEXT_TASK M4-0; DỪNG chờ user xác nhận trước khi vào M4.
+Module contract v1 thành văn (BLUEPRINT/AD mới); YouTube module skeleton với ≥1 skill nghiệp vụ chạy end-to-end qua vòng đời Kernel hiện có (test offline); chứng minh "thêm module không sửa Core"; zero regression.
 
 ## Estimated Complexity
 
-Thấp — chủ yếu đánh giá + tài liệu; một quyết định xóa-field có thể kèm code nhỏ.
+Trung bình — quyết định contract là phần khó, code là phần dễ.
 
 ## Estimated AI Cost
 
-Dev session: nhỏ. Runtime: 0.
+Dev session: trung bình. Runtime: 0 (test offline với provider giả).
 
 ## Risk
 
-- Tự nghiệm thu dễ dãi — dùng đúng thước DEVELOPMENT_PLAN, PENDING ghi trung thực như M0/M1/M2.
-- Xóa `retryPolicy` vội trong khi M4 module có thể cần — quyết định phải kèm lập luận chi phí giữ vs xóa (AD-28 hai chiều: thêm khi có bằng chứng, xóa khi hết lý do chờ).
+- Module contract phình thành plugin system (lifecycle/permissions/sandbox) — v1 chỉ cần manifest data + skills; mỗi thứ thêm phải qua Năm Câu Hỏi.
+- Keywords nghiệp vụ giẫm generic skills — test precedence bắt buộc.
 
 ## Những phần tuyệt đối không được sửa
 
-- WriteGate/Reflection (M3-1), ComplexityEstimate/confidence (M3-2), scaffold pipeline (M3-3) — vừa chốt.
+- Core 6 thành phần (mục tiêu của task là chứng minh KHÔNG cần sửa chúng).
+- WriteGate/Reflection/ComplexityEstimate/scaffold pipeline (M3 vừa chốt).
 - Architecture Test rules (chỉ THÊM); ADR cũ (AD-01…AD-43).

@@ -8,7 +8,6 @@ public enum ExecutionStrategy: Sendable {
     /// (Reuse Before Create). Carries the found content so Execution stays
     /// mechanical and never touches the Store (AD-25).
     case reuse(existing: String)
-    case direct
     /// Deterministic tool execution — zero AI, zero tokens. The Kernel
     /// resolves the tool in Decide; the plan carries it so Execution never
     /// selects or swaps tools (AD-25, AD-37).
@@ -22,7 +21,9 @@ public enum ExecutionStrategy: Sendable {
     /// skill rides on this case only — a skill without an AI call is
     /// meaningless in v1, and the type makes that combination impossible.
     case ai(skill: SkillDefinition?)
-    case hybrid
+    // .direct and .hybrid (M0 bootstrap sketches) were removed at M3
+    // review: never constructed across four milestones — a dead case in
+    // every switch is cognitive load with no consumer (AD-28 both ways).
 }
 
 /// Confidence is a tier, never a numeric score (AD-05). Low confidence on
