@@ -10,55 +10,54 @@
 
 ## Current Task
 
-**M3-2 — Smart Planning v1: complexity → tier, Confidence Medium có consumer**
+**M3-3 — Deliverable Templates & Executive Summary v1**
 
 ## Objective
 
-Decide thông minh hơn mà không thêm token: (1) **ước lượng complexity deterministic** cho goal (heuristic từ dữ liệu có sẵn — độ dài, số yêu cầu con, từ khóa khối lượng như "detailed/toàn diện/full") → **chọn `ModelTier`** thay vì hardcode `.light` (chuẩn bị sẵn cho ngày có ≥2 model thật — tier routing đang là nợ Medium); (2) **Confidence Medium có consumer đầu tiên** (M1 mới dùng High/Low): goal dài-mơ-hồ (đo được: nhiều mệnh đề, thiếu đối tượng cụ thể — heuristic chặt) → proceed nhưng **assumption được ghi qua đúng WriteGate vừa xây** (justification `reducesFutureTokens`? — không: assumption phục vụ truy vết → `reusableLater`; chốt trong phiên) và xuất hiện trong context của goal sau.
+Deliverable có cấu trúc nhất quán mà không thêm component: mọi deliverable đường AI mở đầu bằng **Executive Summary ngắn + actionable next steps** (đúng phạm vi M3 trong DEVELOPMENT_PLAN). Template là **DATA trong SkillDefinition** (AD-04: prompt template sống cùng skill — KHÔNG Prompt/Deliverable/Template Registry, danh sách cấm còn nguyên). Executive OS trả về thứ đọc được trong 10 giây, không phải bức tường chữ.
 
 ## Phạm vi
 
-1. **`ComplexityEstimate` (pure, Core/Kernel/Decision/):** enum `simple/standard/complex` từ heuristic deterministic; map → tier (`simple/standard → .light`, `complex → .standard` — có ý nghĩa khi catalog ≥2 model; hiện catalog 1 model thật nên tier routing vẫn chờ, nhưng plan.preferredTier bắt đầu mang giá trị thật).
-2. **Confidence Medium:** `confidence(in:)` mở rộng (hiện: empty→low, else high): heuristic Medium chặt (vd goal >N từ nhưng không khớp skill/tool nào VÀ chứa đại từ mơ hồ "it/this/cái đó" không tiền ngữ — giữ đơn giản, thà High); Medium → vẫn thực thi + `MemoryCandidate` assumption ("Assumed interpretation: …") qua WriteGate.
-3. **Metrics/observability:** không thêm seam mới — assumption ghi WC là đủ dấu vết.
-4. **Không làm:** không AI-assisted planning; không đổi Gateway routing (tier consumption vẫn chờ ≥2 model); không nới matcher.
+1. **Output scaffold = data:** hướng dẫn cấu trúc output (Executive Summary → nội dung → Next steps) đi vào prompt như DATA — cân nhắc: (a) mở rộng `promptTemplate` của 3 skill hiện có, hay (b) MỘT scaffold chung ở tầng assemble của Execution/Gateway cho đường `.ai/.composition`. Tự phản biện chọn 1 (gợi ý: (b) một chỗ, 0 lặp — nhưng phải chứng minh không phải "Template Engine trá hình"; nếu chỉ là hằng string nối vào prompt thì OK).
+2. **Plain AI path (không skill)** cũng nhận scaffold — user không cần biết skill tồn tại.
+3. **Presentation:** deliverable reader hiện có đọc markdown — kiểm tra Executive Summary hiển thị tự nhiên, KHÔNG viết parser/formatter mới.
+4. **Không làm:** không Template Registry/file template riêng; không AI hậu xử lý deliverable (1 goal = 1 AI call như cũ); không đổi Store schema; không chạm Reflection/WriteGate/ComplexityEstimate vừa chốt.
 
 ## Files cần tạo
 
-- `Core/Kernel/Decision/ComplexityEstimate.swift`, `Tests/CoreTests/SmartPlanningTests.swift`.
+- `Tests/CoreTests/DeliverableTemplateTests.swift` (captured-prompt: scaffold vào prompt cả đường skill lẫn plain AI; composition chỉ scaffold bước cuối — bước giữa là intermediate).
 
 ## Files cần sửa
 
-- `Core/Kernel/Kernel.swift` (Decide: estimate → tier; confidence medium → assumption candidate qua writeGate), `Core/Kernel/Decision/ExecutionStrategy.swift` (nếu cần chú thích ConfidenceTier.medium).
-- Docs cuối phiên (+AD-42 nếu có quyết định mới đáng ghi).
+- Tùy quyết định (1): `Core/Execution/DefaultExecutionEngine.swift` (assembleTask) HOẶC skill definitions trong CompositionRoot; docs cuối phiên (+AD-43 nếu có quyết định mới đáng ghi).
 
 ## Checklist
 
-- [ ] Toàn bộ heuristic deterministic, 0 AI call, 0 token thêm.
-- [ ] Assumption đi qua WriteGate — KHÔNG đường ghi mới (arch rule memory-born-in-gate đang canh).
-- [ ] Tier chỉ đổi trên `.ai/.composition` path; `.reuse/.tool` không bị ảnh hưởng.
-- [ ] Heuristic Medium chặt — thà High (không spam assumption); test goal thường KHÔNG sinh assumption.
-- [ ] Zero regression toàn bộ test cũ.
-- [ ] Đủ quy trình review + docs + NEXT_TASK (M3-3 — Deliverable Templates & Executive Summary v1).
+- [ ] Scaffold là data/hằng số — 0 engine mới, 0 registry mới, 0 AI call thêm.
+- [ ] Đường plain AI (không skill) cũng có Executive Summary.
+- [ ] Composition: chỉ bước cuối nhận scaffold (intermediate output là nguyên liệu, không phải deliverable).
+- [ ] Reuse path trả nguyên văn — KHÔNG re-format deliverable cũ.
+- [ ] Zero regression toàn bộ test cũ (captured-prompt tests M1-1/M1-2 có thể cần cập nhật expected prompt — được phép vì đó là test NỘI DUNG prompt, không phải arch rule).
+- [ ] Đủ quy trình review + docs + NEXT_TASK (đề xuất: M3-4 — Reuse pipeline hoàn chỉnh + cache optimization, HOẶC M3 review nếu phạm vi còn lại mỏng — tự đánh giá).
 
 ## Definition of Done
 
-Complexity→tier hoạt động có test; Medium confidence sinh assumption ghi qua gate và xuất hiện trong retrieval của goal sau; ConfidenceTier hết case chết; zero regression.
+Goal đường AI ra deliverable có Executive Summary + next steps (test bằng captured prompt — nội dung thật cần Mac/API key, ghi trung thực); plain-AI path có scaffold; zero regression; không component/registry mới.
 
 ## Estimated Complexity
 
-Trung bình — chạm Decide (vùng nhạy cảm nhất), thuần heuristic.
+Thấp–trung bình — chủ yếu prompt data + test; rủi ro chính là cám dỗ xây Template Engine.
 
 ## Estimated AI Cost
 
-Dev session: nhỏ–trung bình. Runtime: 0.
+Dev session: nhỏ. Runtime: 0 (scaffold đi cùng request có sẵn).
 
 ## Risk
 
-- Heuristic phức tạp hóa Decide — giữ mỗi hàm thuần nhỏ, test riêng.
-- Assumption spam làm nhiễu retrieval — tiêu chí Medium rất chặt + TTL tự dọn.
+- "Template Engine trá hình" — nếu thấy cần placeholder/conditional/inheritance trong template: DỪNG, hỏi user (3 câu: đơn giản vì sao không đủ / bằng chứng thật / chi phí bảo trì).
+- Scaffold làm phình prompt — đo token thêm (phải < ~80 token), ghi vào report.
 
 ## Những phần tuyệt đối không được sửa
 
-- WriteGate/Reflection vừa chốt (M3-2 chỉ *dùng* gate, không sửa); Gateway; Execution; Store.
-- Architecture Test rules (chỉ THÊM); ADR cũ (AD-01…AD-41).
+- WriteGate/Reflection (M3-1), ComplexityEstimate/confidence (M3-2) — vừa chốt, chỉ *dùng*.
+- Gateway pipeline; Store; Architecture Test rules (chỉ THÊM); ADR cũ (AD-01…AD-42).

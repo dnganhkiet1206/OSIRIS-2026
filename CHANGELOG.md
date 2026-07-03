@@ -2,6 +2,14 @@
 
 ## [Unreleased — M3]
 
+### 2026-07-03 — M3-2: Smart Planning v1 — tier được earn, assumption có kỷ luật (AD-42)
+
+- **`ComplexityEstimate` (pure, `Core/Kernel/Decision/`):** `simple/standard/complex` chỉ từ dữ liệu có sẵn trong goal — số từ, tín hiệu khối lượng khai báo ("detailed/comprehensive/chi tiết/toàn diện/…"), số mệnh đề (dấu câu + "and/và/then/rồi"). Deterministic tuyệt đối: cùng input cùng output (test lặp 10 lần), 0 AI, 0 ML, 0 lịch sử, 0 token.
+- **Tier được earn, không hardcode:** Decide đặt `preferredTier = skill khai báo ?? estimate` (`simple/standard → .light`, `complex → .standard`) — skill hiểu việc của nó nhất nên outrank estimate (test). Gateway CHỈ tiêu thụ — routing theo tier vẫn chờ catalog ≥2 model thật (nợ Medium trả một nửa: phía Kernel xong). `.reuse/.tool` path không bị ảnh hưởng (test: goal chứa "detailed" vẫn đi tool với tier mặc định).
+- **Confidence Medium có consumer đầu tiên — `ConfidenceTier` hết case chết:** tín hiệu mơ hồ chặt, deliberately ít ("something/somehow/gì đó/sao cũng được/…" — thà High, không spam assumption; test goal thường KHÔNG sinh assumption) → vẫn thực thi + assumption "interpreting the goal literally" đi **qua đúng WriteGate M3-1** với justification `reusableLater`, đích WorkingContext TTL tự dọn. **KHÔNG đường ghi mới** — gate `.disabled` chặn cả assumption (test không-bypass); assumption xuất hiện trong retrieval của goal liên quan sau (test khép vòng qua captured prompt).
+- Không Planner Engine / Intelligence Engine / Decision Engine — Kernel vẫn là nơi quyết duy nhất; toàn bộ heuristic là hằng số đọc được trong 2 file.
+- 13 test mới (`SmartPlanningTests` — RecordingEngine đọc `ExecutionPlan` tại biên Kernel↔Execution thật thay vì suy diễn lại). Tổng **107/107 pass**, 0 warning, offline.
+
 ### 2026-07-02 — M3-1: Reflection & Write Gate v1 — hệ thống bắt đầu ghi nhớ có kỷ luật (AD-41; AD-20 PROVEN)
 
 - **Chuỗi trách nhiệm bằng type, không bypass:** Reflection (pure, deterministic — 0 AI, 0 token) chỉ nhìn strategy/goal/deliverable đã có, sinh tối đa MỘT `MemoryCandidate` — không biết Store, không persist → `WriteGate` là điểm quyết định DUY NHẤT (ghi/không/ghi-đâu; policy đọc từ `policies.json` — key `storeWriteGate`/`workingContextDefaultTTLHours` nằm chờ từ M0-1; unknown justification = fail fast) → Store persist. Arch rule mới (16 tổng): `WorkingContextRecord`/`KnowledgeRecord` chỉ được construct trong Core/Store — Reflection *về mặt type* không thể tự tạo record.

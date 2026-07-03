@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — Trạng Thái Dự Án OSIRIS
 
-> **Cập nhật lần cuối:** 2026-07-02
+> **Cập nhật lần cuối:** 2026-07-03
 > Đây là **nguồn sự thật duy nhất** về trạng thái dự án (nguyên tắc *State Over Chat*). Mọi phiên phát triển bắt đầu bằng việc đọc file này và kết thúc bằng việc cập nhật file này. Đây là **file duy nhất luôn được nạp** vào AI dev session (AD-29) — giữ file ngắn gọn, dạng cấu trúc.
 
 ---
@@ -9,15 +9,15 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M1 — Core Runtime, đang triển khai** (M0 nghiệm thu: tag `M0` local tại `dc54059`; push tag khi merge) |
-| Task hiện tại | **M3 — Intelligence Layer, đang triển khai** · M3-1 (Reflection & Write Gate v1) ✅ hoàn thành — **AD-20 PROVEN** · kế tiếp: M3-2 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
+| Giai đoạn | **M3 — Intelligence Layer, đang triển khai** (M0/M1/M2 nghiệm thu — tag local, push khi merge) |
+| Task hiện tại | M3-1 ✅ · **M3-2 (Smart Planning v1) ✅ hoàn thành — AD-42** · kế tiếp: M3-3 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
-| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **14 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 66/66 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
+| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **16 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 107/107 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
-M1 — Core Runtime: Kernel đầy đủ, hệ điều hành AI thực sự vận hành (DEVELOPMENT_PLAN §2/M1). Trước mắt: user chạy `Docs/RUNBOOK_M1-0.md` (Mac build + key + baseline thật); song song có thể tiến M1-1.
+M3 — Intelligence Layer: trí nhớ đáng tin cậy + planning giải thích được, 0 token thêm (DEVELOPMENT_PLAN §2/M3). Song song: user chạy `Docs/RUNBOOK_M1-0.md` (Mac build + key + baseline thật) — nợ High.
 
 ## 3. Việc đã hoàn thành (Completed)
 
@@ -56,10 +56,12 @@ M1 — Core Runtime: Kernel đầy đủ, hệ điều hành AI thực sự vậ
 
 - [x] **M3-1 — Reflection & Write Gate v1** (AD-41; **AD-20 AWAITING → PROVEN**): Reflection deterministic (0 AI/0 token, tiêu chí chặt: `.ai/.composition` + goal ≥4 từ + có deliverable, tối đa 1 candidate) sinh `MemoryCandidate` — không biết Store, không persist; `WriteGate` là điểm quyết định duy nhất (policy từ policies.json — key nằm chờ từ M0-1; unknown justification = fail fast; đích = WorkingContext TTL tự dọn; default `.disabled` — memory là opt-in); arch rule mới: memory record chỉ construct trong Core/Store (không bypass — 16 rule); save best-effort; **test giá trị khép vòng: goal LIÊN QUAN (không exact) nhận được memory phản chiếu trong prompt qua retrieval**; 6 test mới.
 
+- [x] **M3-2 — Smart Planning v1** (AD-42): `ComplexityEstimate` (pure, Core/Kernel/Decision) — simple/standard/complex từ số từ + tín hiệu khối lượng ("detailed/toàn diện…") + số mệnh đề, deterministic tuyệt đối (có test 10 lần cùng input); **tier được earn thay vì hardcode**: skill khai báo > estimate (`simple/standard→.light`, `complex→.standard`), Gateway chỉ tiêu thụ — nợ Medium "preferredTier chưa mang giá trị thật" TRẢ MỘT NỬA (phía Kernel xong, Gateway routing vẫn chờ ≥2 model); **Confidence Medium có consumer đầu tiên** (hết case chết): tín hiệu mơ hồ chặt ("somehow/gì đó/…") → vẫn thực thi + assumption ghi **qua đúng WriteGate M3-1** (không đường ghi mới; gate `.disabled` chặn cả assumption — test), assumption xuất hiện trong retrieval của goal liên quan sau (test khép vòng); goal thường KHÔNG sinh assumption (test chống spam); `.reuse/.tool` path không bị ảnh hưởng; 13 test mới (RecordingEngine đọc plan tại biên thật).
+
 ## 4. Việc đang chờ (Next Tasks)
 
 1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**.
-2. **M3-2 — Smart Planning v1** (chi tiết: `NEXT_TASK.md`): ước lượng complexity deterministic trong Decide → chọn tier; Confidence **Medium** có consumer đầu tiên (assumption ghi qua đúng WriteGate vừa xây).
+2. **M3-3 — Deliverable Templates & Executive Summary v1** (chi tiết: `NEXT_TASK.md`).
 
 ## 4d. M2 Closeout (nghiệm thu 2026-07-02, tag `M2`)
 
@@ -196,6 +198,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | AD-39 | Gateway.onMetrics: MỘT callback optional phát metrics mỗi request — Gateway không aggregate/persist; DashboardModel session-only (M7 quyết lịch sử); EventBus 2 consumer đầu tiên, tái đánh giá tại M4 |
 | AD-40 | Ranh giới persist: UI preferences = UserDefaults/@AppStorage, chỉ App/Presentation (arch rule cưỡng chế); platform data = Store (AD-32 nguyên vẹn) |
 | AD-41 | Reflection v1 deterministic (0 AI/0 token) sinh MemoryCandidate → WriteGate (policy từ config, điểm quyết định duy nhất, không bypass — arch rule) → Store persist; đích WC-TTL; Knowledge đóng; AI-reflection cấm đến khi trả lời 4 câu bằng chứng; AD-20 PROVEN |
+| AD-42 | Smart Planning v1 deterministic: `ComplexityEstimate` pure (số từ/tín hiệu khối lượng/số mệnh đề — 0 AI/0 token/0 lịch sử); tier được earn (skill > estimate), Gateway chỉ tiêu thụ; Confidence Medium consumer đầu tiên — assumption qua đúng WriteGate (không đường ghi thứ hai); extension-by-data mở, extension-by-algorithm đóng có chủ đích |
 
 ## 6. Nợ kỹ thuật (phân loại lại tại M1 Review — Critical/High/Medium/Low)
 
@@ -206,7 +209,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | **High** | 8 file SwiftUI (App/ + Presentation/) tích tụ 6 milestone chưa qua compiler (môi trường không có Mac); mới qua `swiftc -parse` | **[USER] chạy `Docs/RUNBOOK_M1-0.md`** trước hoặc song song đầu M2 — M2 là milestone toàn UI, xây tiếp trên nền chưa compile là rủi ro kép |
 | Medium | Token/latency/cost baseline provider thật chưa có (cần API key) | Phần C của runbook; không giả số liệu |
 | ~~Medium~~ | ~~Store write gate / learning gate (AD-20) chưa enforce~~ — **ĐÃ TRẢ tại M3-1** (WriteGate + arch rule không-bypass) | ✅ |
-| Medium | Tier routing chưa hoạt động (`preferredTier` chưa được Gateway tiêu thụ — 1 model thật) | Kích hoạt khi có ≥2 model thật trong catalog |
+| Medium | Tier routing: phía Kernel ĐÃ XONG tại M3-2 (`preferredTier` mang giá trị thật từ estimate/skill — AD-42); còn lại phía Gateway chưa tiêu thụ tier khi route (1 model thật) | Kích hoạt khi có ≥2 model thật trong catalog |
 | Medium | `SkillDefinition.retryPolicy` (per-skill) chưa được consumed — Gateway retry là mức duy nhất đang chạy | Kích hoạt cùng tool/AI failure patterns thật (M2+); nếu M3 vẫn không có consumer → cân nhắc xóa field (AD-28 hai chiều) |
 | Low | Store search đọc lại toàn bộ file mỗi lần (chưa cache/index); relevance = word-hit v1 | Tối ưu ở M3/M7 khi có số liệu thật |
 | Low | Working-context hết hạn chỉ lọc khi đọc, chưa xóa vật lý | Cleanup policy M1→M3 (policies.json đã có TTL) |

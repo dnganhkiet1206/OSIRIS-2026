@@ -52,7 +52,8 @@ public final class Kernel: Sendable {
         // 1. INTAKE — understand the objective; never guess (AD-05).
         await publish(.understanding)
         let objective = goal.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard confidence(in: objective) != .low else {
+        let confidenceTier = confidence(in: objective)
+        guard confidenceTier != .low else {
             await publish(.failed("Goal needs clarification"))
             throw KernelError.needsClarification("Describe what you want to accomplish.")
         }
@@ -61,6 +62,7 @@ public final class Kernel: Sendable {
         // first (AD-12): reuse → deterministic tool (zero tokens, AI Is
         // The Last Tool) → skill/composition → plain AI.
         await publish(.planning)
+        let complexity = ComplexityEstimate.estimate(for: objective)
         let strategy: ExecutionStrategy
         var tier: ModelTier = .light
         if let existing = try await reusableResult(for: objective, in: goal.projectID) {
@@ -68,8 +70,10 @@ public final class Kernel: Sendable {
         } else if let tool = matchedTool(for: objective) {
             strategy = .tool(tool)
         } else {
+            // Tier is earned, never hardcoded (AD-42): the skill's declared
+            // tier outranks the estimate; the estimate covers the rest.
             let skill = await matchedSkill(for: objective)
-            tier = skill?.preferredModelTier ?? .light
+            tier = skill?.preferredModelTier ?? complexity.preferredTier
             if let steps = skill?.compositionSteps, !steps.isEmpty {
                 // A misconfigured composition (missing step) degrades to the
                 // plain AI path — the goal still completes.
@@ -79,6 +83,18 @@ public final class Kernel: Sendable {
             }
         }
         let plan = ExecutionPlan(goal: goal, strategy: strategy, preferredTier: tier)
+
+        // Medium confidence (AD-05/42): proceed, but the assumption is
+        // documented — through the same Write Gate as every memory write.
+        // No second path exists.
+        if confidenceTier == .medium,
+           let assumption = writeGate.admit(MemoryCandidate(
+               projectID: goal.projectID,
+               content: "Assumption (medium confidence): interpreting the goal literally — \"\(objective)\"",
+               justifications: [.reusableLater]
+           )) {
+            try? await store.save(assumption)
+        }
 
         // 3. EXECUTE — the engine does the work; the Kernel never does.
         await publish(.executing)
@@ -132,10 +148,21 @@ public final class Kernel: Sendable {
 
     // MARK: Decision helpers (pure)
 
-    /// Confidence v0 (AD-05): an empty objective is Low — ask, never guess.
-    /// Richer signals (ambiguity, missing inputs) arrive with real skills.
+    /// Vague-intent signals — deliberately few: prefer High over
+    /// assumption spam. Confidence reflects decision certainty, never
+    /// "intelligence", and is never adjusted by AI.
+    private static let vagueSignals = [
+        "something", "anything", "somehow", "whatever",
+        "gì đó", "đại khái", "sao cũng được",
+    ]
+
+    /// Confidence v1 (AD-05/42): Low = ask, never guess. Medium = proceed
+    /// while documenting the assumption (via the Write Gate). High = go.
     private func confidence(in objective: String) -> ConfidenceTier {
-        objective.isEmpty ? .low : .high
+        guard !objective.isEmpty else { return .low }
+        let lowered = objective.lowercased()
+        if Self.vagueSignals.contains(where: lowered.contains) { return .medium }
+        return .high
     }
 
     /// Selection is data-driven (M1-1/M1-4): skills and tools declare their
