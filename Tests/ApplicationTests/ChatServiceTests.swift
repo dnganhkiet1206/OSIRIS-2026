@@ -60,7 +60,7 @@ final class ChatServiceTests: XCTestCase {
         let service = try makeConfiguredService()
         let collector = UpdateCollector()
 
-        await service.submit(goal: "Draft a plan", onUpdate: { collector.append($0) })
+        await service.submit(goal: "Draft a plan", projectID: "p1", onUpdate: { collector.append($0) })
 
         let updates = collector.updates
         let activities = updates.filter { if case .activity = $0.kind { return true }; return false }
@@ -76,7 +76,7 @@ final class ChatServiceTests: XCTestCase {
         let service = try makeConfiguredService()
         let collector = UpdateCollector()
 
-        await service.submit(goal: "   ", onUpdate: { collector.append($0) })
+        await service.submit(goal: "   ", projectID: "p1", onUpdate: { collector.append($0) })
 
         guard case .needsClarification(let question) = collector.updates.last?.kind else {
             return XCTFail("Expected needsClarification, got \(String(describing: collector.updates.last))")
@@ -94,6 +94,21 @@ final class ChatServiceTests: XCTestCase {
 
         let providerMessage = ChatService.translate(AIGatewayError.providerFailed(attempts: 2, lastError: "boom"))
         XCTAssertFalse(providerMessage.contains("boom"), "Internal error strings never reach the UI")
+    }
+
+    // Project Isolation holds at the Application boundary: goals land in
+    // the project the UI selected, never in each other's state.
+    func testGoalsLandInTheirOwnProjects() async throws {
+        let service = try makeConfiguredService()
+        let store = FileBackedStore(storage: try FileStorage(baseDirectory: directory))
+
+        await service.submit(goal: "goal for alpha", projectID: "alpha", onUpdate: { _ in })
+        await service.submit(goal: "goal for beta", projectID: "beta", onUpdate: { _ in })
+
+        let alpha = try await store.projectState(for: ProjectID("alpha"))
+        let beta = try await store.projectState(for: ProjectID("beta"))
+        XCTAssertEqual(alpha?.completedTasks, ["goal for alpha"])
+        XCTAssertEqual(beta?.completedTasks, ["goal for beta"])
     }
 
     // Terminal events from Core are not double-reported as activities.

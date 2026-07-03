@@ -9,6 +9,13 @@ import OsirisInfrastructure
 ///
 /// Missing or invalid bundled Config resources mean a broken install; this
 /// layer fails fast with a clear message rather than running misconfigured.
+/// Everything the app shell needs, wired exactly once.
+struct AppDependencies {
+    let chat: ChatService
+    let projects: ProjectDirectory
+    let settings: ProviderSettings
+}
+
 enum CompositionRoot {
     /// Wires the whole graph behind the Application layer (AD-35). The
     /// Kernel publishes progress straight into the service (AD-33); the
@@ -17,12 +24,12 @@ enum CompositionRoot {
     /// Provider selection is graceful (M0-6): an Anthropic key in the vault
     /// selects the real provider; without one the app keeps working fully
     /// on the offline placeholder. Missing a key is never a crash.
-    static func makeChatService() -> ChatService {
+    static func makeDependencies() -> AppDependencies {
         let service = ChatService()
         let logger = ConsoleLogger()
-        // ONE store instance shared by Kernel (state/reuse) and Gateway
-        // (context retrieval, AD-24) — a second instance would be a second
-        // source of truth.
+        // ONE store instance shared by Kernel (state/reuse), Gateway
+        // (context retrieval, AD-24) and the project directory (AD-38) —
+        // a second instance would be a second source of truth.
         let store = makeStore()
         let gateway = DefaultAIGateway(
             provider: selectedProvider.provider,
@@ -39,7 +46,28 @@ enum CompositionRoot {
             publish: { [weak service] event in service?.relay(event) }
         )
         service.configure(kernel: kernel)
-        return service
+        return AppDependencies(
+            chat: service,
+            projects: makeProjectDirectory(store: store),
+            settings: makeProviderSettings()
+        )
+    }
+
+    /// Project management port (AD-38): state management, not goal
+    /// execution — straight onto the Store, the single persister.
+    private static func makeProjectDirectory(store: any Store) -> ProjectDirectory {
+        ProjectDirectory(
+            list: {
+                try await store.listProjectStates().map {
+                    ProjectSummary(id: $0.projectID.rawValue, name: $0.name)
+                }
+            },
+            create: { name in
+                let state = ProjectState(projectID: ProjectID(UUID().uuidString), name: name)
+                try await store.save(state)
+                return ProjectSummary(id: state.projectID.rawValue, name: state.name)
+            }
+        )
     }
 
     /// Port for the Settings screen (AD-35): closures over the Keychain

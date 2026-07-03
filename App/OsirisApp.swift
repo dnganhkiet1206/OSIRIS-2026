@@ -5,14 +5,13 @@ import SwiftUI
 /// Application layer (AD-35). Dependencies are wired exactly once.
 @main
 struct OsirisApp: App {
-    private let chatService = CompositionRoot.makeChatService()
-    private let providerSettings = CompositionRoot.makeProviderSettings()
+    private let dependencies = CompositionRoot.makeDependencies()
 
     var body: some Scene {
         WindowGroup {
             ChatView(
-                model: ChatViewModel(service: chatService),
-                settings: providerSettings
+                model: ChatViewModel(service: dependencies.chat, projects: dependencies.projects),
+                settings: dependencies.settings
             )
         }
     }

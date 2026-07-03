@@ -46,6 +46,11 @@ public actor FileBackedStore: Store {
         try write(state, key: key(Prefix.projectState, id: state.projectID.rawValue))
     }
 
+    public func listProjectStates() throws -> [ProjectState] {
+        try loadAll(ProjectState.self, prefix: Prefix.projectState)
+            .sorted { $0.updatedAt > $1.updatedAt }
+    }
+
     // MARK: Knowledge
 
     public func knowledge(id: String) throws -> KnowledgeRecord? {

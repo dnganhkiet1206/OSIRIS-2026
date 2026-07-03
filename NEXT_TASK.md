@@ -1,67 +1,69 @@
 # NEXT_TASK.md
 
-> **TRẠNG THÁI: CHỜ USER DUYỆT MỞ M2.** M1 đã nghiệm thu (PROJECT_STATE §4c, tag `M1`). Task dưới đây là ĐỀ XUẤT đầu tiên của M2 — không tự ý bắt đầu.
+> Quy trình phiên làm việc: đọc `Docs/PROJECT_STATE.md` → đọc file này → đọc các file liên quan → thiết kế → kiểm tra tái sử dụng → triển khai → Self Review → Architecture Review → refactor nếu cần → cập nhật tài liệu → cập nhật PROJECT_STATE → tạo NEXT_TASK mới → kết thúc. Không bỏ qua bước nào.
 >
-> **Điều kiện nên hoàn thành trước/đầu M2 (nợ High):** user chạy `Docs/RUNBOOK_M1-0.md` — M2 là milestone toàn UI; xây tiếp trên 8 file SwiftUI chưa qua compiler là rủi ro kép. Nếu kết quả runbook được dán vào phiên M2-1: xử lý lỗi compile/baseline TRƯỚC, task dưới SAU.
+> **Song song:** nợ High — user chưa chạy `Docs/RUNBOOK_M1-0.md`. Nếu kết quả được dán vào phiên: xử lý trước, task dưới sau.
 
 ## Current Milestone
 
-**M2 — User Experience** (DEVELOPMENT_PLAN.md §2/M2: Sidebar, Projects, Settings, Search, Dashboard, Advanced Mode, Accessibility)
+**M2 — User Experience** (DEVELOPMENT_PLAN.md §2/M2)
 
-## Current Task (đề xuất)
+## Current Task
 
-**M2-1 — Projects v1: multi-project thật từ Store đến UI**
+**M2-2 — Project Resume v1: mở project là thấy ngay trạng thái**
 
 ## Objective
 
-Project là đơn vị cô lập nền tảng của OSIRIS (Project Isolation) nhưng hiện `ChatService.submit` hardcode `projectID: "default"` — mọi goal đổ vào một project. M2-1 làm multi-project thật: tạo/chọn project, mỗi project có transcript + state + deliverables riêng, sidebar liệt kê projects. Đây là nền của mọi UX sau (Search, Dashboard đều theo project).
+"The user should resume work instantly" (BLUEPRINT/Projects). Hiện chọn project chỉ reset transcript trống — người dùng mù về những gì đã làm. M2-2: mở project → thấy goal gần nhất, các task đã hoàn thành, deliverables (đọc lại nội dung được) — tất cả từ Store (State Over Chat: nguồn sự thật là ProjectState, không phải transcript chat).
 
 ## Phạm vi
 
-1. **Store:** cần liệt kê projects — `listProjectStates()` (đọc qua prefix `project-state/` — pattern đã có; KHÔNG thêm record type mới).
-2. **Application:** ChatService nhận `projectID` từ UI mỗi submit (bỏ hardcode); API mỏng cho danh sách/tạo project (qua Kernel? — KHÔNG: đọc danh sách là query thuần, không phải goal execution — cân nhắc trong phiên: ChatService thêm `listProjects()`/`createProject(name:)` gọi Store trực tiếp? ChatService được phép chạm Store? AD-35 nói Application là cầu nối UI↔Core — Store là Core; nhưng ranh giới hiện tại: ChatService chỉ biết Kernel. Mở rộng ChatService biết Store = thêm quyền lực cho Application. Phương án thay thế: Kernel expose query? Kernel là decision engine, không phải query service. **Chốt trong phiên với Năm Câu Hỏi + cập nhật arch test nếu mở ranh giới** — nghiêng về: Application được chạm Store cho *đọc* (query), mọi *ghi* vẫn qua vòng đời Kernel; nếu chọn hướng này → ghi AD-38).
-3. **ProjectState:** thêm `name` (display) — field mới có migration mặc định (id làm name fallback).
-4. **UI:** sidebar liệt kê projects + nút tạo; chọn project → transcript riêng (ChatViewModel giữ transcript theo project hoặc reset khi đổi — v1: reset + hiển thị state từ Store là M2-2 History; chốt phạm vi nhỏ).
-5. **Tests:** listProjectStates; hai project không rò transcript/deliverable (đã có isolation test ở Store — thêm mức ChatService); tạo project → xuất hiện trong list.
+1. **Application:** mở rộng `ProjectDirectory` (port đã có — thêm closures, không type mới nếu tránh được): `overview(projectID) -> ProjectOverview` (DTO: name, currentGoal?, completedTasks (giới hạn N gần nhất), deliverables [(path, preview ngắn)]) + `deliverableContent(path) -> String?` (đọc full khi user bấm). Composition nối xuống Store hiện có (`projectState(for:)` + `deliverableContent(at:)` — KHÔNG API Store mới nếu đủ; nếu cần preview rẻ → đọc content và cắt tại composition, không thêm method Store).
+2. **UI:** chọn project → detail hiển thị Resume header (goal gần nhất + đếm deliverables) phía trên transcript trống + danh sách deliverables bấm được (sheet đọc nội dung). Giữ diff Presentation nhỏ (nợ High Mac chưa trả).
+3. **Không làm:** không lưu/khôi phục transcript chat (State Over Chat — transcript là UI tạm; lịch sử thật = ProjectState + deliverables); không Search (M2-3); không Dashboard (M2-4).
 
 ## Files cần tạo
 
-- `Tests/CoreTests/ProjectListingTests.swift` (+ ApplicationTests nếu ChatService đổi).
+- `Presentation/Projects/ProjectResumeView.swift` (header + deliverable list + sheet đọc).
+- `Tests/ApplicationTests/ProjectOverviewTests.swift` — overview đúng dữ liệu từ Store; project rỗng → overview rỗng an toàn; preview bị cắt đúng.
 
 ## Files cần sửa
 
-- `Core/Store/Store.swift` + `FileBackedStore.swift` (listProjectStates; ProjectState.name).
-- `Application/ChatService.swift` (projectID per submit + API project).
-- `Presentation/Chat/*` + `App/` (sidebar projects, chọn/tạo).
-- Docs cuối phiên (kể cả AD-38 nếu mở ranh giới đọc cho Application).
+- `Application/ProjectDirectory.swift` (+overview/deliverableContent closures + DTO).
+- `App/AppComposition/CompositionRoot.swift` (nối closures mới).
+- `Presentation/Chat/ChatView.swift` + `ChatViewModel.swift` (hiển thị resume khi đổi project).
+- Docs cuối phiên.
+
+## Dependency
+
+- Store đã có đủ API (projectState, deliverableContent). Không network, offline.
 
 ## Checklist
 
-- [ ] Không nguồn sự thật thứ hai (danh sách project = đọc từ Store, không cache riêng trong UI ngoài view-state).
-- [ ] Ghi vẫn CHỈ qua vòng đời Kernel/Store (arch tests; nếu Application được quyền đọc Store → cập nhật rule có chủ đích, ghi AD — không nới lỏng ngầm).
-- [ ] Project Isolation giữ vững (test 2 project).
+- [ ] Không method Store mới trừ khi chứng minh cần (composition cắt preview được).
+- [ ] Không nguồn sự thật thứ hai (overview = đọc-through, không cache ngoài view-state).
+- [ ] Application vẫn chỉ import OsirisCore; Presentation chỉ OsirisApplication (arch tests).
+- [ ] Transcript chat KHÔNG persist (State Over Chat) — resume đến từ ProjectState.
 - [ ] `swift build` 0 warning; toàn bộ test pass offline.
-- [ ] Đủ quy trình review + docs + NEXT_TASK (M2-2).
+- [ ] Đủ quy trình review + docs + NEXT_TASK (M2-3 — Global Search).
 
 ## Definition of Done
 
-Tạo/chọn project từ UI; goal chạy đúng project; deliverables/state cô lập theo project (test); zero regression.
+Chọn project → thấy goal gần nhất + deliverables, đọc lại được nội dung deliverable; test overview ở tầng Application; zero regression.
 
 ## Estimated Complexity
 
-Trung bình — một quyết định ranh giới (Application đọc Store) cần chốt cẩn thận.
+Thấp–Trung bình.
 
 ## Estimated AI Cost
 
-Dev session: trung bình. Runtime: 0.
+Dev session: nhỏ. Runtime: 0.
 
 ## Risk
 
-- Mở ranh giới Application→Store cẩu thả sẽ xói mòn AD-35 — nếu chốt mở, giới hạn READ-only bằng arch rule mới thay vì bỏ rule.
-- UI code vẫn chưa compile được ở môi trường này (nợ High) — giữ Presentation diff nhỏ.
+- Diff Presentation phình khi nợ Mac chưa trả — giữ view mới nhỏ, tách file riêng.
 
 ## Những phần tuyệt đối không được sửa
 
-- Vòng đời 5 pha, resource order, Gateway pipeline (M2 là UX — Core đứng yên trừ mở rộng Store đọc có chủ đích).
-- Architecture Test rules (chỉ THÊM/siết — kể cả khi mở ranh giới, thêm rule mới thay vì xóa rule cũ).
-- ADR cũ (AD-01…AD-37).
+- Core (M2 là UX; Store API hiện tại đủ — thêm method Store là red flag cần lập luận).
+- Architecture Test rules (chỉ THÊM); ADR cũ (AD-01…AD-38).

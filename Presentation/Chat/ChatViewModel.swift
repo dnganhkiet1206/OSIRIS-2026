@@ -23,6 +23,10 @@ final class ChatViewModel {
 
     private(set) var phase: Phase = .idle
     private(set) var messages: [Message] = []
+    private(set) var projects: [ProjectSummary] = []
+    /// The selected project (Project Isolation). "default" until the user
+    /// picks or creates one; every goal runs inside the current project.
+    private(set) var currentProjectID = "default"
     var draft = ""
 
     var isWorking: Bool {
@@ -31,9 +35,35 @@ final class ChatViewModel {
     }
 
     private let service: ChatService
+    private let projectDirectory: ProjectDirectory
 
-    init(service: ChatService) {
+    init(service: ChatService, projects: ProjectDirectory) {
         self.service = service
+        self.projectDirectory = projects
+    }
+
+    func loadProjects() {
+        Task { @MainActor in
+            projects = (try? await projectDirectory.list()) ?? []
+        }
+    }
+
+    func selectProject(id: String) {
+        guard id != currentProjectID else { return }
+        currentProjectID = id
+        messages = []
+        phase = .idle
+    }
+
+    func createProject(named name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        Task { @MainActor in
+            if let created = try? await projectDirectory.create(trimmed) {
+                projects = (try? await projectDirectory.list()) ?? projects
+                selectProject(id: created.id)
+            }
+        }
     }
 
     func send() {
@@ -42,9 +72,10 @@ final class ChatViewModel {
         draft = ""
         messages.append(Message(role: .user, text: goal))
         phase = .running(activity: "Starting…")
+        let projectID = currentProjectID
 
         Task {
-            await service.submit(goal: goal) { update in
+            await service.submit(goal: goal, projectID: projectID) { update in
                 Task { @MainActor [weak self] in
                     self?.apply(update)
                 }

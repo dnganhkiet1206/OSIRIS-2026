@@ -7,11 +7,13 @@ import OsirisApplication
 /// gets restructured properly).
 struct ChatView: View {
     private enum SidebarItem: Hashable {
-        case chat, settings
+        case chat, project(String), settings
     }
 
     @State private var model: ChatViewModel
     @State private var selection: SidebarItem? = .chat
+    @State private var isNamingProject = false
+    @State private var newProjectName = ""
     private let settings: ProviderSettings
 
     init(model: ChatViewModel, settings: ProviderSettings) {
@@ -24,6 +26,17 @@ struct ChatView: View {
             List(selection: $selection) {
                 Label("Chat", systemImage: "bubble.left.and.text.bubble.right")
                     .tag(SidebarItem.chat)
+                Section("Projects") {
+                    ForEach(model.projects) { project in
+                        Label(project.name, systemImage: "folder")
+                            .tag(SidebarItem.project(project.id))
+                    }
+                    Button {
+                        isNamingProject = true
+                    } label: {
+                        Label("New Project", systemImage: "plus")
+                    }
+                }
                 Label("Settings", systemImage: "gearshape")
                     .tag(SidebarItem.settings)
             }
@@ -39,6 +52,21 @@ struct ChatView: View {
                     composer
                 }
             }
+        }
+        .task { model.loadProjects() }
+        .onChange(of: selection) { _, newValue in
+            if case .project(let id) = newValue {
+                model.selectProject(id: id)
+            }
+        }
+        .alert("New Project", isPresented: $isNamingProject) {
+            TextField("Name", text: $newProjectName)
+            Button("Create") {
+                model.createProject(named: newProjectName)
+                newProjectName = ""
+                selection = .chat
+            }
+            Button("Cancel", role: .cancel) { newProjectName = "" }
         }
     }
 

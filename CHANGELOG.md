@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [Unreleased — M2]
+
+### 2026-07-02 — M2-1: Projects v1 — multi-project thật (AD-38)
+
+- `Store.listProjectStates()` (mới cập nhật trước) + `ProjectState.name` với decode-fallback về id — file state cũ (không có name) migrate im lặng, dữ liệu cũ nguyên vẹn (test bằng file legacy raw).
+- **AD-38:** list/create project là *state management*, không phải goal execution — closure-port `ProjectDirectory` (Application: `ProjectSummary` + 2 closure, không cạnh import mới, cùng pattern ProviderSettings) do composition root nối xuống Store (persister duy nhất). Kernel không thành query service; ChatService không ôm Store; execution results vẫn chỉ persist qua vòng đời Kernel.
+- `ChatService.submit` bắt buộc `projectID` — hết hardcode "default"; UI sở hữu project hiện tại.
+- Sidebar: section Projects (chọn project → transcript reset về project đó; tạo project qua alert); `AppDependencies` gói wiring một lần.
+- Project Isolation test mới ở tầng Application: goal của "alpha" và "beta" không rò state sang nhau.
+- 4 test mới. Tổng 70/70 pass, 0 warning, offline; UI mới qua `swiftc -parse` (nợ High Mac-compiler vẫn treo — runbook).
+
 ## [M1] — 2026-07-02 (tag `M1`)
 
 ### M1-5: Milestone Review & Acceptance

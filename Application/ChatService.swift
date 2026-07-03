@@ -60,7 +60,7 @@ public final class ChatService: @unchecked Sendable {
     /// One goal at a time — a second submit while running fails fast.
     public func submit(
         goal: String,
-        projectID: String = "default",
+        projectID: String,
         onUpdate: @escaping @Sendable (TaskUpdate) -> Void
     ) async {
         guard let kernel = lockedKernel() else {

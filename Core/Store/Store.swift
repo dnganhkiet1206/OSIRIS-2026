@@ -12,6 +12,9 @@ public protocol Store: Sendable {
     // ProjectState
     func projectState(for projectID: ProjectID) async throws -> ProjectState?
     func save(_ state: ProjectState) async throws
+    /// All projects, most recently updated first (M2-1 — feeds the UI's
+    /// project list through the ProjectDirectory port, AD-38).
+    func listProjectStates() async throws -> [ProjectState]
 
     // Knowledge
     func knowledge(id: String) async throws -> KnowledgeRecord?

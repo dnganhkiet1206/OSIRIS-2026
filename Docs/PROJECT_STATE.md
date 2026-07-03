@@ -10,7 +10,7 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M1 — Core Runtime, đang triển khai** (M0 nghiệm thu: tag `M0` local tại `dc54059`; push tag khi merge) |
-| Task hiện tại | **M1 ĐÃ NGHIỆM THU** (M1-5 Review, tag `M1` — xem §4c) · kế tiếp: chờ user duyệt mở M2 (`NEXT_TASK.md` = M2-1) · **[USER] runbook M1-0 vẫn chờ chạy — nợ High, nên xử lý trước/đầu M2** |
+| Task hiện tại | **M2 — User Experience, đang triển khai** · M2-1 (Projects v1) ✅ hoàn thành · kế tiếp: M2-2 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **14 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 66/66 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
@@ -44,10 +44,12 @@ M1 — Core Runtime: Kernel đầy đủ, hệ điều hành AI thực sự vậ
 
 - [x] **M1-4 — Tool Layer v1** (AD-37): `CurrentDateTimeTool` — goal ngày/giờ hoàn thành **0 AI call, 0 token** ("AI Is The Last Tool" thành test vĩnh viễn); `triggerKeywords` trên protocol Tool, **một** thuật toán matching dùng chung skill+tool (`selectByKeywords`); tools inject qua Kernel init (không Tool Registry); `.tool(any Tool)` — plan mang tool đã resolve; **tool results không persist** (deviation có lập luận so với NEXT_TASK: tool re-run miễn phí, kết quả cũ là câu trả lời sai chờ trong reuse — test chứng minh goal lặp lại vẫn fresh + 0 AI); tool fail không rơi sang AI (Kernel đã quyết); metrics `tool.run` tối thiểu; +1 arch rule (Core/Tools là leaf — không biết AI/Skill/Store/Kernel); 4 test mới.
 
+- [x] **M2-1 — Projects v1** (AD-38): multi-project thật — `Store.listProjectStates()` (mới nhất trước) + `ProjectState.name` với decode-fallback về id (file cũ migrate im lặng, có test); `ProjectDirectory` closure-port (Application, cùng pattern ProviderSettings — không cạnh import mới): list/create là state management đi thẳng composition→Store, execution results vẫn chỉ qua Kernel; ChatService.submit bắt buộc projectID (UI sở hữu project hiện tại — hết hardcode "default"); sidebar Projects (chọn/tạo qua alert); Project Isolation test ở tầng Application (2 project không rò state); 4 test mới.
+
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**: 8 file SwiftUI tích tụ 6 milestone chưa qua compiler; nên chạy trước hoặc song song đầu M2 (M2 là milestone toàn UI).
-2. **Chờ user duyệt mở M2** — đề xuất M2-1 tại `NEXT_TASK.md`: Projects v1 (multi-project thật — hiện ChatService hardcode projectID "default").
+1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**: SwiftUI tích tụ chưa qua compiler (M2-1 vừa thêm diff UI); càng sớm càng rẻ.
+2. **M2-2 — Project Resume v1** (chi tiết: `NEXT_TASK.md`): mở project → thấy ngay trạng thái (goal gần nhất, deliverables) — "resume work instantly".
 
 ## 4c. M1 Closeout (nghiệm thu 2026-07-02, tag `M1`)
 
@@ -153,6 +155,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | AD-35 | Application Layer (`OsirisApplication`, chỉ phụ thuộc OsirisCore): ChatService là cầu nối duy nhất UI ↔ Core, dịch event/error → TaskUpdate; Presentation chỉ import OsirisApplication; UI không biết provider/retry/reuse; không rename ExecutionEvent — tổng quát hóa bằng tầng dịch |
 | AD-36 | Composition = `SkillDefinition.compositionSteps` (≤5 bước); xóa struct `SkillComposition` (nguồn sự thật đôi); Kernel resolve steps trong Decide, Execution chạy tuần tự máy móc; parallel + resume hoãn có duyệt đến khi có bằng chứng — xét lại tại M1 review |
 | AD-37 | Tool Layer v1: triggerKeywords trên protocol Tool; MỘT thuật toán matching chung skill+tool; tools inject qua Kernel init (không Tool Registry — AD-17); `.tool(any Tool)` đã resolve; tool results không persist (re-run miễn phí, stale = sai); tool fail không rơi sang AI; metrics tool.run tối thiểu; arch rule: Core/Tools là leaf adapter |
+| AD-38 | Quản lý project = state management (không phải goal execution): closure-port `ProjectDirectory` từ composition root xuống Store; execution results vẫn chỉ qua vòng đời Kernel; ProjectState.name decode-fallback về id |
 
 ## 6. Nợ kỹ thuật (phân loại lại tại M1 Review — Critical/High/Medium/Low)
 
