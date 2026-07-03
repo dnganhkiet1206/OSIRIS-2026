@@ -64,7 +64,7 @@ M8 Production Readiness  ── ổn định lâu dài: test, security, backup, 
 
 **Tiêu chí hoàn thành:** Runtime thực thi được task tổng quát nhiều bước một cách tin cậy; task có thể hoàn thành **không cần AI call nào** khi tài nguyên có sẵn đáp ứng; mọi AI call đều qua AI Gateway.
 
-### M2 — User Experience *(giữ Milestone 2 gốc)*
+### M2 — User Experience *(giữ Milestone 2 gốc)* — ✅ ĐÃ NGHIỆM THU 2026-07-02 (tag `M2`, code-complete; xác minh thiết bị PENDING runbook — PROJECT_STATE §4d)
 
 **Mục tiêu:** Ứng dụng cảm giác hoàn chỉnh, dùng hằng ngày được.
 

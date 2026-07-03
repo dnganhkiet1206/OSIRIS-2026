@@ -1,6 +1,12 @@
 # CHANGELOG
 
-## [Unreleased — M2]
+## [M2] — 2026-07-02 (tag `M2`)
+
+### M2-6: Milestone Review & Acceptance
+
+- **M2 ĐẠT (code-complete)** — nghiệm thu tại PROJECT_STATE §4d; các mục UX chỉ xác minh được trên thiết bị PENDING trung thực (runbook). AD-38/39/40 đều PROVEN bằng test.
+- Câu treo xử có lý do: giữ tên `ProjectDirectory` (rename = churn thẩm mỹ; điều kiện tách ghi rõ); **xóa `InMemorySecretsVault` đúng hẹn** (zero consumer); `ChatViewModel` hoãn tách với trigger cứng (task UI kế tiếp phải tách); `retryPolicy` deadline M3 review.
+- Bằng chứng: build 0/0 debug+release; 87/87 test; baseline 5.53/3.49ms (theo dõi); security sạch; AI spend tích lũy $0.00.
 
 ### 2026-07-02 — M2-5: Advanced Mode gate + Accessibility pass (AD-40)
 

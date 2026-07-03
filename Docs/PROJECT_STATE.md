@@ -10,7 +10,7 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M1 — Core Runtime, đang triển khai** (M0 nghiệm thu: tag `M0` local tại `dc54059`; push tag khi merge) |
-| Task hiện tại | **M2 — User Experience, đang triển khai** · M2-5 (Advanced Mode + Accessibility) ✅ hoàn thành · kế tiếp: M2-6 = M2 Review (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
+| Task hiện tại | **M2 ĐÃ NGHIỆM THU** (code-complete với pending thiết bị — §4d, tag `M2`) · kế tiếp: chờ user duyệt mở M3 (`NEXT_TASK.md` = M3-1) · **[USER] runbook M1-0 vẫn chờ — nợ High, giờ chặn cả xác minh UX M2** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **14 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 66/66 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
@@ -56,8 +56,35 @@ M1 — Core Runtime: Kernel đầy đủ, hệ điều hành AI thực sự vậ
 
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**: SwiftUI tích tụ chưa qua compiler; càng sớm càng rẻ (M2 sắp nghiệm thu — mục simulator sẽ lại PENDING nếu chưa chạy).
-2. **M2-6 — M2 Review** (chi tiết: `NEXT_TASK.md`): nghiệm thu M2 theo DoD; xử các câu treo (tên port ProjectDirectory; InMemorySecretsVault hết M2 không dùng → xóa; ChatViewModel 4 deps — root restructure?); tag `M2`; đề xuất M3.
+1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High** và giờ chặn xác minh UX của M2 trên thiết bị.
+2. **Chờ user duyệt mở M3** — đề xuất M3-1 tại `NEXT_TASK.md`: Reflection & Write Gate v1 (AD-20 có consumer đầu tiên).
+
+## 4d. M2 Closeout (nghiệm thu 2026-07-02, tag `M2`)
+
+**Tiêu chí M2 — đánh giá trung thực:**
+
+| Tiêu chí | Kết quả |
+|---|---|
+| Sidebar (Chat/Search/Dashboard/Projects/Settings; Advanced ẩn) | ✅ |
+| Projects: multi-project + resume tức thì | ✅ (AD-38; isolation + migration có test) |
+| Settings tối giản + API key + Advanced toggle | ✅ |
+| Global Search nhóm loại, xuyên project | ✅ (0 API Store mới) |
+| Dashboard = operational awareness, không analytics | ✅ (AD-39) |
+| Advanced Mode read-only | ✅ (AD-40) |
+| Accessibility | ✅ code-level · ⚠️ mắt thường PENDING Mac |
+| "Người dùng mới hiểu app trong phút đầu" / "app cảm giác hoàn chỉnh" | ⚠️ **PENDING — chỉ xác minh được trên thiết bị (runbook)** |
+
+**Câu treo — quyết định có lý do:**
+- Tên port `ProjectDirectory` (5 vai): **GIỮ** — rename là churn thẩm mỹ không lợi ích chức năng (Constitution: không refactor chỉ vì có cách khác); điều kiện tách: khi M3 làm search giàu lên thành surface riêng.
+- `InMemorySecretsVault`: **ĐÃ XÓA** đúng hẹn (zero consumer — lời hứa M2-1 thực thi; test double conform protocol tại chỗ khi cần).
+- `ChatViewModel` (172 dòng, 4 deps): **chưa god object** — hoãn tách với trigger cứng: *task UI kế tiếp chạm file này (M4 module UI) phải TÁCH thay vì mở rộng* (ghi nợ Medium).
+- `SkillDefinition.retryPolicy`: giữ — deadline là M3 review như hẹn từ M1.
+
+**ADR M2 evidence:** AD-38 (isolation test 2 project + migration test) ✅ PROVEN · AD-39 (seam test cả cache-hit; bus 2 consumer — giá trị "≈ fan-out" ghi trung thực, tái đánh giá M4) ✅ PROVEN · AD-40 (arch rule cưỡng chế, 15 rule xanh) ✅ PROVEN.
+
+**Chất lượng:** build 0/0 debug+release · 87/87 test offline ~1s · baseline: fresh **5.53ms** / reuse **3.49ms** (M1: 5.45/3.14 — nhích trong biên độ đo, theo dõi tiếp) · security sạch · Application lớn nhất 152 dòng, ViewModel 172 · chi phí AI tích lũy **$0.00**.
+
+**Kết luận: M2 ĐẠT (code-complete)** — như M0, phần xác minh thiết bị PENDING có địa chỉ (runbook). Rủi ro lớn nhất không đổi: nợ High Mac ngày càng đắt.
 
 ## 4c. M1 Closeout (nghiệm thu 2026-07-02, tag `M1`)
 
@@ -184,7 +211,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | Low | Keyword matching khớp cả ngữ cảnh phủ định ("don't summarize") | Chấp nhận v1 — fallback rẻ; nâng cấp theo sử dụng thật |
 | Low | Reuse per-project (đúng Project Isolation; chưa có cross-project reuse có kiểm soát) | M3 với policy rõ |
 | Low | Arch-test scanner cắt `//` theo dòng — string literal chứa URL có thể false-negative | Nâng parser khi có ca thật |
-| Low | `InMemorySecretsVault` chưa có consumer production | Xóa nếu hết M2 không dùng |
+| Medium | `ChatViewModel` gánh 5 vai (chat/projects/search/dashboard/skills) — 172 dòng, chưa đau nhưng trend rõ | **Trigger cứng:** task UI kế tiếp chạm file này phải TÁCH (không mở rộng thêm) |
 | Low | EventBus: 2 consumer tĩnh hiện tại ≈ closure fan-out — giá trị thật chờ consumer động | Tái đánh giá tại M4 (Modules); xóa nếu modules không dùng (AD-39) |
 | Low | Metrics chỉ session-only — restart mất "Today's usage" | Chấp nhận theo thiết kế; persist history là câu hỏi M7 với dữ liệu thật |
 

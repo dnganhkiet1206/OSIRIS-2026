@@ -31,7 +31,7 @@ public struct TaskUpdate: Equatable, Sendable {
 ///
 /// Wiring (composition root only): create the service, hand `relay(_:)` to
 /// the Kernel as its event publisher, then `configure(kernel:)` once.
-/// Lock-based state mirrors the InMemorySecretsVault precedent.
+/// Lock-based state — the module's standard pattern for small shared state.
 public final class ChatService: @unchecked Sendable {
     private let lock = NSLock()
     private var kernel: Kernel?
