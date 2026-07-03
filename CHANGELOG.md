@@ -2,6 +2,15 @@
 
 ## [Unreleased — M4]
 
+### 2026-07-03 — M4-3: Channel Analysis v1 — quyết định tool-channel bằng Architecture Review trước code (AD-45)
+
+- **Architecture Review đi trước, code đi sau** (yêu cầu user): 11 câu trả lời đầy đủ, 3 phương án so sánh (A: skill trên dữ liệu user dán; B: mở contract `tools` + API tool; C: tool đọc CSV). **Chọn A — nhỏ nhất**: 0 dòng Core, 0 dòng contract, ship giá trị ngay.
+- **AD-45 — vì sao KHÔNG mở contract (quyết định phủ định có điều kiện kích hoạt):** lý do cấu trúc quyết định — `ModuleManifest` là **Codable thuần data** (bản chất của AD-44), `Tool` là **protocol mang hành vi** (không Codable): nhét `[any Tool]` vào manifest đổi BẢN CHẤT contract từ data sang code. Cộng bằng chứng vận hành: auto-fetch cần OAuth/network/privacy — quyết định thuộc user tại M6 Automation (mcpRemoteTools đang false). Điều kiện kích hoạt + phương án ưu tiên (tách code khỏi manifest) ghi trong AD.
+- **`youtube.channel-analysis`**: phân tích dữ liệu kênh user DÁN vào goal (từ YouTube Studio) — best performer + why, 2 pattern nên lặp, 1 thứ nên dừng, 3 hành động; template tự nhận "dữ liệu không đủ thì nói rõ, không bịa số"; tier `.standard` khai báo; dữ liệu dán luôn tươi đúng mức user muốn (cùng logic AD-37); insight từ text = việc AI thật — "AI Is The Last Tool" giữ nguyên.
+- **Keyword sweep tự động thay rà tay:** test mới quét MỌI cặp keyword (skill mới × toàn registry + tool) khẳng định 0 overlap — trả lời rủi ro n² ghi từ M4-2 bằng máy.
+- Module vẫn 0 state/persistence/business logic; EventBus: 4 mảng liên tiếp không cần events (điểm dữ liệu cho M4 review).
+- **0 dòng Core, 0 dòng contract.** 3 test mới. Tổng **133/133 pass**, 0 warning, offline.
+
 ### 2026-07-03 — M4-2: SEO + Publishing Package — package là deliverable, không phải hệ thống
 
 - **`youtube.seo-package`**: metadata một video (3 title ≤60 ký tự, description 2 đoạn, 10 tags, 3 hashtags) — skill prompt-data, 1 AI call.

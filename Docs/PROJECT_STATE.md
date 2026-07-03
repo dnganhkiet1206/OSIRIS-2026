@@ -10,10 +10,10 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M4 — YouTube Module (reference implementation), đang triển khai** (M0→M3 nghiệm thu; tag local chờ push khi merge) |
-| Task hiện tại | M4-0 ✅ · M4-1 ✅ · **M4-2 (SEO + Publishing Package) ✅ hoàn thành** · kế tiếp: M4-3 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High, ngày càng đắt** |
+| Task hiện tại | M4-0 ✅ · M4-1 ✅ · M4-2 ✅ · **M4-3 (Channel Analysis + quyết định tool-channel) ✅ hoàn thành — AD-45** · kế tiếp: M4-4 Milestone Review (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **16 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 130/130 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 133/133 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -66,10 +66,12 @@ M4 — YouTube Module: module nghiệp vụ production-quality đầu tiên = kh
 
 - [x] **M4-2 — SEO + Publishing Package**: `youtube.seo-package` (metadata: titles/description/tags/hashtags) + `youtube.publishing-package` — **package là DELIVERABLE, không phải hệ thống**: skill một-prompt dùng độc lập (1 AI call) HOẶC làm bước cuối composition `youtube.script-to-package` (package grounded trong script thật qua previous-step chaining — test); không Publishing/SEO/Metadata Engine; module vẫn 0 state/session/OAuth/upload/cache/persistence; **guideline union tinh chỉnh lần 2 (vẫn thuần data):** quy tắc thật = "tuyển chọn union sao cho MỌI tie về single skill, kiểm từng cặp overlap bằng test với tie-break id trong đầu" (ở đây GIỮ "script" trong union vì các id tie đều sort trước composition — ngược với case M4-1 bỏ "script"); phát hiện qua test fail-first (tie 2-2 → single thắng sai domain); 0 dòng Core, 0 dòng contract; 3 test mới; 130/130.
 
+- [x] **M4-3 — Channel Analysis v1 + quyết định tool-channel** (AD-45): Architecture Review TRƯỚC code (11 câu, 3 phương án so sánh — xem report phiên); **quyết định: KHÔNG mở contract** — lý do cấu trúc: manifest là Codable data, Tool là protocol hành vi → `[any Tool]` đổi bản chất contract, không phải thêm field; `youtube.channel-analysis` = skill phân tích dữ liệu USER DÁN VÀO goal (0 tool/OAuth/network/state — dữ liệu dán luôn tươi, cùng logic AD-37; insight từ text = việc AI thật, không vi phạm "AI Is The Last Tool"); tier `.standard` khai báo; keywords 0 overlap với toàn registry (test sweep tự động — chống n² bằng máy thay vì rà tay); điều kiện kích hoạt tool-channel ghi tại AD-45 (M6: OAuth/network do user quyết + MCP flag); EventBus: 4 mảng liên tiếp không cần events; 0 dòng Core, 0 dòng contract; 3 test mới; 133/133.
+
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High** (M4 chạy trên nền thật → giá trị runbook tăng thêm).
-2. **M4-3 — Channel Analysis + câu hỏi tool-contribution-channel** (chi tiết: `NEXT_TASK.md`) — ca đầu tiên cần dữ liệu thật từ ngoài: quyết định mở rộng contract (field optional `tools`) sẽ được đặt với bằng chứng cụ thể; HOẶC M4 review nếu đánh giá khuôn mẫu đã đủ bằng chứng.
+1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**.
+2. **M4-4 — M4 Milestone Review & Acceptance** (chi tiết: `NEXT_TASK.md`): khuôn mẫu module đã lặp 4 mảng đủ bằng chứng; xử deadline EventBus (4 điểm dữ liệu "không cần" đã đếm); Thumbnail/Shorts data thuần → M5 cùng module mới hoặc bổ sung sau theo nhu cầu thật.
 
 ## 4e. M3 Closeout (nghiệm thu 2026-07-03, tag `M3`)
 
@@ -242,6 +244,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | AD-42 | Smart Planning v1 deterministic: `ComplexityEstimate` pure (số từ/tín hiệu khối lượng/số mệnh đề — 0 AI/0 token/0 lịch sử); tier được earn (skill > estimate), Gateway chỉ tiêu thụ; Confidence Medium consumer đầu tiên — assumption qua đúng WriteGate (không đường ghi thứ hai); extension-by-data mở, extension-by-algorithm đóng có chủ đích |
 | AD-43 | Executive Summary = cấu trúc output khai báo, không phải component: scaffold là data trong Config (≤80 token, test cưỡng chế), inject vào Execution, nối máy móc vào `.ai` + bước cuối composition; reuse/tool/bước giữa không scaffold; default nil = zero regression; không Summary/Report/Formatter Engine |
 | AD-44 | Module Contract v1: module LÀ manifest — thuần data (id/version/purpose/skills); target OsirisModules chỉ depend OsirisCore; skill namespace structural theo module id; composition root duy nhất biết module cài đặt; 3 lớp cưỡng chế (compiler + 2 nhóm arch rule); Core không bao giờ biết module cụ thể; không Plugin Engine/Module Manager |
+| AD-45 | Tool-channel cho manifest: KHÔNG mở (manifest = Codable data, Tool = protocol hành vi — đổi bản chất contract); Channel Analysis v1 = skill trên dữ liệu user cung cấp (0 tool/OAuth/network); điều kiện kích hoạt: M6 Automation với user quyết consent + phương án tách code khỏi manifest |
 
 ## 6. Nợ kỹ thuật (phân loại lại tại M1 Review — Critical/High/Medium/Low)
 

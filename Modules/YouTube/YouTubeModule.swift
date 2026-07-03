@@ -13,11 +13,11 @@ import OsirisCore
 public enum YouTubeModule {
     public static let manifest = ModuleManifest(
         id: ModuleID("youtube"),
-        version: "0.3.0",
+        version: "0.4.0",
         purpose: "YouTube content operations — reference module proving the Module Contract",
         skills: [
             ideaGeneration, scriptOutline, scriptGeneration,
-            seoPackage, publishingPackage,
+            seoPackage, publishingPackage, channelAnalysis,
             ideaToScript, researchToScript, scriptToPackage,
         ]
     )
@@ -139,6 +139,36 @@ public enum YouTubeModule {
         """,
         preferredModelTier: .light,
         triggerKeywords: ["publishing package", "publish package", "ready to publish", "gói xuất bản"]
+    )
+
+    /// Channel analysis v1 works on data the USER provides in the goal
+    /// (pasted from YouTube Studio) — deliberately no API tool (AD-45):
+    /// auto-fetch needs OAuth/network decisions that belong to M6 with
+    /// explicit user consent, and the manifest stays Codable pure data.
+    /// Insight extraction from provided text is genuine AI work — no
+    /// deterministic tool could do it, so "AI Is The Last Tool" holds.
+    static let channelAnalysis = SkillDefinition(
+        id: SkillID("youtube.channel-analysis"),
+        version: "1.0.0",
+        capabilityTags: [CapabilityTag("youtube"), CapabilityTag("channel-analysis")],
+        purpose: "Analyze channel data the user provides (paste from YouTube Studio)",
+        inputs: ["goal"],
+        outputs: ["analysis"],
+        promptTemplate: """
+        Analyze the YouTube channel data provided in the request below \
+        (video list, views, retention — whatever was pasted). Identify: \
+        what performs best and the likely why, 2 patterns worth repeating, \
+        1 thing to stop doing, and 3 concrete next actions. Ground every \
+        claim in the provided data — where the data is insufficient, say \
+        so instead of inventing numbers.
+
+        Request: {goal}
+        """,
+        preferredModelTier: .standard,
+        triggerKeywords: [
+            "channel analysis", "analyze my channel", "channel stats",
+            "channel performance", "phân tích kênh",
+        ]
     )
 
     /// Cross-namespace composition (AD-44 proof): step 1 is a BUILT-IN
