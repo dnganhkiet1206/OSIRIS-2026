@@ -1,65 +1,64 @@
 # NEXT_TASK.md
 
-> **TRẠNG THÁI: CHỜ USER DUYỆT MỞ M3.** M2 đã nghiệm thu (PROJECT_STATE §4d, tag `M2`). Task dưới đây là ĐỀ XUẤT đầu tiên của M3 — không tự ý bắt đầu.
+> Quy trình phiên làm việc: đọc `Docs/PROJECT_STATE.md` → đọc file này → đọc các file liên quan → thiết kế → kiểm tra tái sử dụng → triển khai → Self Review → Architecture Review → refactor nếu cần → cập nhật tài liệu → cập nhật PROJECT_STATE → tạo NEXT_TASK mới → kết thúc. Không bỏ qua bước nào.
 >
-> **Nợ High vẫn treo:** `Docs/RUNBOOK_M1-0.md` — giờ chặn cả xác minh UX M2 trên thiết bị. M3 là milestone Core-heavy (ít UI) nên có thể chạy song song, nhưng càng để lâu càng đắt.
+> **Song song:** nợ High — user chưa chạy `Docs/RUNBOOK_M1-0.md`. Nếu kết quả được dán vào phiên: xử lý trước, task dưới sau.
 
 ## Current Milestone
 
-**M3 — Intelligence Layer** (DEVELOPMENT_PLAN.md §2/M3: smart planning, reuse pipeline hoàn chỉnh, cache tối ưu, reflection có gate, deliverable templates, auto state update)
+**M3 — Intelligence Layer** (DEVELOPMENT_PLAN.md §2/M3)
 
-## Current Task (đề xuất)
+## Current Task
 
-**M3-1 — Reflection & Write Gate v1: AD-20 có consumer đầu tiên**
+**M3-2 — Smart Planning v1: complexity → tier, Confidence Medium có consumer**
 
 ## Objective
 
-ADR chờ lâu nhất (AD-20 — learning gate, từ v1.1) có consumer thật: sau mỗi execution thành công, pha Persist chạy một bước **reflection tối giản, deterministic** (chưa AI): quyết định *có gì đáng ghi vào Store làm việc tương lai rẻ hơn không* — và mọi ghi phải qua **write gate** đọc từ `policies.json` (trả nợ Medium "write gate chưa enforce bằng code"). Sau M3-1: goal lặp *gần giống* (không exact) bắt đầu hưởng lợi từ WorkingContext do hệ thống tự ghi.
+Decide thông minh hơn mà không thêm token: (1) **ước lượng complexity deterministic** cho goal (heuristic từ dữ liệu có sẵn — độ dài, số yêu cầu con, từ khóa khối lượng như "detailed/toàn diện/full") → **chọn `ModelTier`** thay vì hardcode `.light` (chuẩn bị sẵn cho ngày có ≥2 model thật — tier routing đang là nợ Medium); (2) **Confidence Medium có consumer đầu tiên** (M1 mới dùng High/Low): goal dài-mơ-hồ (đo được: nhiều mệnh đề, thiếu đối tượng cụ thể — heuristic chặt) → proceed nhưng **assumption được ghi qua đúng WriteGate vừa xây** (justification `reducesFutureTokens`? — không: assumption phục vụ truy vết → `reusableLater`; chốt trong phiên) và xuất hiện trong context của goal sau.
 
 ## Phạm vi
 
-1. **WriteGate (Core/Store/Policies/):** đọc `policies.json > storeWriteGate.requiresAnyOf` (đã có sẵn từ M0-1!) — một hàm thuần `allows(WriteJustification) -> Bool`; `WriteJustification` = tập lý do khai báo (`reusableLater`, `affectsArchitecture`, `reducesFutureTokens`).
-2. **Reflection v0 (deterministic, KHÔNG AI call):** trong Persist, sau khi save deliverable: nếu strategy là `.ai/.composition` và goal chứa tín hiệu chủ đề (đơn giản: goal length ≥ N từ) → ghi một `WorkingContextRecord` (TTL từ policies.json `workingContextDefaultTTLHours` — cũng có sẵn!) tóm tắt: goal + path deliverable, justification `reusableLater`. Gate từ chối → không ghi (test).
-3. **Kernel giữ thuần:** quyết định "ghi gì" là Decide-đúng-nghĩa → logic reflection nằm trong Kernel (pure decision) nhưng thao tác ghi qua Store như mọi khi; policies inject qua init (data, không I/O trong Kernel — composition đọc file).
-4. **Đo được:** event mới? Không — log qua Store? Giữ tối giản: đếm trong test.
-5. **Tests:** gate cho phép/từ chối theo policy; reflection ghi WorkingContext đúng TTL; goal ngắn không ghi (không rác); reuse `.anyWord` của Gateway retrieval nhặt được record vừa ghi ở goal liên quan (khép vòng giá trị).
+1. **`ComplexityEstimate` (pure, Core/Kernel/Decision/):** enum `simple/standard/complex` từ heuristic deterministic; map → tier (`simple/standard → .light`, `complex → .standard` — có ý nghĩa khi catalog ≥2 model; hiện catalog 1 model thật nên tier routing vẫn chờ, nhưng plan.preferredTier bắt đầu mang giá trị thật).
+2. **Confidence Medium:** `confidence(in:)` mở rộng (hiện: empty→low, else high): heuristic Medium chặt (vd goal >N từ nhưng không khớp skill/tool nào VÀ chứa đại từ mơ hồ "it/this/cái đó" không tiền ngữ — giữ đơn giản, thà High); Medium → vẫn thực thi + `MemoryCandidate` assumption ("Assumed interpretation: …") qua WriteGate.
+3. **Metrics/observability:** không thêm seam mới — assumption ghi WC là đủ dấu vết.
+4. **Không làm:** không AI-assisted planning; không đổi Gateway routing (tier consumption vẫn chờ ≥2 model); không nới matcher.
 
 ## Files cần tạo
 
-- `Core/Store/Policies/WriteGate.swift`, `Tests/CoreTests/ReflectionTests.swift`.
+- `Core/Kernel/Decision/ComplexityEstimate.swift`, `Tests/CoreTests/SmartPlanningTests.swift`.
 
 ## Files cần sửa
 
-- `Core/Kernel/Kernel.swift` (Persist + reflection decision; init nhận `WritePolicy` data), `App/AppComposition/CompositionRoot.swift` (đọc policies.json đầy đủ → inject), có thể `PoliciesFile` mở rộng.
-- Docs cuối phiên (+AD-41: reflection v0 deterministic — AI-reflection chỉ khi có bằng chứng đáng tiền).
+- `Core/Kernel/Kernel.swift` (Decide: estimate → tier; confidence medium → assumption candidate qua writeGate), `Core/Kernel/Decision/ExecutionStrategy.swift` (nếu cần chú thích ConfidenceTier.medium).
+- Docs cuối phiên (+AD-42 nếu có quyết định mới đáng ghi).
 
 ## Checklist
 
-- [ ] AD-20 chuyển trạng thái AWAITING → PROVEN (gate có consumer + test).
-- [ ] Reflection KHÔNG gọi AI, KHÔNG thêm token cost; mọi ghi qua gate; gate đọc từ config (không hardcode lý do).
-- [ ] Kernel vẫn thuần (arch test canh); Store vẫn persister duy nhất.
-- [ ] Không ghi rác: goal ngắn/tool/reuse không sinh record (tool đã 0-persist theo AD-37).
-- [ ] `swift build` 0 warning; toàn bộ test pass offline.
-- [ ] Đủ quy trình review + docs + NEXT_TASK (M3-2 — Smart Planning: complexity estimate + confidence Medium có consumer).
+- [ ] Toàn bộ heuristic deterministic, 0 AI call, 0 token thêm.
+- [ ] Assumption đi qua WriteGate — KHÔNG đường ghi mới (arch rule memory-born-in-gate đang canh).
+- [ ] Tier chỉ đổi trên `.ai/.composition` path; `.reuse/.tool` không bị ảnh hưởng.
+- [ ] Heuristic Medium chặt — thà High (không spam assumption); test goal thường KHÔNG sinh assumption.
+- [ ] Zero regression toàn bộ test cũ.
+- [ ] Đủ quy trình review + docs + NEXT_TASK (M3-3 — Deliverable Templates & Executive Summary v1).
 
 ## Definition of Done
 
-Write gate enforce từ config; reflection deterministic ghi WorkingContext có TTL sau execution AI thành công; retrieval nhặt được record ở goal liên quan (test end-to-end); AD-20 PROVEN; zero regression.
+Complexity→tier hoạt động có test; Medium confidence sinh assumption ghi qua gate và xuất hiện trong retrieval của goal sau; ConfidenceTier hết case chết; zero regression.
 
 ## Estimated Complexity
 
-Trung bình — chạm Persist của Kernel (vùng nhạy cảm), nhưng thuần data-driven.
+Trung bình — chạm Decide (vùng nhạy cảm nhất), thuần heuristic.
 
 ## Estimated AI Cost
 
-Dev session: nhỏ–trung bình. Runtime: 0 (reflection deterministic).
+Dev session: nhỏ–trung bình. Runtime: 0.
 
 ## Risk
 
-- Reflection ghi rác làm nhiễu retrieval — tiêu chí ghi chặt (thà không ghi), TTL tự dọn, gate từ config.
-- Đụng Persist → giữ mọi test reuse/persist hiện có làm guard.
+- Heuristic phức tạp hóa Decide — giữ mỗi hàm thuần nhỏ, test riêng.
+- Assumption spam làm nhiễu retrieval — tiêu chí Medium rất chặt + TTL tự dọn.
 
 ## Những phần tuyệt đối không được sửa
 
-- Gateway pipeline; Execution; contract Store hiện có (WriteGate là type mới cạnh Store, không đổi protocol trừ khi có bằng chứng trong phiên — nếu cần method mới phải lập luận).
-- Architecture Test rules (chỉ THÊM); ADR cũ (AD-01…AD-40).
+- WriteGate/Reflection vừa chốt (M3-2 chỉ *dùng* gate, không sửa); Gateway; Execution; Store.
+- Architecture Test rules (chỉ THÊM); ADR cũ (AD-01…AD-41).

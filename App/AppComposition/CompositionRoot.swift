@@ -57,6 +57,7 @@ enum CompositionRoot {
             engine: DefaultExecutionEngine(gateway: gateway, logger: logger),
             store: store,
             approvalGate: RequireUserApprovalGate(),
+            writeGate: WriteGate(policy: makeWritePolicy()),
             publish: { await events.publish($0) }
         )
         subscribe(events) { [weak service] in service?.relay($0) }
@@ -181,7 +182,28 @@ enum CompositionRoot {
 
     private struct PoliciesFile: Decodable {
         struct AIRetry: Decodable { let maxAttempts: Int }
+        struct StoreWriteGate: Decodable { let requiresAnyOf: [String] }
         let aiRetry: AIRetry
+        let storeWriteGate: StoreWriteGate
+        let workingContextDefaultTTLHours: Double
+    }
+
+    /// Write policy from Config (AD-20/41). An unknown justification in the
+    /// config is a broken install — fail fast, never silently drop rules.
+    private static func makeWritePolicy() -> WritePolicy {
+        do {
+            let policies = try makeConfigurationLoader().loadJSON(PoliciesFile.self, file: "policies.json")
+            let mapped = policies.storeWriteGate.requiresAnyOf.compactMap(WriteJustification.init(rawValue:))
+            guard mapped.count == policies.storeWriteGate.requiresAnyOf.count else {
+                fatalError("Config/policies.json contains unknown write-gate justifications")
+            }
+            return WritePolicy(
+                requiresAnyOf: mapped,
+                workingContextTTLHours: policies.workingContextDefaultTTLHours
+            )
+        } catch {
+            fatalError("Config/policies.json missing or invalid: \(error)")
+        }
     }
 
     private static func loadRouting(from config: ConfigurationLoader) -> RoutingFile {

@@ -20,6 +20,10 @@ public final class Kernel: Sendable {
     private let engine: any ExecutionEngine
     private let store: any Store
     private let approvalGate: any ApprovalGate
+    /// The only path from reflection candidates to persistable records
+    /// (AD-20/41). Defaults to disabled — memory writes are opt-in via
+    /// the composed policy, never an accident.
+    private let writeGate: WriteGate
     private let publish: EventPublisher
 
     public init(
@@ -28,6 +32,7 @@ public final class Kernel: Sendable {
         engine: any ExecutionEngine,
         store: any Store,
         approvalGate: any ApprovalGate,
+        writeGate: WriteGate = WriteGate(policy: .disabled),
         publish: @escaping EventPublisher
     ) {
         self.skills = skills
@@ -35,6 +40,7 @@ public final class Kernel: Sendable {
         self.engine = engine
         self.store = store
         self.approvalGate = approvalGate
+        self.writeGate = writeGate
         self.publish = publish
     }
 
@@ -110,6 +116,15 @@ public final class Kernel: Sendable {
         }
         state.recordCompletion(of: goal.text)
         try await store.save(state)
+
+        // Reflection (AD-41): deterministic, zero tokens. A candidate only
+        // becomes a record if the Write Gate admits it; persisting it is
+        // best-effort — auxiliary memory never fails a completed goal.
+        if let memoryCandidate = Reflection.candidate(
+            goal: goal, strategy: strategy, deliverablePath: deliverable.filePath
+        ), let record = writeGate.admit(memoryCandidate) {
+            try? await store.save(record)
+        }
 
         await publish(.completed)
         return deliverable

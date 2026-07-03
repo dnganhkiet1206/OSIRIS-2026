@@ -10,7 +10,7 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M1 — Core Runtime, đang triển khai** (M0 nghiệm thu: tag `M0` local tại `dc54059`; push tag khi merge) |
-| Task hiện tại | **M2 ĐÃ NGHIỆM THU** (code-complete với pending thiết bị — §4d, tag `M2`) · kế tiếp: chờ user duyệt mở M3 (`NEXT_TASK.md` = M3-1) · **[USER] runbook M1-0 vẫn chờ — nợ High, giờ chặn cả xác minh UX M2** |
+| Task hiện tại | **M3 — Intelligence Layer, đang triển khai** · M3-1 (Reflection & Write Gate v1) ✅ hoàn thành — **AD-20 PROVEN** · kế tiếp: M3-2 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **14 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 66/66 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
@@ -54,10 +54,12 @@ M1 — Core Runtime: Kernel đầy đủ, hệ điều hành AI thực sự vậ
 
 - [x] **M2-5 — Advanced Mode gate + Accessibility pass** (AD-40): toggle trong Settings, ẩn mặc định — `@AppStorage` nằm trọn trong Presentation (không cần port); **AD-40 định nghĩa ranh giới hai loại persist** (UI-pref = UserDefaults ở App/Presentation; platform data = Store) + arch rule mới cưỡng chế (15 rule); AdvancedView read-only: Skills inventory (`SkillInfo.from` — pure mapping, composition badge) + System (provider/version) — không dev-tool platform, không hành động phá hoại; accessibility: label cho nút icon-only, status combine, không fixed font; 3 test mapping + 1 arch rule.
 
+- [x] **M3-1 — Reflection & Write Gate v1** (AD-41; **AD-20 AWAITING → PROVEN**): Reflection deterministic (0 AI/0 token, tiêu chí chặt: `.ai/.composition` + goal ≥4 từ + có deliverable, tối đa 1 candidate) sinh `MemoryCandidate` — không biết Store, không persist; `WriteGate` là điểm quyết định duy nhất (policy từ policies.json — key nằm chờ từ M0-1; unknown justification = fail fast; đích = WorkingContext TTL tự dọn; default `.disabled` — memory là opt-in); arch rule mới: memory record chỉ construct trong Core/Store (không bypass — 16 rule); save best-effort; **test giá trị khép vòng: goal LIÊN QUAN (không exact) nhận được memory phản chiếu trong prompt qua retrieval**; 6 test mới.
+
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High** và giờ chặn xác minh UX của M2 trên thiết bị.
-2. **Chờ user duyệt mở M3** — đề xuất M3-1 tại `NEXT_TASK.md`: Reflection & Write Gate v1 (AD-20 có consumer đầu tiên).
+1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**.
+2. **M3-2 — Smart Planning v1** (chi tiết: `NEXT_TASK.md`): ước lượng complexity deterministic trong Decide → chọn tier; Confidence **Medium** có consumer đầu tiên (assumption ghi qua đúng WriteGate vừa xây).
 
 ## 4d. M2 Closeout (nghiệm thu 2026-07-02, tag `M2`)
 
@@ -193,6 +195,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | AD-38 | Quản lý project = state management (không phải goal execution): closure-port `ProjectDirectory` từ composition root xuống Store; execution results vẫn chỉ qua vòng đời Kernel; ProjectState.name decode-fallback về id |
 | AD-39 | Gateway.onMetrics: MỘT callback optional phát metrics mỗi request — Gateway không aggregate/persist; DashboardModel session-only (M7 quyết lịch sử); EventBus 2 consumer đầu tiên, tái đánh giá tại M4 |
 | AD-40 | Ranh giới persist: UI preferences = UserDefaults/@AppStorage, chỉ App/Presentation (arch rule cưỡng chế); platform data = Store (AD-32 nguyên vẹn) |
+| AD-41 | Reflection v1 deterministic (0 AI/0 token) sinh MemoryCandidate → WriteGate (policy từ config, điểm quyết định duy nhất, không bypass — arch rule) → Store persist; đích WC-TTL; Knowledge đóng; AI-reflection cấm đến khi trả lời 4 câu bằng chứng; AD-20 PROVEN |
 
 ## 6. Nợ kỹ thuật (phân loại lại tại M1 Review — Critical/High/Medium/Low)
 
@@ -202,7 +205,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 |---|---|---|
 | **High** | 8 file SwiftUI (App/ + Presentation/) tích tụ 6 milestone chưa qua compiler (môi trường không có Mac); mới qua `swiftc -parse` | **[USER] chạy `Docs/RUNBOOK_M1-0.md`** trước hoặc song song đầu M2 — M2 là milestone toàn UI, xây tiếp trên nền chưa compile là rủi ro kép |
 | Medium | Token/latency/cost baseline provider thật chưa có (cần API key) | Phần C của runbook; không giả số liệu |
-| Medium | Store write gate / learning gate (AD-20) là contract chưa enforce bằng code | M3 (Reflection/memory update là consumer đầu tiên) |
+| ~~Medium~~ | ~~Store write gate / learning gate (AD-20) chưa enforce~~ — **ĐÃ TRẢ tại M3-1** (WriteGate + arch rule không-bypass) | ✅ |
 | Medium | Tier routing chưa hoạt động (`preferredTier` chưa được Gateway tiêu thụ — 1 model thật) | Kích hoạt khi có ≥2 model thật trong catalog |
 | Medium | `SkillDefinition.retryPolicy` (per-skill) chưa được consumed — Gateway retry là mức duy nhất đang chạy | Kích hoạt cùng tool/AI failure patterns thật (M2+); nếu M3 vẫn không có consumer → cân nhắc xóa field (AD-28 hai chiều) |
 | Low | Store search đọc lại toàn bộ file mỗi lần (chưa cache/index); relevance = word-hit v1 | Tối ưu ở M3/M7 khi có số liệu thật |

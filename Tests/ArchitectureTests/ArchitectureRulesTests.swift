@@ -233,6 +233,16 @@ final class ArchitectureRulesTests: XCTestCase {
         }
     }
 
+    // MARK: Memory write gate (AD-20/41, added M3-1 — rules are only ever added)
+
+    func testMemoryRecordsAreBornInTheGate() {
+        assertNoMatch(
+            sources(notUnder: ["Core/Store/"]),
+            pattern: #"(WorkingContextRecord|KnowledgeRecord)\("#,
+            rule: "AD-20/41: memory records are constructed only inside Core/Store (the Write Gate) — nothing bypasses it"
+        )
+    }
+
     // MARK: UI preference boundary (AD-40, added M2-5 — rules are only ever added)
 
     func testUIPreferencesStayInPresentationAndApp() {

@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [Unreleased — M3]
+
+### 2026-07-02 — M3-1: Reflection & Write Gate v1 — hệ thống bắt đầu ghi nhớ có kỷ luật (AD-41; AD-20 PROVEN)
+
+- **Chuỗi trách nhiệm bằng type, không bypass:** Reflection (pure, deterministic — 0 AI, 0 token) chỉ nhìn strategy/goal/deliverable đã có, sinh tối đa MỘT `MemoryCandidate` — không biết Store, không persist → `WriteGate` là điểm quyết định DUY NHẤT (ghi/không/ghi-đâu; policy đọc từ `policies.json` — key `storeWriteGate`/`workingContextDefaultTTLHours` nằm chờ từ M0-1; unknown justification = fail fast) → Store persist. Arch rule mới (16 tổng): `WorkingContextRecord`/`KnowledgeRecord` chỉ được construct trong Core/Store — Reflection *về mặt type* không thể tự tạo record.
+- Tiêu chí chặt — trí nhớ đáng tin hơn nhiều trí nhớ: chỉ `.ai/.composition` (reuse đã trên đĩa, tool free-to-recompute theo AD-37), goal ≥4 từ, có deliverable; đích duy nhất = WorkingContext với TTL từ policy (tự dọn); Knowledge writes đóng cho đến khi justification có consumer; save best-effort (memory phụ không fail goal); Kernel default `.disabled` — memory là opt-in qua composition.
+- **Test giá trị khép vòng:** goal thứ hai *liên quan* (không exact — "Write catchy thumbnail captions…" sau "Research thumbnail ideas…") nhận memory phản chiếu trong prompt qua Gateway retrieval (`### Current working context`). Disabled policy → zero record (chứng minh không đường ngầm).
+- AD-20 (khai từ kiến trúc v1.1, AWAITING 4 milestone) → **PROVEN**; trả nợ Medium "write gate chưa enforce".
+- 6 test mới; 94/94 pass, 0 warning, offline. Không Learning Engine, không AI reflection (bị cấm đến khi trả lời đủ 4 câu bằng chứng).
+
 ## [M2] — 2026-07-02 (tag `M2`)
 
 ### M2-6: Milestone Review & Acceptance
