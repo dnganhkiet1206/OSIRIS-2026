@@ -77,6 +77,17 @@ enum CompositionRoot {
             },
             deliverableContent: { path in
                 try await store.deliverableContent(at: path)
+            },
+            search: { query in
+                let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty else { return [] }
+                let projects = try await store.listProjectStates().map {
+                    ProjectSummary(id: $0.projectID.rawValue, name: $0.name)
+                }
+                let results = try await store.search(StoreQuery(
+                    text: trimmed, projectID: nil, limit: 15, matchMode: .anyWord
+                ))
+                return SearchHit.assemble(query: trimmed, projects: projects, storeResults: results)
             }
         )
     }

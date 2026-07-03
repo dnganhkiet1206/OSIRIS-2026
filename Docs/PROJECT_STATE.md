@@ -10,7 +10,7 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M1 — Core Runtime, đang triển khai** (M0 nghiệm thu: tag `M0` local tại `dc54059`; push tag khi merge) |
-| Task hiện tại | **M2 — User Experience, đang triển khai** · M2-2 (Project Resume v1) ✅ hoàn thành · kế tiếp: M2-3 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
+| Task hiện tại | **M2 — User Experience, đang triển khai** · M2-3 (Global Search v1) ✅ hoàn thành · kế tiếp: M2-4 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **14 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 66/66 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
@@ -48,10 +48,12 @@ M1 — Core Runtime: Kernel đầy đủ, hệ điều hành AI thực sự vậ
 
 - [x] **M2-2 — Project Resume v1**: mở project → thấy ngay trạng thái từ ProjectState (State Over Chat — transcript chat không persist): `ProjectOverview` (lastGoal, completedCount, ≤5 deliverables mới nhất với preview 120 chars) + đọc full deliverable qua sheet; **toàn bộ logic lắp resume nằm trong MỘT hàm thuần `ProjectOverview.assemble`** (test được trên Linux — composition chỉ fetch); port `ProjectDirectory` mở rộng 2 closure (không method Store mới — checklist giữ vững); overview là read-through, refresh khi đổi project/hoàn thành goal; file deliverable mất không phá resume (test); 4 test mới.
 
+- [x] **M2-3 — Global Search v1**: một ô search từ sidebar, kết quả nhóm theo loại xuyên mọi project (Projects khớp tên case-insensitive → Deliverables → Knowledge → Working notes); `SearchHit.assemble` là hàm thuần testable (composition chỉ fetch — pattern M2-2); deliverable titled bằng preview, **không lộ path nội bộ**; project-hit chuyển workspace, deliverable-hit mở reader (tái dùng flow M2-1/M2-2); search closure thêm vào port `ProjectDirectory` (Năm Câu Hỏi: 1 closure không đáng port mới; tên port xem lại ở M2 review); không method Store mới (StoreQuery projectID:nil + .anyWord có sẵn từ M1-2); 4 test mới.
+
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**: SwiftUI tích tụ chưa qua compiler (M2-1/M2-2 tiếp tục thêm UI); càng sớm càng rẻ.
-2. **M2-3 — Global Search v1** (chi tiết: `NEXT_TASK.md`): tìm xuyên project/deliverable/knowledge từ sidebar — Store.search đã có sẵn hai mode, UI chỉ việc dùng.
+1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**: SwiftUI tích tụ chưa qua compiler; càng sớm càng rẻ.
+2. **M2-4 — Dashboard v1** (chi tiết: `NEXT_TASK.md`): operational awareness từ state/metrics có sẵn — Current Goal/Task, Progress, Token Usage, System Status. EventBus có consumer thật đầu tiên (trả nợ Low).
 
 ## 4c. M1 Closeout (nghiệm thu 2026-07-02, tag `M1`)
 

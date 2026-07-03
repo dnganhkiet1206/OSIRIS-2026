@@ -66,6 +66,60 @@ public struct ProjectOverview: Equatable, Sendable {
     }
 }
 
+/// One global search result as the UI sees it (M2-3). Deliverables are
+/// titled by their content preview — internal paths never become titles.
+public struct SearchHit: Identifiable, Equatable, Sendable {
+    public enum Kind: Equatable, Sendable {
+        case project, deliverable, knowledge, workingContext
+    }
+
+    public let kind: Kind
+    public let id: String
+    public let title: String
+    public let snippet: String
+
+    public init(kind: Kind, id: String, title: String, snippet: String) {
+        self.kind = kind
+        self.id = id
+        self.title = title
+        self.snippet = snippet
+    }
+
+    /// Pure, platform-testable merge of project-name matches and Store
+    /// results, grouped deterministically: projects → deliverables →
+    /// knowledge → working context. Empty queries return nothing.
+    public static func assemble(
+        query: String,
+        projects: [ProjectSummary],
+        storeResults: [StoreSearchResult]
+    ) -> [SearchHit] {
+        let needle = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !needle.isEmpty else { return [] }
+
+        var projectHits: [SearchHit] = []
+        var deliverableHits: [SearchHit] = []
+        var knowledgeHits: [SearchHit] = []
+        var workingContextHits: [SearchHit] = []
+
+        for project in projects where project.name.lowercased().contains(needle) {
+            projectHits.append(SearchHit(kind: .project, id: project.id, title: project.name, snippet: ""))
+        }
+        for result in storeResults {
+            switch result.kind {
+            case .deliverable:
+                deliverableHits.append(SearchHit(kind: .deliverable, id: result.id, title: result.snippet, snippet: ""))
+            case .knowledge:
+                knowledgeHits.append(SearchHit(kind: .knowledge, id: result.id, title: result.snippet, snippet: ""))
+            case .workingContext:
+                workingContextHits.append(SearchHit(kind: .workingContext, id: result.id, title: "Working note", snippet: result.snippet))
+            case .projectState:
+                continue
+            }
+        }
+        return projectHits + deliverableHits + knowledgeHits + workingContextHits
+    }
+}
+
 /// Port for project management (AD-38). Listing and creating projects is
 /// state management, not goal execution — so it does not pass through the
 /// Kernel. The composition root wires these closures onto the Store (the
@@ -79,16 +133,20 @@ public struct ProjectDirectory: Sendable {
     public let overview: @Sendable (_ projectID: String) async throws -> ProjectOverview?
     /// Full deliverable body, loaded on demand when the user opens one.
     public let deliverableContent: @Sendable (_ path: String) async throws -> String?
+    /// Global search across all projects (M2-3) — grouped SearchHits.
+    public let search: @Sendable (_ query: String) async throws -> [SearchHit]
 
     public init(
         list: @escaping @Sendable () async throws -> [ProjectSummary],
         create: @escaping @Sendable (_ name: String) async throws -> ProjectSummary,
         overview: @escaping @Sendable (_ projectID: String) async throws -> ProjectOverview?,
-        deliverableContent: @escaping @Sendable (_ path: String) async throws -> String?
+        deliverableContent: @escaping @Sendable (_ path: String) async throws -> String?,
+        search: @escaping @Sendable (_ query: String) async throws -> [SearchHit]
     ) {
         self.list = list
         self.create = create
         self.overview = overview
         self.deliverableContent = deliverableContent
+        self.search = search
     }
 }

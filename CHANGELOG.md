@@ -2,6 +2,14 @@
 
 ## [Unreleased — M2]
 
+### 2026-07-02 — M2-3: Global Search v1
+
+- Sidebar có mục Search: một ô, kết quả nhóm loại xuyên mọi project — Projects (khớp tên, case-insensitive) → Deliverables → Knowledge → Working notes. Project-hit chuyển workspace; deliverable-hit mở reader (tái dùng flow có sẵn); knowledge/note hiển thị snippet tại chỗ.
+- `SearchHit.assemble`: hàm thuần trong Application gộp project-name matches + dịch `StoreSearchResult` (bỏ projectState), thứ tự nhóm deterministic — test được trên Linux; composition root chỉ fetch (list + `StoreQuery(projectID: nil, matchMode: .anyWord, limit: 15)` — toàn API có sẵn từ M1-2, **không method Store mới**).
+- Deliverable hiển thị bằng content preview — path nội bộ không bao giờ thành title (có test).
+- Search closure gia nhập port `ProjectDirectory` (một closure không đáng port mới — Năm Câu Hỏi; cân nhắc đổi tên port tại M2 review).
+- 4 test mới. Tổng 78/78 pass, 0 warning, offline; UI mới qua `swiftc -parse`.
+
 ### 2026-07-02 — M2-2: Project Resume v1 — "resume work instantly"
 
 - Mở project → thấy ngay: goal gần nhất, số task hoàn thành, ≤5 deliverables mới nhất (preview 120 chars), bấm đọc full qua sheet. Tất cả từ ProjectState + files (State Over Chat — transcript chat là UI tạm, không persist).

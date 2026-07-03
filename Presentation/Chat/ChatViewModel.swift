@@ -67,6 +67,21 @@ final class ChatViewModel {
         loadOverview()
     }
 
+    var searchQuery = ""
+    private(set) var searchResults: [SearchHit] = []
+
+    func runSearch() {
+        let query = searchQuery
+        Task { @MainActor in
+            searchResults = (try? await projectDirectory.search(query)) ?? []
+        }
+    }
+
+    func clearSearch() {
+        searchQuery = ""
+        searchResults = []
+    }
+
     func openDeliverable(path: String) {
         Task { @MainActor in
             if let content = try? await projectDirectory.deliverableContent(path), let content {

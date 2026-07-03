@@ -7,7 +7,7 @@ import OsirisApplication
 /// gets restructured properly).
 struct ChatView: View {
     private enum SidebarItem: Hashable {
-        case chat, project(String), settings
+        case chat, search, project(String), settings
     }
 
     @State private var model: ChatViewModel
@@ -26,6 +26,8 @@ struct ChatView: View {
             List(selection: $selection) {
                 Label("Chat", systemImage: "bubble.left.and.text.bubble.right")
                     .tag(SidebarItem.chat)
+                Label("Search", systemImage: "magnifyingglass")
+                    .tag(SidebarItem.search)
                 Section("Projects") {
                     ForEach(model.projects) { project in
                         Label(project.name, systemImage: "folder")
@@ -45,6 +47,8 @@ struct ChatView: View {
             switch selection {
             case .settings:
                 SettingsView(settings: settings)
+            case .search:
+                SearchResultsView(model: model) { selection = .chat }
             default:
                 VStack(spacing: 0) {
                     transcript
