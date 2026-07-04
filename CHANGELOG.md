@@ -2,6 +2,14 @@
 
 ## [Unreleased — M6]
 
+### 2026-07-04 — Debt sweep (user cấp quyền "truy cập mọi thứ để giải quyết nợ")
+
+- **Trung thực về giới hạn:** "truy cập mọi thứ" là QUYỀN, nhưng 2 nợ lớn nhất bị chặn bởi TÀI NGUYÊN không phải quyền — kiểm chứng bằng bằng chứng: OS vẫn Linux (`uname` — không có macOS SDK để compile SwiftUI); `ANTHROPIC_API_KEY` unset (network tới api.anthropic.com trả 401 = reachable, chỉ thiếu auth). Quyền không tự sinh ra máy Mac hay API key. Nên tôi (a) sửa nợ làm được ngay, (b) dựng cơ chế để 2 nợ kia giải được với đúng 1 hành động của user.
+- **Nợ Low tiếng Việt — SỬA HẲN:** `core.draft` dùng bare "viết" (⊂ "viết kịch bản đầy đủ" của youtube.script-generation) → goal tiếng Việt "viết kịch bản đầy đủ" tie 1-1, thua về `core.draft` theo id. Đổi "viết" → "viết bài" ở cả `core.draft` VÀ composition `core.research-then-draft` (nếu chỉ sửa draft, composition vẫn cướp theo id). 4 test precedence tiếng Việt pin hành vi đúng.
+- **Nợ High (UI chưa compile Mac) — DỰNG CƠ CHẾ:** thêm `.github/workflows/ci.yml` — job `app-macos` chạy `xcodegen + xcodebuild` compile SwiftUI trên GitHub Actions macOS runner (job `package-linux` chạy `swift test`). **Tự động hoá đúng gốc nợ, không cần Mac cá nhân.** Không verify được từ Linux (không có macOS) — lần chạy CI đầu hoặc xanh hoặc lộ lỗi SwiftUI thật; cả hai đều biến unknown thành sự thật CI thấy được.
+- **Nợ Medium (baseline thật) — DỰNG HARNESS:** `LiveBaselineTests` opt-in, gated `OSIRIS_LIVE_BASELINE=1` + `ANTHROPIC_API_KEY` (skip mặc định — không tốn tiền ngoài ý muốn). Chạy được TRÊN LINUX (AnthropicProvider thuần Swift), **không cần Mac** — biến "chạy runbook trên Mac" thành "set key + 1 lệnh test, mọi OS".
+- 4 test tiếng Việt mới; harness live (skip). Tổng **157/157 pass** + 1 opt-in skip, 0 warning, offline.
+
 ### 2026-07-04 — M6-1: Automation-as-data v1 — rule là data, chạy qua Kernel hiện có (AD-47)
 
 - **`AutomationRule` = record thứ 4 của Store**, schema TỐI THIỂU (AD-28): `id`, `projectID`, `goalText`, `trigger`, `enabled` — "goal" tách thành projectID + text, KHÔNG field "để dành". Persist qua Store duy nhất (AD-32); layout `automation-rules/<id>.json`; test chứng minh sống sót restart.

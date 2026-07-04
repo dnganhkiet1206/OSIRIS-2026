@@ -44,7 +44,10 @@ public enum GenericSkills {
         Request: {goal}
         """,
         preferredModelTier: .light,
-        triggerKeywords: ["draft", "soạn", "viết"]
+        // "viết bài" not bare "viết": the single word was a substring of
+        // module keywords like "viết kịch bản đầy đủ", tying 1-1 and winning
+        // by id over the more specific skill (fixed at M6-1 debt sweep).
+        triggerKeywords: ["draft", "soạn", "viết bài"]
     )
 
     /// Composition (AD-36): declared as compositionSteps on a parent skill —
@@ -61,7 +64,7 @@ public enum GenericSkills {
         outputs: ["draft"],
         preferredModelTier: .light,
         compositionSteps: [SkillID("core.research-outline"), SkillID("core.draft")],
-        triggerKeywords: ["research", "nghiên cứu", "investigate", "draft", "soạn", "viết"]
+        triggerKeywords: ["research", "nghiên cứu", "investigate", "draft", "soạn", "viết bài"]
     )
 
     public static let researchOutline = SkillDefinition(

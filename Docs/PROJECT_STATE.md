@@ -10,10 +10,10 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M6 — Automation, đang triển khai** (M0→M5 nghiệm thu; tag local chờ push khi merge) |
-| Task hiện tại | M6-0 ✅ · **M6-1 (Automation-as-data v1) ✅ hoàn thành** — `AutomationRule` record thứ 4 + "run now" qua Kernel hiện có (0 engine) · kế tiếp: M6-2 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
+| Task hiện tại | M6-1 ✅ · **Debt-sweep (user cấp quyền) ✅**: sửa bug tiếng Việt; thêm CI macOS (gốc nợ High) + harness baseline live-gated (nợ Medium, chạy Linux khi có key) · kế tiếp: M6-2 (xem `NEXT_TASK.md`) · **[USER] cần: bật CI macOS + cấp API key** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **19 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 153/153 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 157/157 test pass** (+1 live-baseline opt-in skip mặc định) (Swift 6.0.3, Linux) · offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -312,8 +312,8 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 
 | Mức | Mô tả | Kế hoạch |
 |---|---|---|
-| **High** | App/ + Presentation/ (UI) + 3 module nghiệp vụ tích tụ qua M0→M5 chưa qua compiler Mac (môi trường không có Mac); mới qua `swiftc -parse` + `swift build` phần SPM (Core/App/Infra/Modules build sạch trên Linux — chỉ App shell SwiftUI chưa) | **[USER] chạy `Docs/RUNBOOK_M1-0.md`** — nay có 3 module để smoke test thật; càng để càng đắt |
-| Medium | Token/latency/cost baseline provider thật chưa có (cần API key) | Phần C của runbook; không giả số liệu |
+| **High** | App/ + Presentation/ SwiftUI chưa từng qua compiler Xcode (môi trường Linux không có SwiftUI SDK); mới qua `swiftc -parse` | **Đã thêm CI macOS** (`.github/workflows/ci.yml`, debt-sweep): job `app-macos` chạy `xcodegen + xcodebuild` compile SwiftUI trên GitHub Actions macOS runner — **tự động hoá đúng gốc nợ, không cần Mac cá nhân**. Lần chạy CI đầu: hoặc xanh, hoặc lộ lỗi SwiftUI tích tụ thật (biến unknown thành lỗi CI thấy được). **Còn lại [USER]:** bật Actions (macOS runner) và sửa lỗi CI lộ ra; verify UX mắt thường vẫn cần thiết bị (runbook) |
+| Medium | Token/latency/cost baseline provider thật chưa có (cần API key) | **Đã thêm harness `LiveBaselineTests`** (opt-in, gated `OSIRIS_LIVE_BASELINE=1` + `ANTHROPIC_API_KEY`) — chạy được TRÊN LINUX (AnthropicProvider thuần Swift, network tới Anthropic đã xác nhận reachable), **KHÔNG cần Mac**. **Còn lại [USER]:** cung cấp API key rồi chạy `OSIRIS_LIVE_BASELINE=1 ANTHROPIC_API_KEY=… swift test --filter LiveBaseline`, dán số vào §4b |
 | ~~Medium~~ | ~~Store write gate / learning gate (AD-20) chưa enforce~~ — **ĐÃ TRẢ tại M3-1** (WriteGate + arch rule không-bypass) | ✅ |
 | Medium | Tier routing: phía Kernel ĐÃ XONG tại M3-2 (`preferredTier` mang giá trị thật từ estimate/skill — AD-42); còn lại phía Gateway chưa tiêu thụ tier khi route (1 model thật) | Kích hoạt khi có ≥2 model thật trong catalog |
 | ~~Medium~~ | ~~`SkillDefinition.retryPolicy` chưa được consumed~~ — **ĐÃ XÓA tại M3-4 đúng hẹn** (cùng `ExecutionPlan.retryPolicy` và `.direct/.hybrid` — 0 consumer, 114/114 pass không sửa test) | ✅ |
@@ -322,7 +322,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | Low | Working-context hết hạn chỉ lọc khi đọc, chưa xóa vật lý | Cleanup policy M1→M3 (policies.json đã có TTL) |
 | Low | `InMemoryResponseCache` không bound/TTL | Eviction khi có bằng chứng; interface là seam |
 | Low | Keyword matching khớp cả ngữ cảnh phủ định ("don't summarize") | Chấp nhận v1 — fallback rẻ; nâng cấp theo sử dụng thật |
-| Low | Latent overlap tiếng Việt nội bộ YouTube: "viết" (core.draft) ⊂ "viết kịch bản đầy đủ" (youtube.script-generation) → goal "viết kịch bản đầy đủ" tie 1-1, id đẩy về core.draft (chưa có test tiếng Việt pin) | **Xác nhận tại M5-2:** bug thật nhưng Low (draft vẫn ra nội dung dạng script); fix ĐÚNG = rà lại toàn bộ keyword tiếng Việt của draft/script-outline/script-generation như một ma trận precedence riêng (không phải one-liner cascade). Điều kiện: YouTube polish-pass HOẶC runbook cho thấy dùng thật tiếng Việt. Không có bằng chứng tác động mới ở M5-2 → giữ Low, không smuggle sửa vào review |
+| ~~Low~~ | ~~Latent overlap tiếng Việt "viết" (core.draft) ⊂ "viết kịch bản đầy đủ"~~ — **ĐÃ SỬA tại debt-sweep**: bare "viết" → "viết bài" ở `core.draft` VÀ composition `core.research-then-draft` (không thì composition vẫn cướp theo id); 4 test precedence tiếng Việt pin (full-script→script-generation; viết bài/soạn→draft; kịch bản video→outline) | ✅ |
 | Low | Reuse per-project (đúng Project Isolation; chưa có cross-project reuse có kiểm soát) | M3 với policy rõ |
 | Low | Arch-test scanner cắt `//` theo dòng — string literal chứa URL có thể false-negative | Nâng parser khi có ca thật |
 | Medium | `ChatViewModel` gánh 5 vai (chat/projects/search/dashboard/skills) — 172 dòng, chưa đau nhưng trend rõ | **Trigger cứng:** task UI kế tiếp chạm file này phải TÁCH (không mở rộng thêm) |
