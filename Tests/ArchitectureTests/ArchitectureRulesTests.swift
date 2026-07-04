@@ -185,6 +185,8 @@ final class ArchitectureRulesTests: XCTestCase {
             "PromptRegistry", "DeliverableRegistry", "CapabilityRegistry",
             "WorkflowEngine", "WorkflowRuntime",
             "ModelRouter", "TokenManager", "IntelligenceEngine",
+            // Deleted at its M4 deadline (AD-46): zero dynamic consumers.
+            "EventBus",
         ].joined(separator: "|")
         assertNoMatch(
             Self.allSources,

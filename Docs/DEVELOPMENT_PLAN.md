@@ -82,13 +82,15 @@ M8 Production Readiness  ── ổn định lâu dài: test, security, backup, 
 
 **Tiêu chí hoàn thành:** Số AI call và token trung bình cho cùng loại task **giảm có đo lường** so với baseline M1; chất lượng deliverable qua Verify gate ổn định. *(Nghiệm thu: cơ chế giảm chứng minh bằng test vĩnh viễn — reuse/tool = 0 call, cache-hit; số token provider thật PENDING runbook, không giả số liệu.)*
 
-### M4 — YouTube Module (Reference Implementation)
+### M4 — YouTube Module (Reference Implementation) — ✅ ĐÃ NGHIỆM THU 2026-07-03 (tag `M4`; chi tiết PROJECT_STATE §4f)
+
+> **Chốt tại M4-4:** khuôn mẫu module PROVEN với 4/9 mảng (ideas, script, SEO+publishing, channel analysis) — các mảng còn lại (Thumbnail, Shorts, Project Tracking…) là data thuần theo khuôn có sẵn, bổ sung **theo nhu cầu thật khi dùng app**, không phải để đủ danh sách. EventBus xóa đúng deadline (AD-46). Tool-channel cho module: điều kiện kích hoạt tại M6 (AD-45).
 
 **Mục tiêu:** Module nghiệp vụ production-quality đầu tiên; trở thành khuôn mẫu bắt buộc cho mọi module sau (AD-21).
 
 **Phạm vi:** Research, Channel Analysis, Idea Generation, Script Generation, SEO, Thumbnail Planning, Shorts Planning, Publishing Package, Project Tracking — tất cả hiện thực dưới dạng **Skills + Templates trong module**, tái dùng toàn bộ Core.
 
-**Tiêu chí hoàn thành:** Hoàn thành công việc YouTube có ý nghĩa từ đầu tới cuối chỉ bằng mục tiêu một câu; module tuân thủ 100% Module contract (manifest, cấu trúc thư mục chuẩn, không đụng Core).
+**Tiêu chí hoàn thành:** Hoàn thành công việc YouTube có ý nghĩa từ đầu tới cuối chỉ bằng mục tiêu một câu; module tuân thủ 100% Module contract (manifest, cấu trúc thư mục chuẩn, không đụng Core). *(Nghiệm thu: end-to-end offline bằng test; chất lượng nội dung thật PENDING runbook.)*
 
 ### M5 — Platform Expansion
 

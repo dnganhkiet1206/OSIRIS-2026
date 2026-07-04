@@ -9,11 +9,11 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M4 — YouTube Module (reference implementation), đang triển khai** (M0→M3 nghiệm thu; tag local chờ push khi merge) |
-| Task hiện tại | M4-0 ✅ · M4-1 ✅ · M4-2 ✅ · **M4-3 (Channel Analysis + quyết định tool-channel) ✅ hoàn thành — AD-45** · kế tiếp: M4-4 Milestone Review (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
+| Giai đoạn | **M4 — YouTube Module: ĐÃ NGHIỆM THU 2026-07-03** (tag `M4` local; M0→M4 đều chờ push tag khi merge) |
+| Task hiện tại | **M4-4 (Milestone Review) ✅ — M4 ĐẠT (code-complete); EventBus XÓA đúng deadline (AD-46)** · kế tiếp: M5-0 TikTok Module (xem `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN · **[USER] runbook M1-0 vẫn chờ — nợ High** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **16 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 133/133 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 132/132 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -71,7 +71,34 @@ M4 — YouTube Module: module nghiệp vụ production-quality đầu tiên = kh
 ## 4. Việc đang chờ (Next Tasks)
 
 1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**.
-2. **M4-4 — M4 Milestone Review & Acceptance** (chi tiết: `NEXT_TASK.md`): khuôn mẫu module đã lặp 4 mảng đủ bằng chứng; xử deadline EventBus (4 điểm dữ liệu "không cần" đã đếm); Thumbnail/Shorts data thuần → M5 cùng module mới hoặc bổ sung sau theo nhu cầu thật.
+2. **M5-0 — TikTok Module + MODULE_GUIDE.md** (chi tiết: `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN mở M5.
+
+## 4f. M4 Closeout (nghiệm thu 2026-07-03, tag `M4`)
+
+**Tiêu chí M4 (DEVELOPMENT_PLAN §2/M4) — đánh giá trung thực:**
+
+| Tiêu chí | Kết quả |
+|---|---|
+| Module nghiệp vụ production-quality đầu tiên = khuôn mẫu (AD-21) | ✅ 9 skill / 4 mảng (ideas, script, SEO+publishing, channel analysis) + 3 composition (1 xuyên namespace) |
+| "Hoàn thành công việc YouTube có ý nghĩa end-to-end bằng mục tiêu một câu" | ✅ offline bằng test (captured prompts, goal một câu → pipeline nhiều bước → deliverable); ⚠️ chất lượng NỘI DUNG thật PENDING thiết bị + API key (runbook) |
+| Module tuân thủ 100% contract, không đụng Core | ✅ **bằng chứng mạnh nhất: M4-1/2/3 mỗi task 0 dòng Core, 0 dòng contract** (git); thí nghiệm gỡ hẳn module (M4-2): platform build sạch, 116/116 pass |
+| 9 mảng capability danh mục gốc | ⚠️ 4/9 — đủ để CHỨNG MINH KHUÔN (mục tiêu thật của M4); Thumbnail/Shorts/… là data thuần theo khuôn có sẵn, bổ sung **theo nhu cầu thật khi dùng app**, không phải để đủ danh sách |
+
+**Module Contract v1 đã chứng minh:** (1) thêm module = thêm data — 3 task liên tiếp 0 dòng Core/contract; (2) xóa module = gỡ data — thí nghiệm build thật; (3) xuyên namespace miễn phí — composition module dùng skill built-in chỉ bằng ID; (4) kỷ luật chiều ngược — cơ hội mở contract (tool-channel M4-3) bị TỪ CHỐI bằng lập luận cấu trúc (AD-45). **ADR M4:** AD-44 ✅ PROVEN (3 lớp cưỡng chế + 2 thí nghiệm) · AD-45 ✅ PROVEN (lát cắt ship 0 contract change) · AD-46 ✅ thực thi đúng hẹn · AD-26 → Superseded.
+
+**EventBus — xử đúng deadline (AD-39 → AD-46):** bằng chứng xóa: 1 producer + 2 consumer TĨNH + 0 consumer động sau 4 mảng module; chi phí giữ (actor 31 dòng + 2 subscribe task + 1 hop async) > chi phí thay (2 dòng fan-out trong closure publish có sẵn — seam AD-33 không đổi). Xóa: component + test + cập nhật 6 docs; thêm vào danh sách cấm-tái-tạo; điều kiện tái sinh ghi trong AD-46 (audience ĐỘNG thật). Baseline sau xóa: fresh 3.78ms (M3: 4.98) — bớt một actor hop.
+
+**Module architecture — business logic creep: KHÔNG.** `YouTubeModule.swift` = 100% struct literal; arch rule data-only canh bằng máy; module 0 state/persistence qua cả 4 mảng (kể cả mảng "cần dữ liệu thật" — giải bằng user-provided data, AD-45).
+
+**Skill Registry / matcher — theo số liệu:** 14 skill + 1 tool; 2 lần tinh chỉnh curated-union (M4-1/M4-2, đều là DATA); 1 tie bất ngờ bị test bắt trước khi ship; keyword-sweep test tự động hóa việc rà n² (M4-3). **Kết luận: chưa có bằng chứng cần đổi matcher** — mọi sự cố đều giải được bằng data + được test khóa; tín hiệu theo dõi = khi curated-union không còn giải được một ca thật.
+
+**Open source (cập nhật từ M3-4):** điều kiện "module contract proven" ✅ ĐẠT. Người ngoài viết module thứ hai hôm nay: về CƠ HỌC là copy `YouTubeModule.swift` + 1 dòng composition root — nhưng guideline (namespace, curated-union, precedence tests) đang nằm rải trong code comments/CHANGELOG → **thiếu MỘT tài liệu `MODULE_GUIDE.md`** — giao cho M5-0 (viết bằng chính trải nghiệm dựng TikTok). Còn lại: runbook (user) + Store versioning (M7).
+
+**Nợ kỹ thuật — rà toàn bộ, không kéo deadline thiếu bằng chứng:** EventBus **XÓA** (deadline M4 ✅) · retryPolicy đã xóa M3-4 · ApprovalGate deadline M6 chưa điểm (giữ nguyên hẹn) · tier routing Gateway-side: điều kiện ≥2 model thật chưa xảy ra (evidence-gated, không phải deadline quá hạn) · ChatViewModel trigger cứng còn nguyên (M3/M4 không chạm UI) · nhóm Low (search re-read, TTL cleanup, cache eviction, negation, cross-project reuse, scanner) đều evidence-gated vào runbook/M7 — blocker là dữ liệu thật, chủ sở hữu đã rõ.
+
+**Chất lượng:** build 0/0 debug+release · **132/132 test** offline ~1.2s · baseline M4: fresh **3.78ms** / reuse **2.54ms** (M3: 4.98/3.20 — cải thiện sau khi bớt actor hop) · AI spend tích lũy **$0.00** · 19 arch rule (18 + EventBus vào banned list).
+
+**Kết luận: M4 ĐẠT (code-complete).** Khuôn mẫu module PROVEN bằng lặp + thí nghiệm; phần PENDING duy nhất là chất lượng nội dung trên thiết bị thật (runbook — nợ High của user, đã qua 5 milestone).
 
 ## 4e. M3 Closeout (nghiệm thu 2026-07-03, tag `M3`)
 
@@ -220,7 +247,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | AD-23 | Vision = artifact tĩnh trong `Config/` (chính là System Preamble), không phải memory tier |
 | AD-24 | Context Engine hợp nhất vào AI Gateway (retrieve → assemble → budget → cache → route → đo); đường AI call: `Kernel → AI Gateway → Provider` |
 | AD-25 | Kernel là nơi duy nhất được quyền chọn; Execution thi hành máy móc theo policy khai báo trong Skill contract; vượt policy → quay về Kernel |
-| AD-26 | Event Bus hạ xuống Infrastructure (pub/sub mỏng), không phải Core component |
+| AD-26 | ~~Event Bus hạ xuống Infrastructure~~ → **superseded bởi AD-46** (xóa tại deadline M4) |
 | AD-27 | Bỏ Networking layer; consumer dùng URLSession trực tiếp |
 | AD-28 | Skill schema tối thiểu: 6 trường bắt buộc (`id, version, capabilityTags, purpose, inputs, outputs`), còn lại optional — thêm khi có bằng chứng |
 | AD-29 | Context tiering cho tài liệu: chỉ PROJECT_STATE.md luôn nạp; các file khác nạp theo tình huống |
@@ -245,6 +272,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | AD-43 | Executive Summary = cấu trúc output khai báo, không phải component: scaffold là data trong Config (≤80 token, test cưỡng chế), inject vào Execution, nối máy móc vào `.ai` + bước cuối composition; reuse/tool/bước giữa không scaffold; default nil = zero regression; không Summary/Report/Formatter Engine |
 | AD-44 | Module Contract v1: module LÀ manifest — thuần data (id/version/purpose/skills); target OsirisModules chỉ depend OsirisCore; skill namespace structural theo module id; composition root duy nhất biết module cài đặt; 3 lớp cưỡng chế (compiler + 2 nhóm arch rule); Core không bao giờ biết module cụ thể; không Plugin Engine/Module Manager |
 | AD-45 | Tool-channel cho manifest: KHÔNG mở (manifest = Codable data, Tool = protocol hành vi — đổi bản chất contract); Channel Analysis v1 = skill trên dữ liệu user cung cấp (0 tool/OAuth/network); điều kiện kích hoạt: M6 Automation với user quyết consent + phương án tách code khỏi manifest |
+| AD-46 | XÓA EventBus đúng deadline M4 (AD-39): 0 consumer động sau 4 mảng module; thay bằng fan-out trực tiếp trong closure publish (seam AD-33 không đổi); vào danh sách cấm-tái-tạo; tái sinh chỉ khi có audience động thật; AD-26 Superseded |
 
 ## 6. Nợ kỹ thuật (phân loại lại tại M1 Review — Critical/High/Medium/Low)
 
@@ -265,7 +293,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | Low | Reuse per-project (đúng Project Isolation; chưa có cross-project reuse có kiểm soát) | M3 với policy rõ |
 | Low | Arch-test scanner cắt `//` theo dòng — string literal chứa URL có thể false-negative | Nâng parser khi có ca thật |
 | Medium | `ChatViewModel` gánh 5 vai (chat/projects/search/dashboard/skills) — 172 dòng, chưa đau nhưng trend rõ | **Trigger cứng:** task UI kế tiếp chạm file này phải TÁCH (không mở rộng thêm) |
-| Low | EventBus: 2 consumer tĩnh hiện tại ≈ closure fan-out — giá trị thật chờ consumer động | Tái đánh giá tại M4 (Modules); xóa nếu modules không dùng (AD-39) |
+| ~~Low~~ | ~~EventBus: 2 consumer tĩnh ≈ closure fan-out~~ — **ĐÃ XÓA tại M4-4 đúng deadline** (AD-46; 0 consumer động, thay bằng 2 dòng fan-out trực tiếp) | ✅ |
 | Low | Metrics chỉ session-only — restart mất "Today's usage" | Chấp nhận theo thiết kế; persist history là câu hỏi M7 với dữ liệu thật |
 
 *(Đã xử lý & gỡ khỏi bảng: UI nhập API key — SettingsView M1-0; InMemoryStore — xóa M0-2; reuse-snippet — trả M0-4B; ContextPriority/`Kernel.skills` dead contract — tiêu thụ M1-2/M1-1.)*

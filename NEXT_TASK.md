@@ -6,49 +6,53 @@
 
 ## Current Milestone
 
-**M4 — YouTube Module (Reference Implementation)** (DEVELOPMENT_PLAN.md §2/M4, AD-21/44/45)
+**M5 — Platform Expansion** (DEVELOPMENT_PLAN.md §2/M5) — CHỜ USER XÁC NHẬN MỞ
 
 ## Current Task
 
-**M4-4 — M4 Milestone Review & Acceptance**
+**M5-0 — TikTok Module + MODULE_GUIDE.md (nhân bản khuôn lần đầu, viết guide bằng trải nghiệm thật)**
 
-## Vì sao review bây giờ (lập luận tại M4-3)
+## Objective
 
-Khuôn mẫu module đã LẶP 4 mảng nghiệp vụ (ideas, script, SEO/publishing, channel analysis) + 3 composition (gồm xuyên namespace) mà không một lần chạm Core/contract — mục tiêu M4 ("chứng minh mô hình mở rộng") đã đủ bằng chứng để nghiệm thu khuôn. Phần capability còn thiếu so với danh mục gốc (Thumbnail/Shorts Planning — data thuần theo khuôn có sẵn, Research đã có qua composition xuyên namespace) không thêm bằng chứng kiến trúc mới — bổ sung theo NHU CẦU THẬT khi user dùng app, không phải để đủ danh sách.
+M5 = nhân bản mô hình module. M5-0 làm HAI việc gắn chặt nhau: (1) dựng **TikTok module** (module thứ hai, thứ tự giá trị DEVELOPMENT_PLAN: TikTok trước) bằng CHÍNH khuôn YouTube — kỳ vọng chứng minh "0 dòng Core, 0 dòng contract" lần thứ tư; (2) trong lúc dựng, ghi lại từng bước thành **`Docs/MODULE_GUIDE.md`** — tài liệu DUY NHẤT người ngoài cần đọc để viết module (lỗ hổng open-source chỉ ra tại M4-4: guideline đang rải trong code comments/CHANGELOG).
 
-## Phạm vi review (theo mẫu M1-5/M2-6/M3-4)
+## Phạm vi
 
-1. **Đánh giá trung thực tiêu chí M4** (DEVELOPMENT_PLAN §2/M4): "hoàn thành công việc YouTube có ý nghĩa end-to-end bằng mục tiêu một câu" — ✅/⚠️ từng phần, PENDING thiết bị ghi rõ; "module tuân thủ 100% Module contract, không đụng Core" — bằng chứng git + thí nghiệm gỡ module (M4-2).
-2. **ADR M4:** AD-44/45 — Decision → Evidence → Result.
-3. **Xử deadline EventBus (hẹn từ M2-4/AD-39):** 4 điểm dữ liệu "module không cần events" đã đếm đủ M4 — quyết giữ/xóa với lập luận (lưu ý: chat relay + dashboard vẫn là 2 consumer thật; câu hỏi là bus có đáng hơn 2 closure trực tiếp không).
-4. **Phân loại lại nợ kỹ thuật**; retrospective khuôn M4 (guideline curated-union 2 lần tinh chỉnh → chốt thành văn cho M5).
-5. **Acceptance report + tag `M4`** (local) + cập nhật DEVELOPMENT_PLAN (M4 marked; Thumbnail/Shorts ghi "theo nhu cầu thật") + NEXT_TASK cho M5-0 (module thứ hai — TikTok theo thứ tự giá trị; khuôn copy từ YouTube).
-6. **Open-source readiness check** (đã hẹn ở M3-4): M4 xong = điều kiện "module contract proven" đạt; còn lại runbook + Store versioning — cập nhật đánh giá.
+1. **TikTok module v0** (`Modules/TikTok/TikTokModule.swift`): manifest `tiktok` + 3–4 skill data theo capability DEVELOPMENT_PLAN (content-planning, trend-research→dùng dữ liệu user dán như AD-45, publishing-package); ≥1 composition (cân nhắc xuyên namespace `core.research-outline` → tiktok skill — đã có tiền lệ); keywords: chạy sweep test chống overlap toàn registry (giờ 2 module — sweep mở rộng thành rule chung cho MỌI cặp skill, không chỉ skill mới).
+2. **`Docs/MODULE_GUIDE.md`** — viết TRONG LÚC dựng TikTok, mục lục tối thiểu: manifest & namespace (precondition); skill = data (template/{goal}/tier/keywords); composition & curated-union guideline (2 bài học M4-1/M4-2 + luật tie-break id); precedence tests bắt buộc; đăng ký 1 dòng ở composition root; những gì module KHÔNG được làm (arch rules); khi nào cần hơn data → AD-45/M6.
+3. **Wiring:** thêm `TikTokModule.manifest` vào `installedModules` (1 dòng — đúng lời hứa AD-44).
+4. **Không làm:** không sửa khuôn để "tiện cho TikTok" (khuôn đổi = phải có bằng chứng + AD); không Shopify/Etsy (M5-1+); không tool-channel (M6).
+
+## Files cần tạo/sửa
+
+- `Modules/TikTok/TikTokModule.swift`, `Docs/MODULE_GUIDE.md`, `Tests/ModuleTests/TikTokModuleTests.swift`, CompositionRoot (1 dòng), docs cuối phiên.
 
 ## Checklist
 
-- [ ] Không sửa code trừ khi review phát hiện lỗi thật hoặc quyết định EventBus được chốt là XÓA (khi đó thực thi + arch test cập nhật theo chiều XÓA component khỏi codebase — không phải nới rule).
-- [ ] Mọi PENDING có địa chỉ; ADR cũ không sửa; tag M4 local.
-- [ ] Zero regression (133 + thay đổi nếu có).
+- [ ] 0 dòng Core, 0 dòng contract — lần thứ tư liên tiếp.
+- [ ] Sweep test nâng cấp: quét MỌI cặp skill trong registry hợp nhất (youtube × tiktok × generic) — trả lời câu n² một lần cho mãi mãi.
+- [ ] MODULE_GUIDE đủ để người không đọc Core viết được module (thước đo: chính TikTok module chỉ dùng kiến thức trong guide).
+- [ ] Zero regression 132 test cũ.
+- [ ] Đủ quy trình review + docs + NEXT_TASK (M5-1 — module kế theo giá trị, hoặc đánh giá lại thứ tự với user).
 
 ## Definition of Done
 
-Bảng tiêu chí M4 trung thực; AD-44/45 evidence; EventBus quyết xong có lập luận; nợ phân loại lại; tag `M4`; NEXT_TASK M5-0; DỪNG chờ user xác nhận.
+TikTok module chạy end-to-end offline qua lifecycle nguyên trạng; 2 module chung sống không giẫm keywords (test); MODULE_GUIDE.md hoàn chỉnh tự đứng được; zero regression; khuôn không đổi.
 
 ## Estimated Complexity
 
-Thấp–trung bình — quyết định EventBus là phần nặng nhất.
+Thấp–trung bình — khuôn đã có; giá trị chính là guide + sweep tổng.
 
 ## Estimated AI Cost
 
-Dev session: nhỏ. Runtime: 0.
+Dev session: nhỏ–trung bình. Runtime: 0.
 
 ## Risk
 
-- EventBus: 2 consumer thật đang chạy — xóa vội phá chat status + dashboard activity; giữ vô điều kiện lại nuôi abstraction thiếu bằng chứng. Quyết định phải so CHI PHÍ THAY THẾ (2 closure inject) vs CHI PHÍ GIỮ (1 actor generic mỏng).
-- Tự nghiệm thu dễ dãi — PENDING thiết bị ghi trung thực như mọi milestone.
+- Hai module + generic = không gian keyword chật hơn — sweep tổng + precedence tests là lưới an toàn; nếu xuất hiện ca curated-union KHÔNG giải được, đó là bằng chứng matcher (dừng, ghi nhận, không tự sửa).
+- MODULE_GUIDE phình thành sách — giữ ≤2 trang, mọi thứ dài hơn là dấu hiệu contract chưa đủ đơn giản.
 
 ## Những phần tuyệt đối không được sửa
 
-- Core 6; ModuleManifest; matcher; toàn bộ M3 vừa chốt.
-- Architecture Test rules (chỉ THÊM/siết trừ trường hợp xóa-component có quyết định); ADR cũ (AD-01…AD-45).
+- Core 6; ModuleManifest; matcher; YouTube module (khuôn tham chiếu — TikTok copy, không sửa gốc).
+- Architecture Test rules (chỉ THÊM/siết); ADR cũ (AD-01…AD-46).

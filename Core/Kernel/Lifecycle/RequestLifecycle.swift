@@ -30,8 +30,10 @@ public struct Deliverable: Sendable {
 }
 
 /// Lightweight execution events shown to the user (UI contract: activities,
-/// never reasoning). Defined in Core; carried by the generic
-/// Infrastructure.EventBus.
+/// never reasoning). Defined in Core; delivered through the Kernel's
+/// injected publish closure (AD-33) — the composition root fans out to
+/// the consumers directly (AD-46: the EventBus was deleted at its M4
+/// deadline with zero dynamic consumers).
 public enum ExecutionEvent: Sendable {
     case understanding
     case planning

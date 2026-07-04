@@ -1,6 +1,15 @@
 # CHANGELOG
 
-## [Unreleased — M4]
+## [M4] — 2026-07-03 (tag `M4`)
+
+### M4-4: Milestone Review & Acceptance — EventBus xóa đúng deadline (AD-46)
+
+- **M4 ĐẠT (code-complete)** — nghiệm thu tại PROJECT_STATE §4f. Module Contract v1 PROVEN bốn chiều: thêm module = data (3 task 0 dòng Core/contract), xóa module = gỡ data (thí nghiệm build 116/116), xuyên namespace = miễn phí (test), kỷ luật chiều ngược (từ chối mở contract có lập luận — AD-45).
+- **EventBus XÓA đúng deadline AD-39** (AD-46; AD-26 → Superseded): bằng chứng — 1 producer, 2 consumer tĩnh, **0 consumer động sau 4 mảng module**; chi phí giữ (actor 31 dòng + 2 subscribe task + 1 async hop) > chi phí thay (2 dòng fan-out trong closure `publish` có sẵn — seam AD-33 không đổi, Kernel không biết gì thay đổi). Xóa component + test theo quy trình; "EventBus" vào danh sách cấm-tái-tạo (19 arch rule); điều kiện tái sinh: audience ĐỘNG thật. Baseline hưởng lợi: fresh 4.98 → **3.78ms**.
+- **Matcher — kết luận theo số liệu:** 14 skill, 2 lần tinh chỉnh đều bằng DATA, 0 sự cố lọt qua test, sweep n² đã tự động — CHƯA có bằng chứng cần đổi matcher.
+- **Open source:** điều kiện "module contract proven" đạt; thiếu đúng MỘT thứ cho người ngoài viết module: `MODULE_GUIDE.md` (guideline đang rải trong comments/CHANGELOG) — giao M5-0 viết bằng trải nghiệm dựng TikTok thật.
+- Nợ rà toàn bộ: EventBus xóa ✅; ApprovalGate (M6) và tier-routing (≥2 model) chưa đến điều kiện — giữ nguyên hẹn, không kéo dài tùy tiện; nhóm Low đều evidence-gated vào runbook/M7.
+- Bằng chứng: build 0/0 debug+release; **132/132 test**; baseline fresh 3.78ms / reuse 2.54ms; AI spend tích lũy $0.00.
 
 ### 2026-07-03 — M4-3: Channel Analysis v1 — quyết định tool-channel bằng Architecture Review trước code (AD-45)
 

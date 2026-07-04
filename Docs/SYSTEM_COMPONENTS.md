@@ -33,7 +33,7 @@
                     └──────────────┘
 
    Skill Registry: Kernel tra capability tag → Execution chọn skill
-   Event Bus (Infrastructure): progress events → Presentation
+   Progress events: Kernel publish closure → fan-out → Presentation (AD-46)
 ```
 
 **Đường AI call bắt buộc:** `Kernel → AI Gateway → Provider`. Gateway tự retrieve context qua Store. Không có đường tắt (AD-06, AD-24).
@@ -108,7 +108,7 @@
 | **Logging** | Structured logs: debugging, cost analysis, execution review; nuôi Developer Mode; không ảnh hưởng UX |
 | **Security** | Keychain cho API keys; bảo vệ user data, project files; không lộ dữ liệu nhạy cảm vào prompt (Prompt Security — P17) |
 | **Configuration** | Nạp `Config/*.json` (preamble/vision, models, routing, budgets, policies, feature flags); hành vi đổi qua config, không qua code |
-| **Event Bus** *(AD-26)* | Pub/sub mỏng: giao tiếp lỏng giữa thành phần và giữa Modules (module không gọi đích danh module khác — AD-19); nguồn của Execution Status trên UI: `Understanding… Planning… Generating… Completed.` — không bao giờ chở chain-of-thought |
+| ~~Event Bus~~ *(AD-26 → AD-46)* | **ĐÃ XÓA tại M4-4** — 0 consumer động sau deadline; progress events (`Understanding… Planning…` — không bao giờ chở chain-of-thought) đi thẳng từ closure `publish` của Kernel (AD-33) fan-out tại composition root; tái sinh chỉ khi có audience động thật (AD-46) |
 
 *(Không có component Networking riêng — AD-27: consumer dùng URLSession trực tiếp.)*
 
@@ -128,7 +128,7 @@
 | **Dashboard** | Nhận thức vận hành — không phải trang thống kê | Goal, Task, Progress, Token Usage, Status |
 | **Settings** | Tối giản: General, AI, Models, Memory, Token, Developer | |
 | **Advanced Mode** | Ẩn mặc định | Memory/Knowledge Viewer (view trên Store), Log Viewer, Token Analysis, Model Routing, Skill config |
-| **Execution Status** | Component hiển thị progress events (từ Event Bus) | Không lộ reasoning; không % giả |
+| **Execution Status** | Component hiển thị progress events (từ publish closure của Kernel, AD-46) | Không lộ reasoning; không % giả |
 
 ## 5. MODULES — nghiệp vụ (plugin)
 

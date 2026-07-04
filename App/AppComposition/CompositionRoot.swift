@@ -22,8 +22,8 @@ struct AppDependencies {
 
 enum CompositionRoot {
     /// Wires the whole graph behind the Application layer (AD-35). The
-    /// Kernel publishes progress straight into the service (AD-33); the
-    /// Event Bus joins when multiple consumers exist (Dashboard, M2).
+    /// Kernel publishes progress through its injected closure (AD-33),
+    /// fanned out here directly to the two consumers (AD-46).
     ///
     /// Provider selection is graceful (M0-6): an Anthropic key in the vault
     /// selects the real provider; without one the app keeps working fully
@@ -47,10 +47,6 @@ enum CompositionRoot {
             logger: logger,
             onMetrics: { dashboard.recordMetrics($0) }
         )
-        // The Event Bus carries execution events to its first REAL
-        // multi-consumer audience (M2-4): chat status and the dashboard's
-        // activity strip. Value re-assessed at M4 when modules subscribe.
-        let events = EventBus<ExecutionEvent>()
         // Modules contribute skills as data through their manifests
         // (AD-44); one registry, one matching algorithm — module skills
         // and built-ins are indistinguishable to the Kernel. This list is
@@ -70,10 +66,16 @@ enum CompositionRoot {
             store: store,
             approvalGate: RequireUserApprovalGate(),
             writeGate: WriteGate(policy: makeWritePolicy()),
-            publish: { await events.publish($0) }
+            // Direct fan-out to the two real consumers (AD-46): the
+            // EventBus met its M4 deadline with zero module subscribers —
+            // an actor indirection between one producer and two static
+            // closures was pure overhead. A future DYNAMIC audience
+            // re-earns a bus with evidence, through this same seam.
+            publish: { [weak service] event in
+                service?.relay(event)
+                dashboard.recordEvent(event)
+            }
         )
-        subscribe(events) { [weak service] in service?.relay($0) }
-        subscribe(events) { dashboard.recordEvent($0) }
         service.configure(kernel: kernel)
         return AppDependencies(
             chat: service,
@@ -82,18 +84,6 @@ enum CompositionRoot {
             dashboard: dashboard,
             skillList: { await skillRegistry.allSkills().map(SkillInfo.from) }
         )
-    }
-
-    /// App-lifetime subscription: one consumer, one stream.
-    private static func subscribe(
-        _ bus: EventBus<ExecutionEvent>,
-        _ handle: @escaping @Sendable (ExecutionEvent) -> Void
-    ) {
-        Task {
-            for await event in await bus.events() {
-                handle(event)
-            }
-        }
     }
 
     /// Project management port (AD-38): state management, not goal

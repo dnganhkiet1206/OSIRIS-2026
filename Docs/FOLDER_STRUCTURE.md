@@ -98,7 +98,8 @@ OSIRIS/
 │   ├── Logging/                  # Structured logs (debug, cost, execution review)
 │   ├── Security/                 # Keychain (API keys), bảo vệ dữ liệu
 │   ├── Configuration/            # Nạp/ghi config, feature flags
-│   └── Events/                   # Event Bus: pub/sub mỏng (AD-26), progress events
+│   # KHÔNG còn Events/ — EventBus xóa tại M4-4 (AD-46): progress events
+│   # fan-out trực tiếp từ closure publish của Kernel tại composition root
 │   # KHÔNG có Networking/ — URLSession dùng trực tiếp tại consumer (AD-27)
 │
 ├── Modules/                      # SPM target OsirisModules — CHỈ import OsirisCore (AD-44)
