@@ -92,15 +92,15 @@ M8 Production Readiness  ── ổn định lâu dài: test, security, backup, 
 
 **Tiêu chí hoàn thành:** Hoàn thành công việc YouTube có ý nghĩa từ đầu tới cuối chỉ bằng mục tiêu một câu; module tuân thủ 100% Module contract (manifest, cấu trúc thư mục chuẩn, không đụng Core). *(Nghiệm thu: end-to-end offline bằng test; chất lượng nội dung thật PENDING runbook.)*
 
-### M5 — Platform Expansion *(đang triển khai)*
+### M5 — Platform Expansion *(đang triển khai — tiêu chí ≥3 module ĐÃ ĐẠT)*
 
-> **M5-0 (2026-07-04):** TikTok = module thứ hai, dựng chỉ từ `Docs/MODULE_GUIDE.md` — 0 dòng Core/contract. Bài kiểm tra guide đạt (viết module không cần đọc Core). Contract v1 giữ nguyên.
+> **M5-0/M5-1 (2026-07-04):** TikTok + Shopify = module thứ hai & ba, mỗi cái dựng chỉ từ `Docs/MODULE_GUIDE.md` — 0 dòng Core/contract. Bài kiểm tra guide đạt 2 lần (content-creation + e-commerce). Guide nay tự-đủ (Phụ lục A built-in IDs + B khung test). Contract v1 giữ nguyên qua cả 3 module.
 
 **Mục tiêu:** Nhân bản mô hình module. Thứ tự đề xuất theo giá trị: TikTok → Shopify → Etsy → Instagram/Facebook → Research/Documents → Trading Research.
 
 **Quy tắc:** mỗi module copy đúng cấu trúc YouTube module (`Docs/MODULE_GUIDE.md`); **không** sửa Core; nếu một module "cần" sửa Core → dừng lại, review kiến trúc trước.
 
-**Tiêu chí hoàn thành:** ≥ 3 module mới hoạt động mà Core không đổi (chứng minh plugin architecture). *(Tiến độ: 1/≥3 — TikTok M5-0.)*
+**Tiêu chí hoàn thành:** ≥ 3 module mới hoạt động mà Core không đổi (chứng minh plugin architecture). *(✅ ĐẠT: YouTube M4 + TikTok M5-0 + Shopify M5-1 — 3 module, 0 dòng Core. Nghiệm thu chính thức tại M5-2.)*
 
 ### M6 — Automation
 

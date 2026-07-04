@@ -10,14 +10,14 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M5 — Platform Expansion, đang triển khai** (M0→M4 nghiệm thu; tag local chờ push khi merge) |
-| Task hiện tại | **M5-0 (TikTok Module + MODULE_GUIDE.md) ✅ hoàn thành** — module thứ hai dựng CHỈ từ guide, contract KHÔNG đổi · kế tiếp: M5-1 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
+| Task hiện tại | **M5-1 (Shopify Module) ✅ hoàn thành** — module thứ 3, domain khác hẳn; đạt mốc ≥3 module (tiêu chí M5) · kế tiếp: M5-2 Milestone Review (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
-| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **2 module** (YouTube, TikTok) qua Contract v1 (AD-44) · **19 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 139/139 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
+| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **19 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 146/146 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
-M5 — Platform Expansion: nhân bản mô hình module (DEVELOPMENT_PLAN §2/M5). M5-0 xong: TikTok = module thứ hai, dựng CHỈ bằng `Docs/MODULE_GUIDE.md` + Module Contract (bài kiểm tra guide đạt) — Contract v1 đủ để mở rộng không cần đọc Core. Song song: user chạy `Docs/RUNBOOK_M1-0.md` — nợ High; 2 mục M3 hoãn (reuse-nới, cache-tối-ưu) kích hoạt bằng dữ liệu runbook.
+M5 — Platform Expansion: nhân bản mô hình module (DEVELOPMENT_PLAN §2/M5). **Đạt mốc ≥3 module Core-không-đổi (tiêu chí hoàn thành M5):** YouTube (M4), TikTok (M5-0), Shopify (M5-1 — domain khác hẳn). MODULE_GUIDE nay tự-đủ (Phụ lục A built-in IDs + B khung test). Song song: user chạy `Docs/RUNBOOK_M1-0.md` — nợ High; 2 mục M3 hoãn kích hoạt bằng dữ liệu runbook.
 
 ## 3. Việc đã hoàn thành (Completed)
 
@@ -70,10 +70,12 @@ M5 — Platform Expansion: nhân bản mô hình module (DEVELOPMENT_PLAN §2/M5
 
 - [x] **M5-0 — TikTok Module + MODULE_GUIDE.md**: `Docs/MODULE_GUIDE.md` (≤2 trang, prescriptive: manifest/namespace/keywords/composition/curated-union/tests/arch-rules/cấm) — tài liệu DUY NHẤT cần để viết module, 0 tham chiếu Core; **bài kiểm tra guide ĐẠT**: TikTok module (`tiktok` — hook-ideas, content-plan, trend-brief + composition `tiktok.research-to-plan` xuyên namespace `core.research-outline`→module) dựng CHỈ từ guide + `ModuleManifest`, không cần đọc Core; **0 dòng Core, 0 dòng Infrastructure, 0 dòng contract** (lần 4 chứng minh "thêm module = data + 1 dòng wiring"); trend-brief dùng dữ liệu user dán (AD-45); sweep test nâng cấp cho 2 module (keyword TikTok 0 giẫm toàn registry); 7 test mới; 139/139. **Không AD mới — contract giữ nguyên là chính bằng chứng.** Phát hiện trung thực: latent overlap tiếng Việt nội bộ YouTube ("viết"⊂"viết kịch bản đầy đủ") — ngoài phạm vi M5-0, ghi nợ Low.
 
+- [x] **M5-1 — Shopify Module (module thứ 3, domain e-commerce khác hẳn)**: guide-validation lần 2 — dựng từ `Docs/MODULE_GUIDE.md` + `ModuleManifest`; `shopify` (product-research, listing-optimization, store-analysis dùng dữ liệu user dán AD-45 + composition `shopify.research-to-listing` xuyên namespace `core.research-outline`→module); keyword single-skill CỐ Ý tránh từ built-in ("research"/"draft") để không tie với `core.*` (test precedence chứng minh goal "research…" thuần vẫn về core); **0 dòng Core/Infrastructure/contract** (lần 5); **MODULE_GUIDE nâng cấp tự-đủ**: Phụ lục A (built-in skill IDs) + Phụ lục B (khung test copy sẵn) — đóng finding M5-0 (guide trước trỏ "copy từ YouTube", vi phạm bài kiểm tra cấm-đọc-module-cũ); arch rule cấm-tên-module siết thêm "shopify"; **đạt tiêu chí M5 ≥3 module**; 7 test mới; 146/146.
+
 ## 4. Việc đang chờ (Next Tasks)
 
 1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**.
-2. **M5-1 — Module thứ ba theo giá trị (đề xuất Shopify) HOẶC hoàn thiện YouTube/TikTok theo nhu cầu** (chi tiết: `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN.
+2. **M5-2 — M5 Milestone Review & Acceptance** (chi tiết: `NEXT_TASK.md`): 3 module Core-không-đổi đủ chứng minh plugin architecture; guide-test 2 lần đạt; tag `M5`.
 
 ## 4f. M4 Closeout (nghiệm thu 2026-07-03, tag `M4`)
 

@@ -2,6 +2,14 @@
 
 ## [Unreleased — M5]
 
+### 2026-07-04 — M5-1: Shopify Module — guide-validation lần 2 trên domain khác hẳn
+
+- **Shopify = module thứ 3, domain e-commerce** (không phải content-creation như YouTube/TikTok) — bằng chứng mạnh hơn rằng Contract v1 đủ tổng quát. `shopify`: product-research, listing-optimization, store-analysis (dữ liệu user dán — AD-45) + composition `shopify.research-to-listing` xuyên namespace (bước 1 = built-in `core.research-outline`).
+- **Bài học keyword cho domain mới:** single-skill keyword CỐ Ý tránh từ built-in ("research"/"draft") — vì "product research" ⊃ "research" sẽ tie 1-1 và THUA `core.research-outline` theo id. Dùng "winning products"/"product opportunities" thay thế; composition ĐƯỢC tái dùng "research" trong union (§6). Test precedence pin: goal "research…" thuần vẫn về core, không bị Shopify cướp.
+- **MODULE_GUIDE nâng cấp tự-đủ (đóng finding M5-0):** thêm **Phụ lục A** (built-in skill IDs cho composition) + **Phụ lục B** (khung test copy sẵn). Guide cũ trỏ "copy từ YouTubeModule/test YouTube" — vi phạm chính bài kiểm tra "cấm đọc module cũ". Giờ guide đứng một mình: manifest từ contract, skill từ §3, composition IDs từ Phụ lục A, test từ Phụ lục B.
+- **Bằng chứng "mở rộng không sửa Core" lần 5:** 0 dòng Core, 0 dòng Infrastructure, 0 dòng contract. Đạt **tiêu chí hoàn thành M5: ≥3 module Core-không-đổi**.
+- Arch rule cấm-tên-module siết thêm "shopify". 7 test mới. Tổng **146/146 pass**, 0 warning, offline.
+
 ### 2026-07-04 — M5-0: TikTok Module + MODULE_GUIDE.md — Contract v1 tự chứng minh bằng module thứ hai
 
 - **`Docs/MODULE_GUIDE.md`** (≤2 trang, prescriptive — không triết lý): manifest, namespace, triggerKeywords, composition, precedence, curated union, mandatory tests, architecture rules, những điều cấm. Tham chiếu code duy nhất: `ModuleManifest` (~50 dòng) + mẫu YouTube. Là tài liệu DUY NHẤT người ngoài cần để viết module.

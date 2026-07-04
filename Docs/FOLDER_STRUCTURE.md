@@ -105,8 +105,10 @@ OSIRIS/
 ├── Modules/                      # SPM target OsirisModules — CHỈ import OsirisCore (AD-44)
 │   ├── YouTube/                  # Reference module (AD-21): manifest + skills thuần data
 │   │   └── YouTubeModule.swift   # ModuleManifest "youtube" — 9 skill/composition
-│   └── TikTok/                   # Module thứ hai (M5-0): dựng chỉ từ MODULE_GUIDE.md
-│       └── TikTokModule.swift    # ModuleManifest "tiktok" — hook/content/trend + composition
+│   ├── TikTok/                   # Module thứ hai (M5-0): dựng chỉ từ MODULE_GUIDE.md
+│   │   └── TikTokModule.swift    # ModuleManifest "tiktok" — hook/content/trend + composition
+│   └── Shopify/                  # Module thứ ba (M5-1): domain e-commerce khác hẳn
+│       └── ShopifyModule.swift   # ModuleManifest "shopify" — product/listing/store + composition
 │
 ├── Config/                       # CẤU HÌNH NGOÀI SOURCE (editable không cần sửa code)
 │   ├── preamble.md               # Vision + System Preamble tĩnh < 400 token (AD-13, AD-23)

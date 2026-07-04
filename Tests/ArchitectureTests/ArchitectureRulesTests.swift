@@ -305,10 +305,11 @@ final class ArchitectureRulesTests: XCTestCase {
 
     func testOnlyModulesAndCompositionRootKnowConcreteModules() {
         // Every installed module's name is banned outside Modules/ and the
-        // composition root. Strengthened at M5-0 to cover the second module.
+        // composition root. Strengthened per module added (M5-0 tiktok,
+        // M5-1 shopify).
         assertNoMatch(
             sources(notUnder: ["Modules/", "App/"]),
-            pattern: #"(?i)(youtube|tiktok)"#,
+            pattern: #"(?i)(youtube|tiktok|shopify)"#,
             rule: "AD-44: Core/Application/Infrastructure/Presentation never reference a concrete module — only Modules/ and the composition root do"
         )
     }

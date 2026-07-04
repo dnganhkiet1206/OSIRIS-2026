@@ -6,43 +6,38 @@
 
 ## Current Milestone
 
-**M5 — Platform Expansion** (DEVELOPMENT_PLAN.md §2/M5) — tiến độ 1/≥3 module
+**M5 — Platform Expansion** (DEVELOPMENT_PLAN.md §2/M5) — tiêu chí ≥3 module ĐÃ ĐẠT
 
 ## Current Task
 
-**M5-1 — Shopify Module (module thứ ba, domain khác hẳn content-creation)**
+**M5-2 — M5 Milestone Review & Acceptance**
 
-## Objective
+## Vì sao review bây giờ
 
-Module 1 (YouTube) + module 2 (TikTok) đều là content-creation — cùng "họ" nghiệp vụ. Shopify là domain KHÁC HẲN (thương mại điện tử: product research, listing, store analysis). Giá trị M5-1: chứng minh khuôn + MODULE_GUIDE hoạt động cho domain **không giống** hai module đầu (bằng chứng mạnh hơn cho "Contract v1 đủ tổng quát"), và đạt mốc **3 module = tiêu chí hoàn thành M5** (DEVELOPMENT_PLAN). Đây cũng là bài kiểm tra guide lần 2: nếu Shopify cần quay lại đọc Core → guide chưa đạt cho domain mới.
+Tiêu chí hoàn thành M5 (DEVELOPMENT_PLAN §2/M5) = "≥3 module hoạt động mà Core không đổi" — ĐÃ ĐẠT: YouTube (M4) + TikTok (M5-0) + Shopify (M5-1), mỗi module 0 dòng Core/contract. Guide-test đạt 2 lần trên 2 domain khác nhau (content-creation, e-commerce). Không có bằng chứng cần thêm module thứ 4 để nghiệm thu khuôn — module tiếp theo thêm theo NHU CẦU THẬT, không phải để review.
 
-## Phạm vi
+## Phạm vi review (mẫu M1-5/M2-6/M3-4/M4-4)
 
-1. **Đọc trước:** CHỈ `Docs/MODULE_GUIDE.md` + `Core/Modules/Contracts/ModuleManifest.swift` (đóng vai session mới — như M5-0). Nếu thấy cần đọc thêm Core → DỪNG, ghi lại guide thiếu gì (đó là finding quan trọng hơn cả module).
-2. **Shopify module v0** (`Modules/Shopify/ShopifyModule.swift`): 3–4 skill data theo DEVELOPMENT_PLAN (product-research, landing-page/listing-optimization, store-analysis); store-analysis dùng dữ liệu user dán (AD-45 — thương mại cũng cần số liệu thật); ≥1 composition (cân nhắc xuyên namespace).
-3. **Tests** theo MODULE_GUIDE §7 (manifest, e2e, precedence, sweep module-mới-không-giẫm, composition); keywords chứa định danh "shopify"/"store"/"product" — rà sweep.
-4. **Wiring:** 1 dòng `installedModules`.
-5. **Không làm:** Shopify API/OAuth/webhook (M6, AD-45); không sửa Core/contract/matcher/module cũ.
-
-## Files cần tạo/sửa
-
-- `Modules/Shopify/ShopifyModule.swift`, `Tests/ModuleTests/ShopifyModuleTests.swift`, CompositionRoot (1 dòng), docs cuối phiên.
+1. **Đánh giá trung thực tiêu chí M5:** bảng Tiêu chí → Kết quả; "≥3 module Core-không-đổi" (bằng chứng git 5 lần liên tiếp + thí nghiệm gỡ module M4-2); "chứng minh plugin architecture" (2 guide-test, 2 domain).
+2. **MODULE_GUIDE tự-đủ:** xác nhận đủ cho người ngoài (Phụ lục A+B đóng finding M5-0); còn thiếu gì cho module #4 không — trả lời bằng bằng chứng từ chính M5-1.
+3. **Matcher theo số liệu:** giờ ~18 skill / 3 module + generic; curated-union + sweep tự động đã chặn mọi ca; có bằng chứng cần đổi matcher chưa? (kết luận từ số liệu, không dự đoán).
+4. **Nợ kỹ thuật rà toàn bộ:** latent overlap tiếng Việt YouTube (M5-0, Low) — đến hạn sửa chưa hay vẫn evidence-gated; ApprovalGate (M6), tier routing (≥2 model), ChatViewModel trigger — không đến điều kiện thì giữ hẹn.
+5. **Acceptance report + tag `M5`** (local) + DEVELOPMENT_PLAN (M5 marked) + NEXT_TASK cho M6-0 (Automation — scheduling/background/MCP; đọc kỹ §2/M6; đây là nơi tool-channel AD-45 + risky-action ApprovalGate + EventBus-tái-sinh có thể đến điều kiện).
+6. **Open-source readiness:** cập nhật đánh giá — module contract PROVEN + guide tự-đủ; còn lại runbook (user) + Store versioning (M7).
 
 ## Checklist
 
-- [ ] Guide-test lần 2: dựng Shopify KHÔNG đọc Core — nếu phải đọc, ghi finding + bổ sung guide.
-- [ ] 0 dòng Core, 0 dòng contract, 0 dòng matcher, 0 dòng module cũ.
-- [ ] Sweep: keyword Shopify không giẫm toàn registry (giờ 3 module + generic + tool).
-- [ ] Zero regression 139 test cũ.
-- [ ] Đủ quy trình review + docs + NEXT_TASK (M5-2 hoặc M5 review nếu 3 module đủ chứng minh — tự đánh giá).
+- [ ] Không sửa code trừ khi review phát hiện lỗi thật (vd quyết định sửa latent overlap YouTube — nếu làm thì kèm precedence test tiếng Việt).
+- [ ] Mọi PENDING có địa chỉ; ADR cũ không sửa; tag M5 local.
+- [ ] Zero regression (146 + thay đổi nếu có).
 
 ## Definition of Done
 
-Shopify chạy end-to-end offline; đạt mốc 3 module Core-không-đổi (tiêu chí M5); guide-test lần 2 kết luận rõ (đạt / thiếu gì); zero regression.
+Bảng tiêu chí M5 trung thực; plugin architecture PROVEN bằng bằng chứng; matcher/nợ kết luận theo số liệu; tag `M5`; NEXT_TASK M6-0; DỪNG chờ user xác nhận trước khi vào M6.
 
 ## Estimated Complexity
 
-Thấp — khuôn + guide đã có; giá trị là bằng chứng domain-khác + guide-test lần 2.
+Thấp — đánh giá + tài liệu.
 
 ## Estimated AI Cost
 
@@ -50,10 +45,10 @@ Dev session: nhỏ. Runtime: 0.
 
 ## Risk
 
-- Domain thương mại có thể lộ nhu cầu contract mới (vd cần structured product data) — nếu xuất hiện, DỪNG, đó là bằng chứng thật cho quyết định mở contract (AD-45/M6), không tự mở.
-- 3 module + generic = keyword chật hơn — sweep + precedence là lưới.
+- Tự nghiệm thu dễ dãi — dùng đúng thước DEVELOPMENT_PLAN; PENDING thiết bị (runbook) ghi trung thực như mọi milestone.
+- Cám dỗ thêm module thứ 4 "cho chắc" — tiêu chí đã đạt, thêm là scope creep; module mới theo nhu cầu thật ở M5+/M6.
 
 ## Những phần tuyệt đối không được sửa
 
-- Core 6; ModuleManifest; matcher; YouTube/TikTok module (khuôn — copy, không sửa).
+- Core 6; ModuleManifest; matcher; 3 module (trừ khi sửa latent overlap có test).
 - Architecture Test rules (chỉ THÊM/siết); ADR cũ (AD-01…AD-46).
