@@ -24,6 +24,12 @@ public protocol Store: Sendable {
     func workingContext(for projectID: ProjectID) async throws -> [WorkingContextRecord]
     func save(_ record: WorkingContextRecord) async throws
 
+    // AutomationRule (M6-1, AD-47): saved goals; persisted like any record
+    // through the single persister — no separate "automation store".
+    func automationRules() async throws -> [AutomationRule]
+    func save(_ rule: AutomationRule) async throws
+    func deleteAutomationRule(id: String) async throws
+
     // Deliverables (AD-10, AD-32): files on disk are the source of truth,
     // written ONLY by the Store; ProjectState.deliverablePaths is the
     // derived index maintained by the Kernel's Persist phase. The goal is

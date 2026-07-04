@@ -18,6 +18,9 @@ struct AppDependencies {
     let dashboard: DashboardModel
     /// Read-only skill inventory for the Advanced panel (M2-5).
     let skillList: @Sendable () async -> [SkillInfo]
+    /// Saved-goal automation (M6-1). The Presentation surface is a later
+    /// task / device-pending; the port is ready.
+    let automation: Automation
 }
 
 enum CompositionRoot {
@@ -83,7 +86,41 @@ enum CompositionRoot {
             projects: makeProjectDirectory(store: store),
             settings: settings,
             dashboard: dashboard,
-            skillList: { await skillRegistry.allSkills().map(SkillInfo.from) }
+            skillList: { await skillRegistry.allSkills().map(SkillInfo.from) },
+            automation: makeAutomation(store: store, service: service)
+        )
+    }
+
+    /// Automation port (M6-1, AD-47): rules are data on the Store; `runNow`
+    /// forwards to the SAME `ChatService.submit` a typed goal uses — no
+    /// second execution path. Scheduled firing (`.daily`) is iOS background,
+    /// not wired here.
+    private static func makeAutomation(store: any Store, service: ChatService) -> Automation {
+        Automation(
+            list: {
+                try await store.automationRules().map(AutomationRuleSummary.from)
+            },
+            create: { goalText, projectID in
+                let rule = AutomationRule(
+                    id: UUID().uuidString, projectID: ProjectID(projectID), goalText: goalText
+                )
+                try await store.save(rule)
+                return AutomationRuleSummary.from(rule)
+            },
+            setEnabled: { id, enabled in
+                guard var rule = try await store.automationRules().first(where: { $0.id == id }) else { return }
+                rule.enabled = enabled
+                try await store.save(rule)
+            },
+            delete: { id in try await store.deleteAutomationRule(id: id) },
+            runNow: { id, onUpdate in
+                guard let rule = try? await store.automationRules().first(where: { $0.id == id }),
+                      rule.enabled else {
+                    onUpdate(TaskUpdate(kind: .failed(message: "That automation is unavailable.")))
+                    return
+                }
+                await service.submit(goal: rule.goalText, projectID: rule.projectID.rawValue, onUpdate: onUpdate)
+            }
         )
     }
 

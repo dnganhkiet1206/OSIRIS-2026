@@ -58,6 +58,7 @@ OSIRIS/
 │   │   │                         #   deliverable index (derived từ file)
 │   │   ├── Knowledge/            # Cách hệ thống hoạt động — searchable
 │   │   ├── WorkingContext/       # Tạm thời, TTL tự hết hạn
+│   │   ├── Automation/           # AutomationRule = saved goal (M6-1, AD-47) — data, không engine
 │   │   ├── Search/               # Retrieval: phục vụ Decide, AI Gateway, Global Search
 │   │   ├── Policies/             # Ghi/nén/hết hạn/learning gate (AD-20)
 │   │   └── Persistence/          # Đọc/ghi, migration, khôi phục

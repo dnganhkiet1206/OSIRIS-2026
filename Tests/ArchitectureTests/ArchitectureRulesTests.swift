@@ -187,6 +187,9 @@ final class ArchitectureRulesTests: XCTestCase {
             "ModelRouter", "TokenManager", "IntelligenceEngine",
             // Deleted at its M4 deadline (AD-46): zero dynamic consumers.
             "EventBus",
+            // Forbidden at M6-1 (AD-47): automation is DATA + the existing
+            // Kernel — never an engine/manager/runner.
+            "AutomationEngine", "AutomationManager", "RuleRunner", "AutomationRuntime",
         ].joined(separator: "|")
         assertNoMatch(
             Self.allSources,

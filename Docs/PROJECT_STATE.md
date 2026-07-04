@@ -10,14 +10,14 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M6 — Automation, đang triển khai** (M0→M5 nghiệm thu; tag local chờ push khi merge) |
-| Task hiện tại | **M6-0 (Automation Architecture Review + xóa ApprovalGate) ✅ hoàn thành — AD-47** · kế tiếp: M6-1 build automation-as-data (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
+| Task hiện tại | M6-0 ✅ · **M6-1 (Automation-as-data v1) ✅ hoàn thành** — `AutomationRule` record thứ 4 + "run now" qua Kernel hiện có (0 engine) · kế tiếp: M6-2 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **19 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 146/146 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 153/153 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
-M6 — Automation: nối trí tuệ với thực thi tự động, KHÔNG visual workflow builder (DEVELOPMENT_PLAN §2/M6). M6-0 xong: Architecture Review chốt 4 quyết định (AD-47) — xóa ApprovalGate (0 consumer/6 milestone), automation = data + Kernel hiện có. Song song: user chạy `Docs/RUNBOOK_M1-0.md` — nợ High.
+M6 — Automation: nối trí tuệ với thực thi tự động, KHÔNG visual workflow builder (DEVELOPMENT_PLAN §2/M6). M6-0 chốt thiết kế (AD-47); M6-1 hiện thực: `AutomationRule` = data trong Store + "run now" tái dùng Kernel (0 engine). Trigger theo lịch = iOS background PENDING thiết bị. Song song: user chạy `Docs/RUNBOOK_M1-0.md` — nợ High.
 
 ## 3. Việc đã hoàn thành (Completed)
 
@@ -72,12 +72,14 @@ M6 — Automation: nối trí tuệ với thực thi tự động, KHÔNG visual
 
 - [x] **M5-1 — Shopify Module (module thứ 3, domain e-commerce khác hẳn)**: guide-validation lần 2 — dựng từ `Docs/MODULE_GUIDE.md` + `ModuleManifest`; `shopify` (product-research, listing-optimization, store-analysis dùng dữ liệu user dán AD-45 + composition `shopify.research-to-listing` xuyên namespace `core.research-outline`→module); keyword single-skill CỐ Ý tránh từ built-in ("research"/"draft") để không tie với `core.*` (test precedence chứng minh goal "research…" thuần vẫn về core); **0 dòng Core/Infrastructure/contract** (lần 5); **MODULE_GUIDE nâng cấp tự-đủ**: Phụ lục A (built-in skill IDs) + Phụ lục B (khung test copy sẵn) — đóng finding M5-0; arch rule cấm-tên-module siết thêm "shopify"; **đạt tiêu chí M5 ≥3 module**; 7 test mới; 146/146.
 
+- [x] **M6-1 — Automation-as-data v1** (AD-47 câu 4 hiện thực): `AutomationRule` = **record thứ 4 của Store** (schema tối thiểu AD-28: `id`, `projectID`, `goalText`, `trigger`, `enabled` — "goal" tách 2 trường, KHÔNG field để dành); `AutomationTrigger` enum data (`.manual` chạy được / `.daily(hour:)` = SCHEMA cho iOS scheduling, không fire trên Linux); Store CRUD (`automationRules`/`save`/`deleteAutomationRule`, layout `automation-rules/<id>`, persist qua Store duy nhất AD-32 — test restart); Application port `Automation` (closure struct, pattern AD-38) — **`runNow` gọi đúng `ChatService.submit` như goal thủ công, KHÔNG execution path thứ hai** (test: rule goal qua Kernel = 1 AI call ordinary); pure mapping `AutomationRuleSummary.from` testable; arch rule cấm-tái-tạo siết thêm `AutomationEngine/AutomationManager/RuleRunner/AutomationRuntime` (cưỡng chế "0 engine" của user); **0 component mới, 0 pipeline riêng**; 7 test mới; 153/153.
+
 - [x] **M6-0 — Automation Architecture Review + xóa ApprovalGate** (AD-47): review 4 quyết định bằng bằng chứng grep/git — **(1) XÓA ApprovalGate + RiskyAction/ApprovalDecision/RequireUserApprovalGate**: `evaluate(_:)` chưa từng gọi, `RiskyAction` chưa từng construct qua 6 milestone; automation sinh deliverable local-reversible ≠ risky action; xóa (Kernel init bớt 1 param, ~18 test site, file Gates/ xóa) — **146/146 pass, 0 test logic sửa = bằng chứng 0 consumer**; tái sinh cùng risky action THẬT đầu tiên (= mở tool-channel AD-45); **(2)** tool-channel KHÔNG mở (không module cần); **(3)** EventBus KHÔNG tái sinh (không audience động); **(4)** automation = DATA (rule: goal + trigger) + Kernel hiện có, KHÔNG Engine/Runtime/Scheduler — build M6-1; trigger lịch = iOS PENDING thiết bị.
 
 ## 4. Việc đang chờ (Next Tasks)
 
 1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High** (nay 3 module + toàn UI tích trên nền chưa compiler Mac).
-2. **M6-1 — Automation-as-data v1** (chi tiết: `NEXT_TASK.md`): `AutomationRule` record trong Store (schema tối thiểu AD-28) + "run now" qua Kernel hiện có; trigger lịch interface-only PENDING thiết bị.
+2. **M6-2 — Scheduled trigger + Automation UI (phần lớn PENDING thiết bị)** (chi tiết: `NEXT_TASK.md`): iOS background firing cho `.daily` (không test được Linux) + Presentation surface cho automation port.
 
 ## 4g. M5 Closeout (nghiệm thu 2026-07-04, tag `M5`)
 

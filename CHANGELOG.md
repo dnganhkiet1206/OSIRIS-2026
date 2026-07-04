@@ -2,6 +2,15 @@
 
 ## [Unreleased — M6]
 
+### 2026-07-04 — M6-1: Automation-as-data v1 — rule là data, chạy qua Kernel hiện có (AD-47)
+
+- **`AutomationRule` = record thứ 4 của Store**, schema TỐI THIỂU (AD-28): `id`, `projectID`, `goalText`, `trigger`, `enabled` — "goal" tách thành projectID + text, KHÔNG field "để dành". Persist qua Store duy nhất (AD-32); layout `automation-rules/<id>.json`; test chứng minh sống sót restart.
+- **`AutomationTrigger` = data enum, KHÔNG scheduler:** `.manual` (chạy được offline qua "run now") + `.daily(hour:)` (định nghĩa SCHEMA cho iOS background scheduling — M6-2+, KHÔNG fire trên Linux, có test Codable round-trip). Không timer, không dispatcher, không giả lập scheduler.
+- **"Run now" tái dùng đúng Kernel:** Application port `Automation` (closure struct, pattern AD-38) — `runNow` fetch rule rồi gọi `ChatService.submit(goalText, projectID)` = **chính xác đường một goal thủ công đi**, KHÔNG execution path thứ hai. Test tại biên Kernel: goal của rule đã lưu → 1 AI call ordinary → deliverable.
+- **Cưỡng chế "0 engine" bằng máy:** arch rule cấm-tái-tạo siết thêm `AutomationEngine/AutomationManager/RuleRunner/AutomationRuntime` (20 rule). Không component/runtime/scheduler/dispatcher mới nào được thêm.
+- `AutomationRuleSummary.from` = pure mapping testable mọi nền tảng; port wired trong composition root (Presentation surface = M6-2/PENDING thiết bị).
+- 7 test mới (persistence restart, delete, trigger round-trip, defaults, run-through-Kernel, summary mapping ×2). Tổng **153/153 pass**, 0 warning, offline.
+
 ### 2026-07-04 — M6-0: Automation Architecture Review + xóa ApprovalGate (AD-47)
 
 - **Architecture Review TRƯỚC code (bắt buộc — milestone đầu có risky actions):** 4 quyết định, tất cả bằng bằng chứng grep/git, không phỏng đoán.

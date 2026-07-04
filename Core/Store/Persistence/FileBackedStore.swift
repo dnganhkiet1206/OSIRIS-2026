@@ -16,6 +16,7 @@ public actor FileBackedStore: Store {
         static let projectState = "project-state"
         static let knowledge = "knowledge"
         static let workingContext = "working-context"
+        static let automationRules = "automation-rules"
         static let deliverables = "deliverables"
     }
 
@@ -71,6 +72,21 @@ public actor FileBackedStore: Store {
 
     public func save(_ record: WorkingContextRecord) throws {
         try write(record, key: key(Prefix.workingContext, id: record.id))
+    }
+
+    // MARK: AutomationRule (M6-1)
+
+    public func automationRules() throws -> [AutomationRule] {
+        try loadAll(AutomationRule.self, prefix: Prefix.automationRules)
+            .sorted { $0.id < $1.id }
+    }
+
+    public func save(_ rule: AutomationRule) throws {
+        try write(rule, key: key(Prefix.automationRules, id: rule.id))
+    }
+
+    public func deleteAutomationRule(id: String) throws {
+        try storage.delete(key: key(Prefix.automationRules, id: id))
     }
 
     // MARK: Deliverables (AD-32: only the Store touches disk)
