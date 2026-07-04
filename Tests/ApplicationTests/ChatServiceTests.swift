@@ -48,7 +48,6 @@ final class ChatServiceTests: XCTestCase {
             skills: InMemorySkillRegistry(),
             engine: DefaultExecutionEngine(gateway: gateway),
             store: FileBackedStore(storage: try FileStorage(baseDirectory: directory)),
-            approvalGate: RequireUserApprovalGate(),
             publish: { [weak service] event in service?.relay(event) }
         )
         service.configure(kernel: kernel)

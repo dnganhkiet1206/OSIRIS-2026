@@ -61,7 +61,6 @@ final class CompositionExecutionTests: XCTestCase {
             skills: InMemorySkillRegistry(registering: skills),
             engine: DefaultExecutionEngine(gateway: gateway),
             store: FileBackedStore(storage: try FileStorage(baseDirectory: directory)),
-            approvalGate: RequireUserApprovalGate(),
             publish: { _ in }
         )
     }

@@ -90,7 +90,6 @@ final class SmartPlanningTests: XCTestCase {
             skills: InMemorySkillRegistry(registering: skills),
             engine: engine,
             store: store,
-            approvalGate: RequireUserApprovalGate(),
             writeGate: WriteGate(policy: policy ?? .disabled),
             publish: { _ in }
         )
@@ -163,7 +162,6 @@ final class SmartPlanningTests: XCTestCase {
             tools: [CurrentDateTimeTool()],
             engine: engine,
             store: store,
-            approvalGate: RequireUserApprovalGate(),
             publish: { _ in }
         )
 
@@ -251,7 +249,6 @@ final class SmartPlanningTests: XCTestCase {
             skills: InMemorySkillRegistry(),
             engine: DefaultExecutionEngine(gateway: gateway),
             store: store,
-            approvalGate: RequireUserApprovalGate(),
             writeGate: WriteGate(policy: fullPolicy),
             publish: { _ in }
         )

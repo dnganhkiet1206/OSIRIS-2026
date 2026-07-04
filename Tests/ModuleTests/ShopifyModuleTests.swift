@@ -70,7 +70,6 @@ final class ShopifyModuleTests: XCTestCase {
             skills: InMemorySkillRegistry(registering: allSkills),
             engine: DefaultExecutionEngine(gateway: gateway),
             store: FileBackedStore(storage: try FileStorage(baseDirectory: directory)),
-            approvalGate: RequireUserApprovalGate(),
             publish: { _ in }
         )
     }

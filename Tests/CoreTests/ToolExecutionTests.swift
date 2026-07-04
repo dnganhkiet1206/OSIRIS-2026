@@ -77,7 +77,6 @@ final class ToolExecutionTests: XCTestCase {
             tools: tools,
             engine: DefaultExecutionEngine(gateway: gateway, logger: logger),
             store: FileBackedStore(storage: try FileStorage(baseDirectory: directory)),
-            approvalGate: RequireUserApprovalGate(),
             publish: { _ in }
         )
     }

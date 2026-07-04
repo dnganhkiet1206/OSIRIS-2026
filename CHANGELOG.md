@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [Unreleased — M6]
+
+### 2026-07-04 — M6-0: Automation Architecture Review + xóa ApprovalGate (AD-47)
+
+- **Architecture Review TRƯỚC code (bắt buộc — milestone đầu có risky actions):** 4 quyết định, tất cả bằng bằng chứng grep/git, không phỏng đoán.
+- **(1) XÓA ApprovalGate** (+ `RiskyAction`, `ApprovalDecision`, `RequireUserApprovalGate`): grep chứng minh `evaluate(_:)` **chưa từng được gọi** ở đâu và `RiskyAction` **chưa từng được construct** qua 6 milestone. Automation v1 chạy skill sinh deliverable (file local, reversible) — KHÔNG phải risky action (publish/delete/external effect). Xóa: Kernel init bớt 1 param, ~18 test site, file `Core/Kernel/Gates/` xóa. **Bằng chứng xóa đúng: 146/146 pass mà 0 dòng logic test nào sửa** (sed chỉ gỡ dòng tham số). Shape cũ (publish/delete/largeSpend/…) là phỏng đoán M0 — giữ sẽ neo thiết kế tương lai vào phỏng đoán. **Tái sinh:** cùng sự kiện với risky action THẬT đầu tiên (external/irreversible) = cũng chính là lúc mở tool-channel (AD-45) — một quyết định thống nhất.
+- **(2) Tool-channel: KHÔNG mở** — không module M6-0 nào cần (AD-45 giữ nguyên). **(3) EventBus: KHÔNG tái sinh** — automation v1 không tạo audience động; fan-out closure vẫn đủ (AD-46 giữ nguyên). **(4) Automation sống ở đâu:** = DATA (rule = goal + trigger) + tái dùng vòng đời Kernel hiện có; **KHÔNG Engine/Runtime/Scheduler/Dispatcher**. Trigger theo lịch = iOS background (PENDING thiết bị). Build ở M6-1 với schema tối thiểu (AD-28) khi trigger model rõ — M6-0 chốt thiết kế + dọn scaffolding chết.
+- **Không thêm feature ở M6-0** (đúng "review trước, build sau"): thay đổi thuần là xóa code chết + docs. Kernel giờ chỉ còn seam thật (skills/tools/engine/store/writeGate/publish). Tổng **146/146 pass**, 0 warning, offline.
+
 ## [M5] — 2026-07-04 (tag `M5`)
 
 ### M5-2: Milestone Review & Acceptance — plugin architecture proven

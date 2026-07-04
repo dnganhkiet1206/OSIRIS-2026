@@ -48,7 +48,6 @@ final class KernelDecideTests: XCTestCase {
             skills: InMemorySkillRegistry(),
             engine: DefaultExecutionEngine(gateway: gateway),
             store: store,
-            approvalGate: RequireUserApprovalGate(),
             publish: { _ in }
         )
     }

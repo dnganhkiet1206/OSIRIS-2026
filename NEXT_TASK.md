@@ -6,41 +6,44 @@
 
 ## Current Milestone
 
-**M6 — Automation** (DEVELOPMENT_PLAN.md §2/M6) — CHỜ USER XÁC NHẬN MỞ
+**M6 — Automation** (DEVELOPMENT_PLAN.md §2/M6) — thiết kế đã chốt tại M6-0 (AD-47)
 
 ## Current Task
 
-**M6-0 — Automation bootstrap: ApprovalGate có consumer đầu tiên (risky-action) HOẶC xóa**
+**M6-1 — Automation-as-data v1: `AutomationRule` bền vững + "run now" qua Kernel hiện có**
 
-## Vì sao task này trước
+## Objective
 
-M6 là nơi 3 deadline/điều kiện đã hẹn cùng đến hạn — làm đúng thứ tự bằng chứng, KHÔNG xây visual workflow builder (DEVELOPMENT_PLAN §2/M6 cấm rõ):
-1. **ApprovalGate** (nợ Low, hẹn cứng M6): wired từ M0, chưa từng tham vấn vì chưa có risky action. M6 introduce risky action đầu tiên (scheduling/publish) → gate PHẢI có consumer thật, hoặc xóa nếu automation v1 chưa có hành động rủi ro. Quyết bằng bằng chứng.
-2. **AD-45 tool-channel** (điều kiện M6): MCP/remote tools (AD-18) — nếu automation cần gọi ngoài, đây là lúc câu hỏi mở-contract-tools quay lại VỚI use case thật. Nếu chưa cần → giữ đóng.
-3. **EventBus tái sinh** (AD-46): automation có tạo audience ĐỘNG (nhiều rule subscribe) không? Nếu có → bus được earn lại bằng bằng chứng; nếu không → tiếp tục fan-out closure.
+Hiện thực thiết kế đã chốt ở M6-0 (AD-47, câu 4): automation = DATA + vòng đời Kernel hiện có, KHÔNG engine. Lát cắt testable-offline: một **rule** (mô tả goal cần chạy) được lưu bền qua Store (sống sót restart — State Over Chat), và "chạy ngay" = nạp goal của rule vào Kernel hiện có → ra deliverable y như goal thủ công. Phần trigger-theo-lịch là iOS background → chỉ định nghĩa interface, PENDING thiết bị (như UI M0-M5).
 
-## Phạm vi (lát cắt mỏng nhất — walking skeleton của M6)
+## Phạm vi
 
-1. **Architecture Review TRƯỚC code** (như M4-3): automation "rule" là gì ở dạng đơn giản nhất? Đề xuất khởi điểm: **rule = (trigger điều kiện) → (goal/skill composition có sẵn)** thuần data, KHÔNG engine. Tự phản biện: có phải chỉ là một cách lưu goal + điều kiện chạy? Có tái dùng vòng đời Kernel hiện có không? (phải có).
-2. **Risky action + ApprovalGate:** định nghĩa risky action ĐẦU TIÊN cụ thể (vd "tự động chạy goal theo lịch" có rủi ro tốn token/side-effect) → Kernel tham vấn `approvalGate` trước khi thực thi; test chứng minh gate chặn/cho qua. Nếu kết luận automation v1 CHƯA có risky action thật → xóa ApprovalGate đúng quy trình (như EventBus M4-4).
-3. **iOS background limits** (rủi ro theo dõi từ M1): scheduling trong giới hạn iOS — chỉ thiết kế interface, KHÔNG cần background thật trên Linux (ghi PENDING thiết bị như UI).
-4. **Không làm:** visual workflow builder; scheduler/dispatcher engine; MCP thật nếu chưa có use case; bất kỳ engine mới nào chưa có bằng chứng (Năm Câu Hỏi + DỪNG hỏi user).
+1. **`AutomationRule` = record thứ 4 của Store (schema TỐI THIỂU — AD-28):** chỉ trường bắt buộc để chạy được: `id`, `name`, `goalText`, `projectID`, `enabled`. KHÔNG thêm trigger-schedule fields cho tới khi trigger model có bằng chứng (iOS design). Rule là platform data → Store là nơi lưu duy nhất (AD-32); arch rule mới: `AutomationRule(` chỉ construct trong Core/Store (như memory records AD-41).
+2. **Store CRUD tối thiểu:** `saveAutomationRule` / `automationRules(for:)` / xóa; persist qua LocalStorage layout mới `automation-rules/<id>`; test restart chứng minh sống sót.
+3. **"Run now" = Application port** (pattern ProjectDirectory/ProviderSettings — closure struct, không cạnh import mới): list/create/run rule; "run" gọi `ChatService.submit(rule.goalText, rule.projectID)` — tái dùng Kernel, KHÔNG execution path mới. Test: rule chạy ra deliverable == goal thủ công cùng nội dung.
+4. **Trigger theo lịch:** CHỈ định nghĩa `AutomationTrigger` enum (vd `.manual`, `.daily`) như data; KHÔNG scheduler thật (iOS background — PENDING thiết bị, ghi runbook). `.manual` là case duy nhất chạy được offline v1.
+5. **Không làm:** scheduler/dispatcher/engine; điều kiện phức tạp (rule engine); UI automation (Presentation — sau khi Core+App xong, hoặc PENDING Mac); risky action/ApprovalGate (đã xóa — chờ external tools M6+).
+
+## Files cần tạo/sửa
+
+- `Core/Store/` (AutomationRule type + Store protocol methods + FileBackedStore impl), `Application/` (Automation port), CompositionRoot (wire), Tests (Store persistence + run-now e2e + arch rule), docs.
 
 ## Checklist
 
-- [ ] Architecture Review 11 câu trước khi code (chạm vùng nhạy: Kernel tham vấn gate).
-- [ ] ApprovalGate: quyết consume (có test risky-action) HOẶC xóa (đúng quy trình, arch rule cập nhật).
-- [ ] Automation = data + vòng đời Kernel hiện có; 0 engine mới không bằng chứng.
-- [ ] Nếu chạm Core (Kernel gọi gate là vùng Core): tối thiểu, có arch test, không phá 146 test cũ.
-- [ ] Zero regression; đủ review + docs + NEXT_TASK.
+- [ ] Schema tối thiểu (5 trường); không field trigger-schedule chưa có bằng chứng.
+- [ ] Rule chỉ construct trong Core/Store (arch rule mới, 20 rule).
+- [ ] Persist qua Store duy nhất (AD-32); test restart.
+- [ ] "Run now" tái dùng Kernel — 0 execution path mới; test deliverable == manual goal.
+- [ ] Trigger = data enum; scheduler thật PENDING thiết bị (không giả trên Linux).
+- [ ] Zero regression 146 test; đủ review + docs + NEXT_TASK.
 
 ## Definition of Done
 
-Lát cắt automation v1 chạy end-to-end offline (rule data → Kernel → gate → execution); ApprovalGate quyết xong bằng bằng chứng; iOS-background khoanh vùng PENDING; zero regression.
+Tạo rule → sống sót restart (test) → "run now" ra deliverable đúng (test) qua Kernel hiện có; 0 engine mới; trigger-lịch khoanh vùng PENDING; zero regression.
 
 ## Estimated Complexity
 
-Trung bình — chạm Kernel/gate (vùng nhạy); trọng tâm là quyết định kiến trúc automation-là-gì.
+Trung bình — chạm Store (record type thứ 4) + Application port; vùng đã có khuôn (memory records, closure-port).
 
 ## Estimated AI Cost
 
@@ -48,10 +51,10 @@ Dev session: trung bình. Runtime: 0 (test offline).
 
 ## Risk
 
-- Automation dễ phình thành workflow engine — DEVELOPMENT_PLAN cấm rõ; mỗi cấu trúc mới qua Năm Câu Hỏi.
-- ApprovalGate: xóa vội nếu M6 thật sự cần, hoặc giữ vô ích nếu automation v1 chưa rủi ro — quyết bằng risky action CỤ THỂ, không phỏng đoán.
+- Schema phình sớm (thêm trigger fields đoán trước) — giữ 5 trường, mở rộng khi iOS trigger design rõ (AD-28).
+- "Automation engine" cám dỗ — v1 chỉ là record + Kernel hiện có; scheduler thật là iOS API, không phải component OSIRIS.
 
 ## Những phần tuyệt đối không được sửa
 
-- Core 6 (trừ Kernel-tham-vấn-gate nếu review chứng minh cần — tối thiểu, có test); ModuleManifest; matcher; 3 module.
-- Architecture Test rules (chỉ THÊM/siết); ADR cũ (AD-01…AD-46).
+- Core 6 (Store thêm record type thứ 4 = mở rộng data có lập luận, không phải component mới); matcher; 3 module.
+- Architecture Test rules (chỉ THÊM); ADR cũ (AD-01…AD-47). ApprovalGate đã xóa — KHÔNG tái tạo cho tới khi có risky action thật (AD-47).

@@ -121,7 +121,6 @@ final class ReflectionTests: XCTestCase {
             skills: InMemorySkillRegistry(),
             engine: DefaultExecutionEngine(gateway: gateway),
             store: store,
-            approvalGate: RequireUserApprovalGate(),
             writeGate: WriteGate(policy: policy),
             publish: { _ in }
         )

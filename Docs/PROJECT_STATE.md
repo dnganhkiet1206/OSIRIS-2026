@@ -9,15 +9,15 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M5 — Platform Expansion: ĐÃ NGHIỆM THU 2026-07-04** (tag `M5` local; M0→M5 đều chờ push tag khi merge) |
-| Task hiện tại | **M5-2 (Milestone Review) ✅ — M5 ĐẠT (code-complete); plugin architecture PROVEN (3 module, 0 dòng Core)** · kế tiếp: M6-0 Automation (xem `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN · **[USER] runbook M1-0 vẫn chờ — nợ High** |
+| Giai đoạn | **M6 — Automation, đang triển khai** (M0→M5 nghiệm thu; tag local chờ push khi merge) |
+| Task hiện tại | **M6-0 (Automation Architecture Review + xóa ApprovalGate) ✅ hoàn thành — AD-47** · kế tiếp: M6-1 build automation-as-data (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **19 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 146/146 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
-M5 — Platform Expansion: nhân bản mô hình module (DEVELOPMENT_PLAN §2/M5). **Đạt mốc ≥3 module Core-không-đổi (tiêu chí hoàn thành M5):** YouTube (M4), TikTok (M5-0), Shopify (M5-1 — domain khác hẳn). MODULE_GUIDE nay tự-đủ (Phụ lục A built-in IDs + B khung test). Song song: user chạy `Docs/RUNBOOK_M1-0.md` — nợ High; 2 mục M3 hoãn kích hoạt bằng dữ liệu runbook.
+M6 — Automation: nối trí tuệ với thực thi tự động, KHÔNG visual workflow builder (DEVELOPMENT_PLAN §2/M6). M6-0 xong: Architecture Review chốt 4 quyết định (AD-47) — xóa ApprovalGate (0 consumer/6 milestone), automation = data + Kernel hiện có. Song song: user chạy `Docs/RUNBOOK_M1-0.md` — nợ High.
 
 ## 3. Việc đã hoàn thành (Completed)
 
@@ -72,10 +72,12 @@ M5 — Platform Expansion: nhân bản mô hình module (DEVELOPMENT_PLAN §2/M5
 
 - [x] **M5-1 — Shopify Module (module thứ 3, domain e-commerce khác hẳn)**: guide-validation lần 2 — dựng từ `Docs/MODULE_GUIDE.md` + `ModuleManifest`; `shopify` (product-research, listing-optimization, store-analysis dùng dữ liệu user dán AD-45 + composition `shopify.research-to-listing` xuyên namespace `core.research-outline`→module); keyword single-skill CỐ Ý tránh từ built-in ("research"/"draft") để không tie với `core.*` (test precedence chứng minh goal "research…" thuần vẫn về core); **0 dòng Core/Infrastructure/contract** (lần 5); **MODULE_GUIDE nâng cấp tự-đủ**: Phụ lục A (built-in skill IDs) + Phụ lục B (khung test copy sẵn) — đóng finding M5-0; arch rule cấm-tên-module siết thêm "shopify"; **đạt tiêu chí M5 ≥3 module**; 7 test mới; 146/146.
 
+- [x] **M6-0 — Automation Architecture Review + xóa ApprovalGate** (AD-47): review 4 quyết định bằng bằng chứng grep/git — **(1) XÓA ApprovalGate + RiskyAction/ApprovalDecision/RequireUserApprovalGate**: `evaluate(_:)` chưa từng gọi, `RiskyAction` chưa từng construct qua 6 milestone; automation sinh deliverable local-reversible ≠ risky action; xóa (Kernel init bớt 1 param, ~18 test site, file Gates/ xóa) — **146/146 pass, 0 test logic sửa = bằng chứng 0 consumer**; tái sinh cùng risky action THẬT đầu tiên (= mở tool-channel AD-45); **(2)** tool-channel KHÔNG mở (không module cần); **(3)** EventBus KHÔNG tái sinh (không audience động); **(4)** automation = DATA (rule: goal + trigger) + Kernel hiện có, KHÔNG Engine/Runtime/Scheduler — build M6-1; trigger lịch = iOS PENDING thiết bị.
+
 ## 4. Việc đang chờ (Next Tasks)
 
 1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High** (nay 3 module + toàn UI tích trên nền chưa compiler Mac).
-2. **M6-0 — Automation bootstrap** (chi tiết: `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN mở M6.
+2. **M6-1 — Automation-as-data v1** (chi tiết: `NEXT_TASK.md`): `AutomationRule` record trong Store (schema tối thiểu AD-28) + "run now" qua Kernel hiện có; trigger lịch interface-only PENDING thiết bị.
 
 ## 4g. M5 Closeout (nghiệm thu 2026-07-04, tag `M5`)
 
@@ -300,6 +302,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | AD-44 | Module Contract v1: module LÀ manifest — thuần data (id/version/purpose/skills); target OsirisModules chỉ depend OsirisCore; skill namespace structural theo module id; composition root duy nhất biết module cài đặt; 3 lớp cưỡng chế (compiler + 2 nhóm arch rule); Core không bao giờ biết module cụ thể; không Plugin Engine/Module Manager |
 | AD-45 | Tool-channel cho manifest: KHÔNG mở (manifest = Codable data, Tool = protocol hành vi — đổi bản chất contract); Channel Analysis v1 = skill trên dữ liệu user cung cấp (0 tool/OAuth/network); điều kiện kích hoạt: M6 Automation với user quyết consent + phương án tách code khỏi manifest |
 | AD-46 | XÓA EventBus đúng deadline M4 (AD-39): 0 consumer động sau 4 mảng module; thay bằng fan-out trực tiếp trong closure publish (seam AD-33 không đổi); vào danh sách cấm-tái-tạo; tái sinh chỉ khi có audience động thật; AD-26 Superseded |
+| AD-47 | M6-0 Architecture Review (4 quyết định bằng bằng chứng): xóa ApprovalGate (0 consumer/6 milestone, shape phỏng đoán — tái sinh cùng risky action thật = mở tool-channel AD-45); tool-channel KHÔNG mở; EventBus KHÔNG tái sinh; automation = data + Kernel hiện có, KHÔNG engine/runtime/scheduler |
 
 ## 6. Nợ kỹ thuật (phân loại lại tại M1 Review — Critical/High/Medium/Low)
 
@@ -312,7 +315,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | ~~Medium~~ | ~~Store write gate / learning gate (AD-20) chưa enforce~~ — **ĐÃ TRẢ tại M3-1** (WriteGate + arch rule không-bypass) | ✅ |
 | Medium | Tier routing: phía Kernel ĐÃ XONG tại M3-2 (`preferredTier` mang giá trị thật từ estimate/skill — AD-42); còn lại phía Gateway chưa tiêu thụ tier khi route (1 model thật) | Kích hoạt khi có ≥2 model thật trong catalog |
 | ~~Medium~~ | ~~`SkillDefinition.retryPolicy` chưa được consumed~~ — **ĐÃ XÓA tại M3-4 đúng hẹn** (cùng `ExecutionPlan.retryPolicy` và `.direct/.hybrid` — 0 consumer, 114/114 pass không sửa test) | ✅ |
-| Low | `ApprovalGate` wired từ M0, chưa từng được tham vấn (chưa có risky action) | **Hẹn cứng M6 (Automation) — nay là milestone KẾ TIẾP:** M6-0 phải quyết consume (scheduling/publish = risky action đầu tiên) hoặc xóa. Không gia hạn quá M6 |
+| ~~Low~~ | ~~`ApprovalGate` wired từ M0, chưa từng tham vấn~~ — **ĐÃ XÓA tại M6-0 đúng deadline** (AD-47; grep 0 consumer/6 milestone; 146/146 pass 0 test logic sửa; tái sinh cùng risky action thật) | ✅ |
 | Low | Store search đọc lại toàn bộ file mỗi lần (chưa cache/index); relevance = word-hit v1 | Tối ưu ở M3/M7 khi có số liệu thật |
 | Low | Working-context hết hạn chỉ lọc khi đọc, chưa xóa vật lý | Cleanup policy M1→M3 (policies.json đã có TTL) |
 | Low | `InMemoryResponseCache` không bound/TTL | Eviction khi có bằng chứng; interface là seam |

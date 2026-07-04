@@ -19,7 +19,6 @@ public final class Kernel: Sendable {
     private let tools: [any Tool]
     private let engine: any ExecutionEngine
     private let store: any Store
-    private let approvalGate: any ApprovalGate
     /// The only path from reflection candidates to persistable records
     /// (AD-20/41). Defaults to disabled — memory writes are opt-in via
     /// the composed policy, never an accident.
@@ -31,7 +30,6 @@ public final class Kernel: Sendable {
         tools: [any Tool] = [],
         engine: any ExecutionEngine,
         store: any Store,
-        approvalGate: any ApprovalGate,
         writeGate: WriteGate = WriteGate(policy: .disabled),
         publish: @escaping EventPublisher
     ) {
@@ -39,15 +37,15 @@ public final class Kernel: Sendable {
         self.tools = tools
         self.engine = engine
         self.store = store
-        self.approvalGate = approvalGate
         self.writeGate = writeGate
         self.publish = publish
     }
 
-    /// Handles one goal through the five phases. M0-4A scope: Decide is
-    /// real (confidence gate, reuse-before-AI, cheapest sufficient
-    /// strategy); risky-action gating activates when tools introduce risky
-    /// actions (M1). Deliverable persistence is M0-4B, via Store only.
+    /// Handles one goal through the five phases: Intake → Decide → Execute →
+    /// Verify → Persist. Decide follows the full resource order (reuse →
+    /// tool → skill/composition → AI); persistence is via the Store only.
+    /// Risky-action approval will return with the first real risky action
+    /// (external/irreversible effect) — deleted meanwhile (AD-47).
     public func handle(_ goal: Goal) async throws -> Deliverable {
         // 1. INTAKE — understand the objective; never guess (AD-05).
         await publish(.understanding)

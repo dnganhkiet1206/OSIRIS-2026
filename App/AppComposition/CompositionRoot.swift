@@ -66,7 +66,6 @@ enum CompositionRoot {
                 deliverableScaffold: loadDeliverableScaffold()
             ),
             store: store,
-            approvalGate: RequireUserApprovalGate(),
             writeGate: WriteGate(policy: makeWritePolicy()),
             // Direct fan-out to the two real consumers (AD-46): the
             // EventBus met its M4 deadline with zero module subscribers —

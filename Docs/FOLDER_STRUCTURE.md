@@ -39,8 +39,9 @@ OSIRIS/
 ├── Core/                         # 6 thành phần nền tảng — KHÔNG chứa business logic
 │   ├── Kernel/                   # Executive Brain: nơi DUY NHẤT quyết định
 │   │   ├── Lifecycle/            # Vòng đời 5 pha: Intake, Decide, Execute, Verify, Persist
-│   │   ├── Decision/             # Chiến lược, resource order, confidence tiers
-│   │   └── Gates/                # Validation & approval gates
+│   │   └── Decision/             # Chiến lược, resource order, confidence tiers
+│   │   # KHÔNG còn Gates/ — ApprovalGate xóa tại M6-0 (AD-47): 0 consumer/6 milestone;
+│   │   # tái sinh cùng risky action thật (external effect, = mở tool-channel AD-45)
 │   ├── Execution/                # Execution Engine: nơi DUY NHẤT thi hành
 │   │   ├── TaskRunner/           # Chạy task, parallel, resume sau suspend
 │   │   └── Recovery/             # Retry/fallback theo policy khai báo (AD-25)
