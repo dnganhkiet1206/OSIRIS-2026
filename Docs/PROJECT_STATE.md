@@ -9,8 +9,8 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M5 — Platform Expansion, đang triển khai** (M0→M4 nghiệm thu; tag local chờ push khi merge) |
-| Task hiện tại | **M5-1 (Shopify Module) ✅ hoàn thành** — module thứ 3, domain khác hẳn; đạt mốc ≥3 module (tiêu chí M5) · kế tiếp: M5-2 Milestone Review (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
+| Giai đoạn | **M5 — Platform Expansion: ĐÃ NGHIỆM THU 2026-07-04** (tag `M5` local; M0→M5 đều chờ push tag khi merge) |
+| Task hiện tại | **M5-2 (Milestone Review) ✅ — M5 ĐẠT (code-complete); plugin architecture PROVEN (3 module, 0 dòng Core)** · kế tiếp: M6-0 Automation (xem `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN · **[USER] runbook M1-0 vẫn chờ — nợ High** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **19 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 146/146 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
@@ -70,12 +70,35 @@ M5 — Platform Expansion: nhân bản mô hình module (DEVELOPMENT_PLAN §2/M5
 
 - [x] **M5-0 — TikTok Module + MODULE_GUIDE.md**: `Docs/MODULE_GUIDE.md` (≤2 trang, prescriptive: manifest/namespace/keywords/composition/curated-union/tests/arch-rules/cấm) — tài liệu DUY NHẤT cần để viết module, 0 tham chiếu Core; **bài kiểm tra guide ĐẠT**: TikTok module (`tiktok` — hook-ideas, content-plan, trend-brief + composition `tiktok.research-to-plan` xuyên namespace `core.research-outline`→module) dựng CHỈ từ guide + `ModuleManifest`, không cần đọc Core; **0 dòng Core, 0 dòng Infrastructure, 0 dòng contract** (lần 4 chứng minh "thêm module = data + 1 dòng wiring"); trend-brief dùng dữ liệu user dán (AD-45); sweep test nâng cấp cho 2 module (keyword TikTok 0 giẫm toàn registry); 7 test mới; 139/139. **Không AD mới — contract giữ nguyên là chính bằng chứng.** Phát hiện trung thực: latent overlap tiếng Việt nội bộ YouTube ("viết"⊂"viết kịch bản đầy đủ") — ngoài phạm vi M5-0, ghi nợ Low.
 
-- [x] **M5-1 — Shopify Module (module thứ 3, domain e-commerce khác hẳn)**: guide-validation lần 2 — dựng từ `Docs/MODULE_GUIDE.md` + `ModuleManifest`; `shopify` (product-research, listing-optimization, store-analysis dùng dữ liệu user dán AD-45 + composition `shopify.research-to-listing` xuyên namespace `core.research-outline`→module); keyword single-skill CỐ Ý tránh từ built-in ("research"/"draft") để không tie với `core.*` (test precedence chứng minh goal "research…" thuần vẫn về core); **0 dòng Core/Infrastructure/contract** (lần 5); **MODULE_GUIDE nâng cấp tự-đủ**: Phụ lục A (built-in skill IDs) + Phụ lục B (khung test copy sẵn) — đóng finding M5-0 (guide trước trỏ "copy từ YouTube", vi phạm bài kiểm tra cấm-đọc-module-cũ); arch rule cấm-tên-module siết thêm "shopify"; **đạt tiêu chí M5 ≥3 module**; 7 test mới; 146/146.
+- [x] **M5-1 — Shopify Module (module thứ 3, domain e-commerce khác hẳn)**: guide-validation lần 2 — dựng từ `Docs/MODULE_GUIDE.md` + `ModuleManifest`; `shopify` (product-research, listing-optimization, store-analysis dùng dữ liệu user dán AD-45 + composition `shopify.research-to-listing` xuyên namespace `core.research-outline`→module); keyword single-skill CỐ Ý tránh từ built-in ("research"/"draft") để không tie với `core.*` (test precedence chứng minh goal "research…" thuần vẫn về core); **0 dòng Core/Infrastructure/contract** (lần 5); **MODULE_GUIDE nâng cấp tự-đủ**: Phụ lục A (built-in skill IDs) + Phụ lục B (khung test copy sẵn) — đóng finding M5-0; arch rule cấm-tên-module siết thêm "shopify"; **đạt tiêu chí M5 ≥3 module**; 7 test mới; 146/146.
 
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**.
-2. **M5-2 — M5 Milestone Review & Acceptance** (chi tiết: `NEXT_TASK.md`): 3 module Core-không-đổi đủ chứng minh plugin architecture; guide-test 2 lần đạt; tag `M5`.
+1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High** (nay 3 module + toàn UI tích trên nền chưa compiler Mac).
+2. **M6-0 — Automation bootstrap** (chi tiết: `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN mở M6.
+
+## 4g. M5 Closeout (nghiệm thu 2026-07-04, tag `M5`)
+
+**Tiêu chí M5 (DEVELOPMENT_PLAN §2/M5) — đánh giá trung thực:**
+
+| Tiêu chí | Kết quả |
+|---|---|
+| ≥3 module hoạt động mà Core không đổi (chứng minh plugin architecture) | ✅ **YouTube + TikTok + Shopify; git: 5 task module liên tiếp 0 file Core/Infra chạm** (đo bằng script, không khai) |
+| Mỗi module copy đúng khuôn, không sửa Core | ✅ `MODULE_GUIDE.md` tự-đủ; guide-test đạt 2 lần / 2 domain khác nhau (content-creation, e-commerce) |
+| Nhân bản mô hình module | ✅ + bằng chứng phủ định: thí nghiệm gỡ hẳn module (M4-2) → platform build sạch |
+
+**5 câu hỏi review — kết luận bằng bằng chứng:**
+1. **Guide tự-đủ chưa?** ✅ Nội dung tự-đủ (Shopify dựng 0 read Core sau khi thêm Phụ lục A+B tại M5-1). KHÔNG bổ sung thêm — không tìm thấy gap nội dung nào có bằng chứng.
+2. **Contract v1 còn đúng sau 3 module?** ✅ Đúng — 0 dòng contract đổi qua 5 task. Dấu hiệu mở rộng duy nhất (tool-channel cho dữ liệu ngoài) đã được quyết ĐÓNG có lập luận cấu trúc (AD-45), gate M6. Không có v2.
+3. **Matcher cần nâng cấp?** ❌ Chưa — 18 skill, 2 lần chỉnh curated-union (đều DATA), sweep tự động chặn n², 0 sự cố ship. 1 latent tiếng Việt là artifact TRƯỚC guideline §4; guideline (tránh từ generic trong keyword single-skill) đã chặn cho module mới. Curated keywords vẫn đủ.
+4. **Nợ:** EventBus/retryPolicy đã xóa đúng hẹn (M4-4/M3-4); ApprovalGate → M6 (nay milestone kế, phải quyết); tier-routing chờ ≥2 model; Vietnamese overlap giữ Low (bug thật, không bằng chứng tác động mới, fix cần ma trận precedence riêng); nhóm Low khác evidence-gated vào runbook/M7. Không gia hạn nào thiếu lý do.
+5. **Open source:** contributor đọc guide → viết module → `swift test` (mọi OS) → PR: **luồng kỹ thuật đủ**. Thiếu đúng MỘT thứ = signpost README → MODULE_GUIDE (đã thêm tại M5-2). Rough edge trung thực: dòng đăng ký `installedModules` nằm ở `App/` (Xcode-only) → contributor Linux không compile-verify được đúng 1 dòng đó (nhưng module + test của họ verify được); không sửa (dời đăng ký = đổi kiến trúc, chưa có bằng chứng).
+
+**ADR M5:** KHÔNG có AD mới — **contract v1 giữ nguyên qua 3 module chính là kết quả**; AD-44/45 (M4) tái xác nhận bằng bằng chứng, không cần ADR mới cho review.
+
+**Chất lượng:** build 0/0 debug+release · **146/146 test** offline ~1s · baseline (M4) fresh 3.78ms / reuse 2.54ms (M5 thuần data, không đổi pipeline) · AI spend tích lũy **$0.00** · 19 arch rule.
+
+**Kết luận: M5 ĐẠT (code-complete).** Plugin architecture PROVEN bằng lặp (3 module) + thí nghiệm (gỡ module) + guide-test (2 domain). PENDING duy nhất: chất lượng nội dung thật trên thiết bị (runbook — nợ High, nay đắt hơn với 3 module).
 
 ## 4f. M4 Closeout (nghiệm thu 2026-07-03, tag `M4`)
 
@@ -284,17 +307,17 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 
 | Mức | Mô tả | Kế hoạch |
 |---|---|---|
-| **High** | 8 file SwiftUI (App/ + Presentation/) tích tụ 6 milestone chưa qua compiler (môi trường không có Mac); mới qua `swiftc -parse` | **[USER] chạy `Docs/RUNBOOK_M1-0.md`** trước hoặc song song đầu M2 — M2 là milestone toàn UI, xây tiếp trên nền chưa compile là rủi ro kép |
+| **High** | App/ + Presentation/ (UI) + 3 module nghiệp vụ tích tụ qua M0→M5 chưa qua compiler Mac (môi trường không có Mac); mới qua `swiftc -parse` + `swift build` phần SPM (Core/App/Infra/Modules build sạch trên Linux — chỉ App shell SwiftUI chưa) | **[USER] chạy `Docs/RUNBOOK_M1-0.md`** — nay có 3 module để smoke test thật; càng để càng đắt |
 | Medium | Token/latency/cost baseline provider thật chưa có (cần API key) | Phần C của runbook; không giả số liệu |
 | ~~Medium~~ | ~~Store write gate / learning gate (AD-20) chưa enforce~~ — **ĐÃ TRẢ tại M3-1** (WriteGate + arch rule không-bypass) | ✅ |
 | Medium | Tier routing: phía Kernel ĐÃ XONG tại M3-2 (`preferredTier` mang giá trị thật từ estimate/skill — AD-42); còn lại phía Gateway chưa tiêu thụ tier khi route (1 model thật) | Kích hoạt khi có ≥2 model thật trong catalog |
 | ~~Medium~~ | ~~`SkillDefinition.retryPolicy` chưa được consumed~~ — **ĐÃ XÓA tại M3-4 đúng hẹn** (cùng `ExecutionPlan.retryPolicy` và `.direct/.hybrid` — 0 consumer, 114/114 pass không sửa test) | ✅ |
-| Low | `ApprovalGate` wired từ M0, chưa từng được tham vấn (chưa có risky action) | **Hẹn cứng M6 (Automation):** không có risky action thật → xóa |
+| Low | `ApprovalGate` wired từ M0, chưa từng được tham vấn (chưa có risky action) | **Hẹn cứng M6 (Automation) — nay là milestone KẾ TIẾP:** M6-0 phải quyết consume (scheduling/publish = risky action đầu tiên) hoặc xóa. Không gia hạn quá M6 |
 | Low | Store search đọc lại toàn bộ file mỗi lần (chưa cache/index); relevance = word-hit v1 | Tối ưu ở M3/M7 khi có số liệu thật |
 | Low | Working-context hết hạn chỉ lọc khi đọc, chưa xóa vật lý | Cleanup policy M1→M3 (policies.json đã có TTL) |
 | Low | `InMemoryResponseCache` không bound/TTL | Eviction khi có bằng chứng; interface là seam |
 | Low | Keyword matching khớp cả ngữ cảnh phủ định ("don't summarize") | Chấp nhận v1 — fallback rẻ; nâng cấp theo sử dụng thật |
-| Low | Latent overlap tiếng Việt nội bộ YouTube: "viết" (core.draft) ⊂ "viết kịch bản đầy đủ" (youtube.script-generation) → goal "viết kịch bản đầy đủ" tie 1-1, id đẩy về core.draft (chưa có test tiếng Việt pin) | Phát hiện tại M5-0 sweep; sửa khi YouTube module được rà keywords tiếng Việt (thêm precedence test + chỉnh union) — ngoài phạm vi "clone khuôn" M5-0 |
+| Low | Latent overlap tiếng Việt nội bộ YouTube: "viết" (core.draft) ⊂ "viết kịch bản đầy đủ" (youtube.script-generation) → goal "viết kịch bản đầy đủ" tie 1-1, id đẩy về core.draft (chưa có test tiếng Việt pin) | **Xác nhận tại M5-2:** bug thật nhưng Low (draft vẫn ra nội dung dạng script); fix ĐÚNG = rà lại toàn bộ keyword tiếng Việt của draft/script-outline/script-generation như một ma trận precedence riêng (không phải one-liner cascade). Điều kiện: YouTube polish-pass HOẶC runbook cho thấy dùng thật tiếng Việt. Không có bằng chứng tác động mới ở M5-2 → giữ Low, không smuggle sửa vào review |
 | Low | Reuse per-project (đúng Project Isolation; chưa có cross-project reuse có kiểm soát) | M3 với policy rõ |
 | Low | Arch-test scanner cắt `//` theo dòng — string literal chứa URL có thể false-negative | Nâng parser khi có ca thật |
 | Medium | `ChatViewModel` gánh 5 vai (chat/projects/search/dashboard/skills) — 172 dòng, chưa đau nhưng trend rõ | **Trigger cứng:** task UI kế tiếp chạm file này phải TÁCH (không mở rộng thêm) |

@@ -13,3 +13,10 @@ execution is the product.
 
 Start with `Docs/PROJECT_STATE.md` (always current), then
 `Docs/PROJECT_BLUEPRINT.md` for the architecture. Task queue: `NEXT_TASK.md`.
+
+## Contributing a module
+
+New capabilities ship as modules — pure data, no Core changes. Everything
+you need is in **`Docs/MODULE_GUIDE.md`** (self-contained: manifest,
+keywords, composition, mandatory tests, built-in skill IDs, and a copyable
+test harness). Verify with `swift test` on any OS, then open a PR.

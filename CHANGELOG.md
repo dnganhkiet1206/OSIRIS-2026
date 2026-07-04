@@ -1,6 +1,14 @@
 # CHANGELOG
 
-## [Unreleased — M5]
+## [M5] — 2026-07-04 (tag `M5`)
+
+### M5-2: Milestone Review & Acceptance — plugin architecture proven
+
+- **M5 ĐẠT (code-complete)** — nghiệm thu tại PROJECT_STATE §4g. Tiêu chí "≥3 module Core-không-đổi" đạt: YouTube + TikTok + Shopify; đo bằng script trên git = **5 task module liên tiếp, 0 file Core/Infrastructure chạm** (không khai số).
+- **5 câu review, kết luận bằng bằng chứng:** (1) Guide tự-đủ — không gap nội dung, KHÔNG bổ sung; (2) Contract v1 đúng qua 3 module, 0 dòng đổi, không có v2 (dấu hiệu mở rộng duy nhất = tool-channel, đã đóng có lập luận AD-45, gate M6); (3) Matcher chưa cần nâng cấp — curated keyword + guideline §4 + sweep tự động chặn mọi ca, 0 sự cố ship; (4) nợ rà sạch, không gia hạn thiếu lý do; (5) open-source: luồng contributor đủ, thiếu đúng 1 signpost README→MODULE_GUIDE (đã thêm).
+- **Thay đổi duy nhất (doc):** README thêm mục "Contributing a module" trỏ MODULE_GUIDE. Rough edge ghi trung thực: dòng đăng ký `installedModules` ở App/ (Xcode-only) — contributor Linux verify được module+test của họ nhưng không compile-check đúng 1 dòng đăng ký; không sửa (dời = đổi kiến trúc, chưa có bằng chứng).
+- **Không AD mới** — contract v1 giữ nguyên qua 3 module chính là kết quả review.
+- Bằng chứng: build 0/0 debug+release; 146/146 test offline; baseline fresh 3.78ms / reuse 2.54ms; AI spend tích lũy $0.00; 19 arch rule.
 
 ### 2026-07-04 — M5-1: Shopify Module — guide-validation lần 2 trên domain khác hẳn
 

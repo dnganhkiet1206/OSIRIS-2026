@@ -6,49 +6,52 @@
 
 ## Current Milestone
 
-**M5 — Platform Expansion** (DEVELOPMENT_PLAN.md §2/M5) — tiêu chí ≥3 module ĐÃ ĐẠT
+**M6 — Automation** (DEVELOPMENT_PLAN.md §2/M6) — CHỜ USER XÁC NHẬN MỞ
 
 ## Current Task
 
-**M5-2 — M5 Milestone Review & Acceptance**
+**M6-0 — Automation bootstrap: ApprovalGate có consumer đầu tiên (risky-action) HOẶC xóa**
 
-## Vì sao review bây giờ
+## Vì sao task này trước
 
-Tiêu chí hoàn thành M5 (DEVELOPMENT_PLAN §2/M5) = "≥3 module hoạt động mà Core không đổi" — ĐÃ ĐẠT: YouTube (M4) + TikTok (M5-0) + Shopify (M5-1), mỗi module 0 dòng Core/contract. Guide-test đạt 2 lần trên 2 domain khác nhau (content-creation, e-commerce). Không có bằng chứng cần thêm module thứ 4 để nghiệm thu khuôn — module tiếp theo thêm theo NHU CẦU THẬT, không phải để review.
+M6 là nơi 3 deadline/điều kiện đã hẹn cùng đến hạn — làm đúng thứ tự bằng chứng, KHÔNG xây visual workflow builder (DEVELOPMENT_PLAN §2/M6 cấm rõ):
+1. **ApprovalGate** (nợ Low, hẹn cứng M6): wired từ M0, chưa từng tham vấn vì chưa có risky action. M6 introduce risky action đầu tiên (scheduling/publish) → gate PHẢI có consumer thật, hoặc xóa nếu automation v1 chưa có hành động rủi ro. Quyết bằng bằng chứng.
+2. **AD-45 tool-channel** (điều kiện M6): MCP/remote tools (AD-18) — nếu automation cần gọi ngoài, đây là lúc câu hỏi mở-contract-tools quay lại VỚI use case thật. Nếu chưa cần → giữ đóng.
+3. **EventBus tái sinh** (AD-46): automation có tạo audience ĐỘNG (nhiều rule subscribe) không? Nếu có → bus được earn lại bằng bằng chứng; nếu không → tiếp tục fan-out closure.
 
-## Phạm vi review (mẫu M1-5/M2-6/M3-4/M4-4)
+## Phạm vi (lát cắt mỏng nhất — walking skeleton của M6)
 
-1. **Đánh giá trung thực tiêu chí M5:** bảng Tiêu chí → Kết quả; "≥3 module Core-không-đổi" (bằng chứng git 5 lần liên tiếp + thí nghiệm gỡ module M4-2); "chứng minh plugin architecture" (2 guide-test, 2 domain).
-2. **MODULE_GUIDE tự-đủ:** xác nhận đủ cho người ngoài (Phụ lục A+B đóng finding M5-0); còn thiếu gì cho module #4 không — trả lời bằng bằng chứng từ chính M5-1.
-3. **Matcher theo số liệu:** giờ ~18 skill / 3 module + generic; curated-union + sweep tự động đã chặn mọi ca; có bằng chứng cần đổi matcher chưa? (kết luận từ số liệu, không dự đoán).
-4. **Nợ kỹ thuật rà toàn bộ:** latent overlap tiếng Việt YouTube (M5-0, Low) — đến hạn sửa chưa hay vẫn evidence-gated; ApprovalGate (M6), tier routing (≥2 model), ChatViewModel trigger — không đến điều kiện thì giữ hẹn.
-5. **Acceptance report + tag `M5`** (local) + DEVELOPMENT_PLAN (M5 marked) + NEXT_TASK cho M6-0 (Automation — scheduling/background/MCP; đọc kỹ §2/M6; đây là nơi tool-channel AD-45 + risky-action ApprovalGate + EventBus-tái-sinh có thể đến điều kiện).
-6. **Open-source readiness:** cập nhật đánh giá — module contract PROVEN + guide tự-đủ; còn lại runbook (user) + Store versioning (M7).
+1. **Architecture Review TRƯỚC code** (như M4-3): automation "rule" là gì ở dạng đơn giản nhất? Đề xuất khởi điểm: **rule = (trigger điều kiện) → (goal/skill composition có sẵn)** thuần data, KHÔNG engine. Tự phản biện: có phải chỉ là một cách lưu goal + điều kiện chạy? Có tái dùng vòng đời Kernel hiện có không? (phải có).
+2. **Risky action + ApprovalGate:** định nghĩa risky action ĐẦU TIÊN cụ thể (vd "tự động chạy goal theo lịch" có rủi ro tốn token/side-effect) → Kernel tham vấn `approvalGate` trước khi thực thi; test chứng minh gate chặn/cho qua. Nếu kết luận automation v1 CHƯA có risky action thật → xóa ApprovalGate đúng quy trình (như EventBus M4-4).
+3. **iOS background limits** (rủi ro theo dõi từ M1): scheduling trong giới hạn iOS — chỉ thiết kế interface, KHÔNG cần background thật trên Linux (ghi PENDING thiết bị như UI).
+4. **Không làm:** visual workflow builder; scheduler/dispatcher engine; MCP thật nếu chưa có use case; bất kỳ engine mới nào chưa có bằng chứng (Năm Câu Hỏi + DỪNG hỏi user).
 
 ## Checklist
 
-- [ ] Không sửa code trừ khi review phát hiện lỗi thật (vd quyết định sửa latent overlap YouTube — nếu làm thì kèm precedence test tiếng Việt).
-- [ ] Mọi PENDING có địa chỉ; ADR cũ không sửa; tag M5 local.
-- [ ] Zero regression (146 + thay đổi nếu có).
+- [ ] Architecture Review 11 câu trước khi code (chạm vùng nhạy: Kernel tham vấn gate).
+- [ ] ApprovalGate: quyết consume (có test risky-action) HOẶC xóa (đúng quy trình, arch rule cập nhật).
+- [ ] Automation = data + vòng đời Kernel hiện có; 0 engine mới không bằng chứng.
+- [ ] Nếu chạm Core (Kernel gọi gate là vùng Core): tối thiểu, có arch test, không phá 146 test cũ.
+- [ ] Zero regression; đủ review + docs + NEXT_TASK.
 
 ## Definition of Done
 
-Bảng tiêu chí M5 trung thực; plugin architecture PROVEN bằng bằng chứng; matcher/nợ kết luận theo số liệu; tag `M5`; NEXT_TASK M6-0; DỪNG chờ user xác nhận trước khi vào M6.
+Lát cắt automation v1 chạy end-to-end offline (rule data → Kernel → gate → execution); ApprovalGate quyết xong bằng bằng chứng; iOS-background khoanh vùng PENDING; zero regression.
 
 ## Estimated Complexity
 
-Thấp — đánh giá + tài liệu.
+Trung bình — chạm Kernel/gate (vùng nhạy); trọng tâm là quyết định kiến trúc automation-là-gì.
 
 ## Estimated AI Cost
 
-Dev session: nhỏ. Runtime: 0.
+Dev session: trung bình. Runtime: 0 (test offline).
 
 ## Risk
 
-- Tự nghiệm thu dễ dãi — dùng đúng thước DEVELOPMENT_PLAN; PENDING thiết bị (runbook) ghi trung thực như mọi milestone.
-- Cám dỗ thêm module thứ 4 "cho chắc" — tiêu chí đã đạt, thêm là scope creep; module mới theo nhu cầu thật ở M5+/M6.
+- Automation dễ phình thành workflow engine — DEVELOPMENT_PLAN cấm rõ; mỗi cấu trúc mới qua Năm Câu Hỏi.
+- ApprovalGate: xóa vội nếu M6 thật sự cần, hoặc giữ vô ích nếu automation v1 chưa rủi ro — quyết bằng risky action CỤ THỂ, không phỏng đoán.
 
 ## Những phần tuyệt đối không được sửa
 
-- Core 6; ModuleManifest; matcher; 3 module (trừ khi sửa latent overlap có test).
+- Core 6 (trừ Kernel-tham-vấn-gate nếu review chứng minh cần — tối thiểu, có test); ModuleManifest; matcher; 3 module.
 - Architecture Test rules (chỉ THÊM/siết); ADR cũ (AD-01…AD-46).
