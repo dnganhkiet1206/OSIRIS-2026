@@ -103,8 +103,10 @@ OSIRIS/
 │   # KHÔNG có Networking/ — URLSession dùng trực tiếp tại consumer (AD-27)
 │
 ├── Modules/                      # SPM target OsirisModules — CHỈ import OsirisCore (AD-44)
-│   └── YouTube/                  # Reference module (AD-21): manifest + skills thuần data
-│       └── YouTubeModule.swift   # ModuleManifest "youtube" + 2 skill v0
+│   ├── YouTube/                  # Reference module (AD-21): manifest + skills thuần data
+│   │   └── YouTubeModule.swift   # ModuleManifest "youtube" — 9 skill/composition
+│   └── TikTok/                   # Module thứ hai (M5-0): dựng chỉ từ MODULE_GUIDE.md
+│       └── TikTokModule.swift    # ModuleManifest "tiktok" — hook/content/trend + composition
 │
 ├── Config/                       # CẤU HÌNH NGOÀI SOURCE (editable không cần sửa code)
 │   ├── preamble.md               # Vision + System Preamble tĩnh < 400 token (AD-13, AD-23)
@@ -131,6 +133,8 @@ OSIRIS/
     ├── DEVELOPMENT_PLAN.md
     ├── FOLDER_STRUCTURE.md
     ├── SYSTEM_COMPONENTS.md
+    ├── MODULE_GUIDE.md           # Cách viết module (M5-0) — đủ để mở rộng không cần đọc Core
+    ├── RUNBOOK_M1-0.md           # Hướng dẫn user tự verify trên Mac + thu baseline thật
     └── archive/                  # 18 file đặc tả gốc (tham chiếu lịch sử — AD-14)
 ```
 

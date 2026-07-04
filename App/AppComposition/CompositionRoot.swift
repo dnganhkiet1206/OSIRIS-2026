@@ -51,7 +51,7 @@ enum CompositionRoot {
         // (AD-44); one registry, one matching algorithm — module skills
         // and built-ins are indistinguishable to the Kernel. This list is
         // the ONLY place that knows which modules are installed.
-        let installedModules: [ModuleManifest] = [YouTubeModule.manifest]
+        let installedModules: [ModuleManifest] = [YouTubeModule.manifest, TikTokModule.manifest]
         let skillRegistry = InMemorySkillRegistry(
             registering: GenericSkills.all + installedModules.flatMap(\.skills)
         )

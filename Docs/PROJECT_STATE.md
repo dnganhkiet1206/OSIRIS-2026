@@ -9,15 +9,15 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M4 — YouTube Module: ĐÃ NGHIỆM THU 2026-07-03** (tag `M4` local; M0→M4 đều chờ push tag khi merge) |
-| Task hiện tại | **M4-4 (Milestone Review) ✅ — M4 ĐẠT (code-complete); EventBus XÓA đúng deadline (AD-46)** · kế tiếp: M5-0 TikTok Module (xem `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN · **[USER] runbook M1-0 vẫn chờ — nợ High** |
+| Giai đoạn | **M5 — Platform Expansion, đang triển khai** (M0→M4 nghiệm thu; tag local chờ push khi merge) |
+| Task hiện tại | **M5-0 (TikTok Module + MODULE_GUIDE.md) ✅ hoàn thành** — module thứ hai dựng CHỈ từ guide, contract KHÔNG đổi · kế tiếp: M5-1 (xem `NEXT_TASK.md`) · **[USER] runbook M1-0 vẫn chờ — nợ High** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
-| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application Layer (AD-35) · **16 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 132/132 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
+| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **2 module** (YouTube, TikTok) qua Contract v1 (AD-44) · **19 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 139/139 test pass** (Swift 6.0.3, Linux) · toàn bộ test offline |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
-M4 — YouTube Module: module nghiệp vụ production-quality đầu tiên = khuôn mẫu bắt buộc cho mọi module sau (AD-21); contract v1 đã ship tại M4-0 (AD-44). Song song: user chạy `Docs/RUNBOOK_M1-0.md` — nợ High; 2 mục M3 hoãn (reuse-nới, cache-tối-ưu) kích hoạt bằng chính dữ liệu từ runbook + sử dụng M4.
+M5 — Platform Expansion: nhân bản mô hình module (DEVELOPMENT_PLAN §2/M5). M5-0 xong: TikTok = module thứ hai, dựng CHỈ bằng `Docs/MODULE_GUIDE.md` + Module Contract (bài kiểm tra guide đạt) — Contract v1 đủ để mở rộng không cần đọc Core. Song song: user chạy `Docs/RUNBOOK_M1-0.md` — nợ High; 2 mục M3 hoãn (reuse-nới, cache-tối-ưu) kích hoạt bằng dữ liệu runbook.
 
 ## 3. Việc đã hoàn thành (Completed)
 
@@ -68,10 +68,12 @@ M4 — YouTube Module: module nghiệp vụ production-quality đầu tiên = kh
 
 - [x] **M4-3 — Channel Analysis v1 + quyết định tool-channel** (AD-45): Architecture Review TRƯỚC code (11 câu, 3 phương án so sánh — xem report phiên); **quyết định: KHÔNG mở contract** — lý do cấu trúc: manifest là Codable data, Tool là protocol hành vi → `[any Tool]` đổi bản chất contract, không phải thêm field; `youtube.channel-analysis` = skill phân tích dữ liệu USER DÁN VÀO goal (0 tool/OAuth/network/state — dữ liệu dán luôn tươi, cùng logic AD-37; insight từ text = việc AI thật, không vi phạm "AI Is The Last Tool"); tier `.standard` khai báo; keywords 0 overlap với toàn registry (test sweep tự động — chống n² bằng máy thay vì rà tay); điều kiện kích hoạt tool-channel ghi tại AD-45 (M6: OAuth/network do user quyết + MCP flag); EventBus: 4 mảng liên tiếp không cần events; 0 dòng Core, 0 dòng contract; 3 test mới; 133/133.
 
+- [x] **M5-0 — TikTok Module + MODULE_GUIDE.md**: `Docs/MODULE_GUIDE.md` (≤2 trang, prescriptive: manifest/namespace/keywords/composition/curated-union/tests/arch-rules/cấm) — tài liệu DUY NHẤT cần để viết module, 0 tham chiếu Core; **bài kiểm tra guide ĐẠT**: TikTok module (`tiktok` — hook-ideas, content-plan, trend-brief + composition `tiktok.research-to-plan` xuyên namespace `core.research-outline`→module) dựng CHỈ từ guide + `ModuleManifest`, không cần đọc Core; **0 dòng Core, 0 dòng Infrastructure, 0 dòng contract** (lần 4 chứng minh "thêm module = data + 1 dòng wiring"); trend-brief dùng dữ liệu user dán (AD-45); sweep test nâng cấp cho 2 module (keyword TikTok 0 giẫm toàn registry); 7 test mới; 139/139. **Không AD mới — contract giữ nguyên là chính bằng chứng.** Phát hiện trung thực: latent overlap tiếng Việt nội bộ YouTube ("viết"⊂"viết kịch bản đầy đủ") — ngoài phạm vi M5-0, ghi nợ Low.
+
 ## 4. Việc đang chờ (Next Tasks)
 
 1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High**.
-2. **M5-0 — TikTok Module + MODULE_GUIDE.md** (chi tiết: `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN mở M5.
+2. **M5-1 — Module thứ ba theo giá trị (đề xuất Shopify) HOẶC hoàn thiện YouTube/TikTok theo nhu cầu** (chi tiết: `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN.
 
 ## 4f. M4 Closeout (nghiệm thu 2026-07-03, tag `M4`)
 
@@ -290,6 +292,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | Low | Working-context hết hạn chỉ lọc khi đọc, chưa xóa vật lý | Cleanup policy M1→M3 (policies.json đã có TTL) |
 | Low | `InMemoryResponseCache` không bound/TTL | Eviction khi có bằng chứng; interface là seam |
 | Low | Keyword matching khớp cả ngữ cảnh phủ định ("don't summarize") | Chấp nhận v1 — fallback rẻ; nâng cấp theo sử dụng thật |
+| Low | Latent overlap tiếng Việt nội bộ YouTube: "viết" (core.draft) ⊂ "viết kịch bản đầy đủ" (youtube.script-generation) → goal "viết kịch bản đầy đủ" tie 1-1, id đẩy về core.draft (chưa có test tiếng Việt pin) | Phát hiện tại M5-0 sweep; sửa khi YouTube module được rà keywords tiếng Việt (thêm precedence test + chỉnh union) — ngoài phạm vi "clone khuôn" M5-0 |
 | Low | Reuse per-project (đúng Project Isolation; chưa có cross-project reuse có kiểm soát) | M3 với policy rõ |
 | Low | Arch-test scanner cắt `//` theo dòng — string literal chứa URL có thể false-negative | Nâng parser khi có ca thật |
 | Medium | `ChatViewModel` gánh 5 vai (chat/projects/search/dashboard/skills) — 172 dòng, chưa đau nhưng trend rõ | **Trigger cứng:** task UI kế tiếp chạm file này phải TÁCH (không mở rộng thêm) |

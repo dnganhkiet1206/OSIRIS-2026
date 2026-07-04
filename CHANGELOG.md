@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [Unreleased — M5]
+
+### 2026-07-04 — M5-0: TikTok Module + MODULE_GUIDE.md — Contract v1 tự chứng minh bằng module thứ hai
+
+- **`Docs/MODULE_GUIDE.md`** (≤2 trang, prescriptive — không triết lý): manifest, namespace, triggerKeywords, composition, precedence, curated union, mandatory tests, architecture rules, những điều cấm. Tham chiếu code duy nhất: `ModuleManifest` (~50 dòng) + mẫu YouTube. Là tài liệu DUY NHẤT người ngoài cần để viết module.
+- **Bài kiểm tra guide (PHẦN 3 của yêu cầu) — ĐẠT:** TikTok module dựng chỉ từ MODULE_GUIDE + Module Contract, KHÔNG cần đọc Core. `tiktok` module: `hook-ideas`, `content-plan`, `trend-brief` (dữ liệu user dán — AD-45) + composition `tiktok.research-to-plan` (xuyên namespace: bước 1 = built-in `core.research-outline`, resolve bằng ID qua registry chung).
+- **Bằng chứng "mở rộng không cần sửa Core" lần 4:** `git status` — 0 dòng Core, 0 dòng Infrastructure, 0 dòng contract; toàn bộ thay đổi = `Modules/TikTok/`, `Tests/ModuleTests/`, 1 dòng `installedModules` ở composition root. **Không AD mới — contract giữ nguyên chính là kết quả.**
+- **Sweep test nâng cấp cho 2 module:** mọi keyword skill đơn của TikTok không giẫm/bị giẫm bởi bất kỳ skill/tool nào khác toàn registry (chống n² đúng phạm vi module mới). Composition miễn (union là cơ chế).
+- Bài học trung thực: sweep test bản đầu quá rộng, phát hiện overlap CÓ CHỦ ĐÍCH nội bộ YouTube ("script" dùng chung) + latent overlap tiếng Việt ("viết"⊂"viết kịch bản đầy đủ"). Thu hẹp test về đúng bất biến "module mới không giẫm ai"; latent YouTube ghi nợ Low (ngoài phạm vi clone khuôn).
+- 7 test mới (TikTok manifest/e2e/precedence/cross-namespace/curated-union/sweep). Tổng **139/139 pass**, 0 warning, offline.
+
 ## [M4] — 2026-07-03 (tag `M4`)
 
 ### M4-4: Milestone Review & Acceptance — EventBus xóa đúng deadline (AD-46)
