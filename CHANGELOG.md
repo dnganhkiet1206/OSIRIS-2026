@@ -2,6 +2,13 @@
 
 ## [Unreleased — M8]
 
+### M8-2: Backup & Recovery review — audit only, no hole found, no change
+
+- Architecture Review across the six requested priorities; audit-only, no speculative cloud sync / version history / snapshot engine / replication / backup manager. Conclusion: backup & recovery is already sound and adequately tested — zero code/test change.
+- Evidence: record-level atomic writes (`FileStorage.write` uses `Data.write(options:.atomic)`); restart recovery is tested (ProjectState/AutomationRule/knowledge survive a new store over the same directory); migration is versioned and tested (`ProjectState` decodes pre-M2 files without `name`, falling back to the id — `testLegacyStateWithoutNameMigratesSilently`); full restore is just copying the Store directory (the deliverable index lives inside ProjectState, so there is no external DB to desync); cross-record consistency is safe by ordering — the Kernel writes the deliverable file before saving the ProjectState index (Kernel.swift:125 then :132), so a crash yields at worst an invisible orphan file, never a dangling pointer, and read paths skip missing files gracefully (`testMissingBodiesAreSkippedNotFailed`).
+- Recorded three triggers (no change now, no evidence of a real problem): `.atomic` does not `F_FULLFSYNC` (power-loss durability — speculative for a local single-user store); a Store-level dangling-path test would strengthen the (correct, Application-tested) skip behavior; migration discipline (new fields must stay decode-tolerant) is per-field, not enforced by a rule — a future required field added without `decodeIfPresent` would break old-data decode.
+- 162 tests / 2 opt-in skip / 0 fail unchanged; $0.00.
+
 ### M8-1: Security review — fix the one proven hole, guard one documented contract
 
 - Architecture Review before code: audited the full secret path (storage → use → every logging route). One real hole, one unguarded documented contract; everything else verified clean, no change.

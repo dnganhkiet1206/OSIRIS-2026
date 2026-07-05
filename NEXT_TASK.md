@@ -10,17 +10,18 @@
 
 - **M7-0 ✅** (baseline nội bộ + provider sàn, quyết KHÔNG tối ưu — §4j). M7 provider-side HOÃN chờ key thường trực.
 - **M8-0 ✅** (Core contract test coverage — §4k): 2 test canh property thật; từ chối resilience suy đoán (write đã atomic).
-- **M8-1 ✅** (Security review — §4l): sửa Keychain thiếu `kSecAttrAccessible` (→ `AfterFirstUnlockThisDeviceOnly`); thêm test "error không lộ key/body"; phần còn lại verify sạch. 162 test / 2 skip / 0 fail.
+- **M8-1 ✅** (Security review — §4l): sửa Keychain thiếu `kSecAttrAccessible`; thêm test "error không lộ key/body".
+- **M8-2 ✅** (Backup & Recovery review — §4m): audit 6 ưu tiên → **KHÔNG lỗ hổng**; backup = copy thư mục Store, không cần manager/engine; 0 dòng đổi. Ghi 3 trigger (fsync, Store-level dangling test, migration discipline).
 
 ## Current Task — CHỜ USER CHỌN task M8 kế (KHÔNG tự mở)
 
 M8 Production Readiness còn các mảnh sau; **mỗi phiên làm ĐÚNG MỘT**, Architecture Review trước code, chỉ đổi khi có bằng chứng:
 
-1. **Backup & Recovery** — export/import ProjectState + Knowledge + deliverables. Cần Architecture Review: là data-copy (Store đọc/ghi) hay cần cơ chế mới? Không tạo Engine. **Ứng viên kế tiếp tốt (Linux làm được).**
-2. **Crash recovery (khôi phục tiến độ dở)** — write đã atomic (record-level an toàn, §4k); phần còn lại: một goal đang chạy mà app chết giữa chừng → lần mở lại có nối lại/nhận biết không? Cần bằng chứng đây là vấn đề thật trước khi thêm code.
-3. **Docs / Accessibility** — rà tài liệu lệch thực tế; accessibility audit UI (cần Mac/simulator).
+1. **Crash recovery (khôi phục tiến độ dở)** — write đã atomic (record-level, §4k); persist data-trước-index an toàn (§4m). Phần còn lại: một goal đang chạy mà app chết giữa chừng → lần mở lại có nối lại/nhận biết không? **Cần bằng chứng đây là vấn đề thật trước khi thêm code** (rất có thể kết luận "no-hole" như M8-2).
+2. **Docs review** — rà tài liệu lệch thực tế (Linux làm được, thuần đọc/sửa doc).
+3. **Accessibility audit** — cần Mac/simulator (UI).
 
-> **Security (M8-1) đã xong** — nếu sau này có on-device UI-test harness: thêm check hành vi `KeychainSecretsVault` (accessibility/read/write/delete) như trigger §4l ghi.
+> **Đã xong & ghi trigger:** Security (M8-1, §4l) · Backup&Recovery (M8-2, §4m). Các trigger nhỏ (Keychain on-device check; fsync durability; Store-level dangling-path test; migration-discipline rule) — chỉ làm khi có bằng chứng/harness, KHÔNG suy đoán.
 
 ## Store-resilience — trigger đã ghi (§4k), CHƯA làm
 Chỉ thêm "loadAll skip file hỏng" khi có **bằng chứng file hỏng thật** (bit-rot, sync-conflict, encoding bug) — KHÔNG phải crash (atomic write đã chặn). Đến lúc đó: skip trong bulk-read, giữ `load` targeted vẫn throw; + test canh.

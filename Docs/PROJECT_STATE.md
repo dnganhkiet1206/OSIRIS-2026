@@ -9,8 +9,8 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M8 — Production Readiness: đang triển khai** (M0→M6 nghiệm thu; tag local chờ push khi merge). M7-0 ✅ (baseline, §4j); **M7 provider-side HOÃN chờ key thường trực**. M8-0 ✅ (§4k) · M8-1 Security ✅ (§4l) |
-| Task hiện tại | **M8-1 (Security review) ✅** — audit đường đi secret; SỬA 1 lỗ hổng thật (Keychain thiếu `kSecAttrAccessible` → nay `AfterFirstUnlockThisDeviceOnly`, device-only/không backup); THÊM 1 test canh hợp đồng "error không lộ key/body"; phần còn lại verify sạch. Chi tiết §4l. **Mac validation ✅ (§4i)** · kế tiếp: chờ USER chọn task M8 kế (NEXT_TASK) — KHÔNG tự mở |
+| Giai đoạn | **M8 — Production Readiness: đang triển khai** (M0→M6 nghiệm thu; tag local chờ push khi merge). M7-0 ✅ (baseline, §4j); **M7 provider-side HOÃN chờ key thường trực**. M8-0 ✅ (§4k) · M8-1 Security ✅ (§4l) · M8-2 Backup&Recovery ✅ (§4m) |
+| Task hiện tại | **M8-2 (Backup & Recovery review) ✅ — KHÔNG có lỗ hổng** (audit 6 ưu tiên: durability/atomic/restart/restore/cross-record/migration đều sound & có test). Backup = copy thư mục Store; **KHÔNG cần backup manager/snapshot/cloud** (bằng chứng §4m). 0 dòng đổi (đúng khung "no-hole → document + dừng"). **Mac validation ✅ (§4i)** · kế tiếp: chờ USER chọn task M8 kế (NEXT_TASK) — KHÔNG tự mở |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **19 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 162 test / 2 opt-in skip / 0 fail** (~1.1s offline; +1 test M8-1 provider-error-no-leak) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · Keychain fix (M8-1) = App-layer, verify qua CI macOS compile (không Linux-test được) · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, iPhone 17 Pro sim (iOS 26.2), UI end-to-end (§4i)** |
@@ -80,7 +80,7 @@ M6 — Automation: nối trí tuệ với thực thi tự động, KHÔNG visual
 
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Chọn task M8 kế** (`NEXT_TASK.md`): backup/recovery · crash-recovery (khôi phục tiến độ dở) · docs · accessibility. (Security ✅ M8-1). Không tự mở.
+1. **[USER] Chọn task M8 kế** (`NEXT_TASK.md`): crash-recovery (khôi phục tiến độ dở) · docs review · accessibility. (Security ✅ M8-1 · Backup&Recovery ✅ M8-2). Không tự mở.
 2. **[USER] Cấp API key THƯỜNG TRỰC** để mở **M7 provider-side** (tối ưu token/latency/cost qua Gateway) — hiện HOÃN; key một-lần đã thu sàn provider (§4j), cần key thường trực cho baseline qua-Gateway nhiều sample.
 3. M8-0 ✅ (§4k). CI macOS giữ chống regression UI.
 
@@ -128,6 +128,26 @@ User tự chạy toàn bộ stack trên Mac thật (branch `claude/osiris-arch-r
 **Ý nghĩa:** rủi ro lớn nhất của dự án (UI chưa qua compiler Mac, mang từ M0) **đóng lại bằng bằng chứng thật, không phải suy đoán**. M6-2 Automation UI — thứ mới nhất, chưa từng chạy trên UI thật — hoạt động đầy đủ ngay lần đầu. CI macOS giữ để chống regression tự động.
 
 **CHƯA test (có chủ đích, không phải lỗ hổng):** live Anthropic (chưa cấu hình key) → **baseline thật vẫn là nợ Medium đang mở**, và là điều kiện tiên quyết của M7. App vẫn placeholder-local.
+
+## 4m. M8-2 Closeout — Backup & Recovery review: KHÔNG lỗ hổng (2026-07-05)
+
+**Architecture Review (audit-only, chỉ đổi khi có bằng chứng lỗ hổng — không thiết kế trước cloud/version/snapshot/replication/backup-manager).** Kết luận: **backup & recovery đã sound, đủ test; 0 dòng đổi.** Bằng chứng theo 6 ưu tiên:
+
+| Ưu tiên | Bằng chứng | Kết luận |
+|---|---|---|
+| **Store durability** | file-per-record qua `FileStorage`; sống sót restart | ✅ đạt |
+| **Atomic write** | `FileStorage.write` dùng `Data.write(options:.atomic)` (temp+rename) — atomic mức record | ✅ đạt |
+| **Recovery sau restart** | `testProjectStateSurvivesRestart`, `testRuleSurvivesRestartAndListsSorted`, `testSearchFindsKnowledgeAcrossRestart…` | ✅ có test |
+| **Restore toàn bộ project** | thư mục Store LÀ project đầy đủ (ProjectState + index deliverable NẰM TRONG nó + knowledge + working-context + file deliverable, đều plain file); không có DB/index ngoài để lệch. Backup = copy thư mục; restore = copy lại. `DeliverablePersistenceTests(a)` round-trip | ✅ đạt — **không cần manager/engine** |
+| **Cross-record consistency** | thứ tự persist **data-trước-index**: Kernel ghi file deliverable trước (`saveDeliverable`, Kernel:125) rồi mới lưu ProjectState (Kernel:132). Crash giữa chừng → tệ nhất là **orphan vô hình** (file chưa được index — vô hại), KHÔNG bao giờ dangling pointer. Read bỏ qua file thiếu (`search` FileBackedStore:152 `guard let data … else continue`; `deliverableContent` trả nil:106; `ProjectOverviewTests.testMissingBodiesAreSkippedNotFailed`). Deliverable không có API xoá → path không dangle do xoá | ✅ an toàn theo thiết kế + test (Application-level) |
+| **Migration safety** | `ProjectState` có custom decoder versioned: `decodeIfPresent(name) ?? projectID` → store pre-M2 (thiếu `name`) migrate im lặng, **có test** `testLegacyStateWithoutNameMigratesSilently` | ✅ đạt |
+
+**Không sửa gì (không có lỗ hổng) — nhưng ghi 3 TRIGGER (chưa làm, không suy đoán):**
+1. **Durability sâu:** `.atomic` = temp+rename (atomic cùng volume) nhưng KHÔNG `F_FULLFSYNC` → mất mát lý thuyết nếu mất điện trước khi OS flush. Chấp nhận cho local single-user iOS; hardening = suy đoán → chỉ thêm khi có bằng chứng mất dữ liệu thật.
+2. **Store-level dangling-path test:** `FileBackedStore.search` bỏ qua deliverable path thiếu ĐÚNG nhưng chỉ được test gián tiếp ở Application-level (ProjectOverview dùng mock), chưa test trực tiếp ở Store thật. KHÔNG phải lỗ hổng (hành vi đúng) → ứng viên regression guard nếu sau này siết.
+3. **Migration discipline:** quy tắc "field mới phải `decodeIfPresent`/có default" đang áp per-field (đúng cho `name`), chưa có rule/test-helper cưỡng chế. Field bắt buộc thêm sau này mà quên → vỡ decode dữ liệu cũ (và qua `loadAll` compactMap-throw sẽ brick bulk read — nối với finding §4k). Hiện KHÔNG vi phạm → ghi trigger, không sửa.
+
+**Chất lượng:** 0 dòng production/test đổi (đúng khung "no-hole → document + dừng") · **162 test / 2 opt-in skip / 0 fail** không đổi · AI spend **$0.00**.
 
 ## 4l. M8-1 Closeout — Security review (2026-07-05)
 
