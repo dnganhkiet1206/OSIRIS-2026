@@ -2,6 +2,14 @@
 
 ## [M8] — 2026-07-05 (tag `M8`, core)
 
+### Provider contract transport — deliver the contract via each provider's system channel
+
+- Architecture Review with code + API evidence (not inference): `AIProvider.complete(prompt:)` took one concatenated string; `AnthropicProvider` left the `system` field empty although the API supports it; and all eight named providers (Anthropic/OpenAI/Gemini/Grok/Mistral/Qwen/DeepSeek/Llama) expose a dedicated system channel that outranks user text. The real test showed the model ignoring "You are OSIRIS" in a user message, so user-role transport is architecturally weak. Evidence was sufficient to change.
+- Smallest possible refactor via a protocol default: added `AIProvider.complete(systemPrompt:userPrompt:modelID:)` as a requirement WITH a default that concatenates exactly as before — so the 21 test doubles and the placeholder need zero changes (they inherit the default; behaviour unchanged). Because it is a requirement (not extension-only), overriding providers get correct dynamic dispatch.
+- `AnthropicProvider` overrides it to route `systemPrompt` to the Anthropic `system` field (`encodeIfPresent`, omitted when empty) and the task to the user message; `complete(prompt:)` delegates with an empty system. `DefaultAIGateway` now splits the preamble (system) from context+task (user) at its single call site, keeping the concatenated `prompt` only for token accounting and the cache key (byte-identical, so budget/cache tests pass unchanged). It remains the sole prompt assembler.
+- Provider-agnostic, general transport improvement — no `if provider ==`, no Persona Engine, no new Prompt Builder or Provider Wrapper, no extra abstraction; the preamble stays a single Config. Only `AnthropicProviderIntegrationTests` changed, to assert the preamble is the `system` prompt and the task is the user message.
+- Identity/localization is now complete in two layers: contract content (preamble rules) + transport (system channel). No architectural lever remains — if the model still drifts after a real-provider re-test, only the preamble text (data, one place) needs tuning. 164 tests / 2 opt-in skip / 0 fail; release build 0 warnings; $0.00.
+
 ### Provider behaviour contract — identity + language (provider-agnostic)
 
 - Real user test surfaced an architecture gap, not a Claude-specific bug: asked in Vietnamese, OSIRIS replied in English and introduced itself as "I am Claude … Current Model: Claude 3.5 Sonnet".

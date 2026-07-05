@@ -16,13 +16,13 @@
 - **M8-4 ✅** (Documentation review — §4o): sửa 5 lỗi doc có bằng chứng. 0 code.
 - **M8-5 ✅** (Production Readiness Milestone Review — §4p): M8 core nghiệm thu (tag `M8`); dead-code scan sạch.
 - **M8-6 ✅** (Accessibility audit — §4q): audit 10 view; sửa `MessageRow` sender cho VoiceOver.
-- **Provider behaviour contract ✅** (§4r): model tự nhận "I am Claude" + trả lời tiếng Anh → sửa `Config/preamble.md` +2 luật (ngôn ngữ + identity), provider-agnostic, 1 chỗ, 0 code, +1 regression test. **[USER] test lại với key thật** để xác nhận model tuân thủ. 164 test / 2 skip / 0 fail.
+- **Provider identity/localization ✅ (ĐÓNG kiến trúc)** — 2 lớp: (§4r) CONTENT preamble +2 luật; (§4s) TRANSPORT preamble nay đi qua **system channel** mọi provider (Anthropic `system`…), refactor nhỏ nhất (default method → 21 test double 0 sửa). 0 `if provider==`, 0 component mới. **[USER] test lại key thật** — nếu còn lệch chỉ tinh chỉnh chữ preamble (data), không đổi kiến trúc. 164 test / 2 skip / 0 fail.
 
 ## Current Milestone
 
 **M8 NGHIỆM THU (tag `M8`) — 7/7 hạng mục code-complete.** Còn lại đều evidence-gated / chờ USER — **KHÔNG tự mở M9:**
 
-1. **[USER] Test lại provider contract với key thật** (§4r): hỏi tiếng Việt → OSIRIS phải trả lời tiếng Việt, KHÔNG tự nhận là Claude. Nếu VẪN sai → trigger nâng preamble sang **system-role transport** (đổi `AIProvider` protocol, có bằng chứng). Nếu đúng → contract đóng.
+1. **[USER] Test lại provider contract với key thật** (§4r+§4s): hỏi tiếng Việt → OSIRIS phải trả lời tiếng Việt, KHÔNG tự nhận là Claude. Kiến trúc đã hoàn chỉnh (content + system-channel transport). Nếu VẪN lệch → chỉ tinh chỉnh CHỮ trong `Config/preamble.md` (data, 1 chỗ), KHÔNG còn đổi kiến trúc.
 2. **[USER] A11y runtime pass** (Mac): checklist §4q (VoiceOver/keyboard/Dynamic Type/contrast).
 3. **M7 provider-side optimization** — cần **key thường trực** (baseline qua-Gateway nhiều sample).
 4. **Mở M9** (nếu roadmap có) — chờ USER xác nhận.

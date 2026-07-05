@@ -61,6 +61,11 @@ public struct DefaultAIGateway: AIGateway {
         // 2. Retrieve → trim → assemble (M1-2). No store or no project means
         // no retrieval — the prompt is then identical to the pre-M1-2 shape.
         let context = trim(await retrieveContext(for: request), task: request.task)
+        // The contract (preamble) is the system prompt; context + task is the
+        // user prompt. `prompt` is the exact concatenation of the two, kept for
+        // token accounting and the cache key so budget/cache behaviour is
+        // unchanged — only the transport to the provider is split.
+        let userPrompt = assembleUserPrompt(task: request.task, context: context)
         let prompt = assemblePrompt(task: request.task, context: context)
         let estimatedTokens = TokenEstimator.estimate(prompt)
 
@@ -110,7 +115,9 @@ public struct DefaultAIGateway: AIGateway {
         var lastError = "unknown"
         while attempt < configuration.retry.maxAttempts {
             do {
-                let result = try await provider.complete(prompt: prompt, modelID: modelID)
+                let result = try await provider.complete(
+                    systemPrompt: configuration.preamble, userPrompt: userPrompt, modelID: modelID
+                )
                 await cache.store(result.text, for: cacheKey)
                 let metrics = makeMetrics(
                     requestID: requestID, modelID: modelID, start: start,
@@ -197,17 +204,18 @@ public struct DefaultAIGateway: AIGateway {
         return current
     }
 
-    /// Stable sectioned layout. With no context this produces exactly the
-    /// pre-M1-2 prompt (preamble + task), so cache keys and tests hold.
+    /// Full prompt = preamble + user prompt, byte-identical to the pre-split
+    /// shape. Used only for token accounting and the cache key; the provider
+    /// receives the two parts separately.
     private func assemblePrompt(task: String, context: [ContextSnippet]) -> String {
-        var parts: [String] = []
-        if !configuration.preamble.isEmpty {
-            parts.append(configuration.preamble)
-        }
-        if context.isEmpty {
-            parts.append(task)
-            return parts.joined(separator: "\n\n")
-        }
+        let body = assembleUserPrompt(task: task, context: context)
+        return configuration.preamble.isEmpty ? body : "\(configuration.preamble)\n\n\(body)"
+    }
+
+    /// The user prompt: context + task, WITHOUT the preamble (the preamble is
+    /// the system prompt, sent on its own channel). Stable sectioned layout.
+    private func assembleUserPrompt(task: String, context: [ContextSnippet]) -> String {
+        guard !context.isEmpty else { return task }
 
         var sections = ["## Relevant context"]
         let groups: [(ContextPriority, String)] = [
@@ -220,9 +228,7 @@ public struct DefaultAIGateway: AIGateway {
             guard !items.isEmpty else { continue }
             sections.append("### \(title)\n" + items.map { "- \($0.text)" }.joined(separator: "\n"))
         }
-        parts.append(sections.joined(separator: "\n\n"))
-        parts.append("## Task\n\(task)")
-        return parts.joined(separator: "\n\n")
+        return "\(sections.joined(separator: "\n\n"))\n\n## Task\n\(task)"
     }
 
     // MARK: Accounting

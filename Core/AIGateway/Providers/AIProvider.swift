@@ -8,6 +8,23 @@ import Foundation
 public protocol AIProvider: Sendable {
     var id: String { get }
     func complete(prompt: String, modelID: String) async throws -> ProviderResponse
+    /// Preferred entry point: the OSIRIS behaviour contract (system) is kept
+    /// separate from the task (user) so each provider can route the contract
+    /// to its strongest instruction channel — Anthropic `system`, OpenAI/Grok/
+    /// Mistral/Qwen/DeepSeek `role: "system"`, Gemini `systemInstruction`.
+    /// System instructions outrank user text in every major provider's
+    /// hierarchy, so a persistent contract (identity, language) belongs here.
+    func complete(systemPrompt: String, userPrompt: String, modelID: String) async throws -> ProviderResponse
+}
+
+public extension AIProvider {
+    /// Faithful fallback for providers (and test doubles) that don't separate
+    /// the two channels: concatenate exactly as before. Overriding providers
+    /// route `systemPrompt` to their system channel instead.
+    func complete(systemPrompt: String, userPrompt: String, modelID: String) async throws -> ProviderResponse {
+        let combined = systemPrompt.isEmpty ? userPrompt : "\(systemPrompt)\n\n\(userPrompt)"
+        return try await complete(prompt: combined, modelID: modelID)
+    }
 }
 
 /// What a provider reports back. Token counts are optional because not every

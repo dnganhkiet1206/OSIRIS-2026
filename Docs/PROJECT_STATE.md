@@ -10,7 +10,7 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M8 — Production Readiness: NGHIỆM THU (tag `M8`)** — 7/7 hạng mục code-complete (M8-0…M8-6). M7-0 ✅ (§4j); M7 provider-side + a11y-runtime-verify = evidence-gated. M8-5 review ✅ (§4p) · M8-6 Accessibility ✅ (§4q) |
-| Task hiện tại | **Provider behaviour contract (identity + language) ✅ — sửa lỗ hổng kiến trúc từ test thật:** model tự nhận "I am Claude" + trả lời tiếng Anh khi user hỏi tiếng Việt. Nguyên nhân: `preamble` thiếu luật ngôn ngữ + kỷ luật-identity (KHÔNG phải bug per-provider). Sửa MỘT chỗ = `Config/preamble.md` +2 luật (data, provider-agnostic, Gateway prepend cho mọi provider) + 1 regression test. 0 code, 0 abstraction, 0 `if provider==`. Chi tiết §4r. **[USER] test lại với key thật để xác nhận model tuân thủ** (nếu chưa đủ → trigger system-role transport). · kế tiếp: chờ USER — KHÔNG tự mở |
+| Task hiện tại | **Provider contract transport → system channel ✅ (issue identity/localization ĐÓNG kiến trúc):** hoàn tất 2 lớp — (1) CONTENT: preamble +2 luật identity/ngôn ngữ (§4r); (2) TRANSPORT: preamble nay đi qua **system channel** mạnh nhất của MỌI provider (Anthropic `system` / OpenAI-compat `role:system` / Gemini `systemInstruction`), không còn user-message yếu. Refactor nhỏ nhất: `AIProvider` +method `complete(systemPrompt:userPrompt:)` CÓ default concat (21 test double 0 sửa); Anthropic route `system`; Gateway tách preamble/body tại 1 call-site (token/cache byte-identical). 0 `if provider==`, 0 component mới. Chi tiết §4s. **[USER] test lại key thật để xác nhận** (không còn lever kiến trúc — chỉ tinh chỉnh chữ preamble nếu cần). · kế tiếp: chờ USER — KHÔNG tự mở |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **18 Architecture Test (function) chống drift** (cưỡng chế đồ thị phụ thuộc + eliminated-components: EventBus AD-46, automation-engine AD-47) · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 164 test / 2 opt-in skip / 0 fail** (~1.1s offline; +1 test provider-contract) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · Keychain fix (M8-1) + MessageRow a11y (M8-6) = verify qua CI macOS · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, iPhone 17 Pro sim (iOS 26.2), UI end-to-end (§4i)** |
@@ -128,6 +128,26 @@ User tự chạy toàn bộ stack trên Mac thật (branch `claude/osiris-arch-r
 **Ý nghĩa:** rủi ro lớn nhất của dự án (UI chưa qua compiler Mac, mang từ M0) **đóng lại bằng bằng chứng thật, không phải suy đoán**. M6-2 Automation UI — thứ mới nhất, chưa từng chạy trên UI thật — hoạt động đầy đủ ngay lần đầu. CI macOS giữ để chống regression tự động.
 
 **CHƯA test (có chủ đích, không phải lỗ hổng):** live Anthropic (chưa cấu hình key) → **baseline thật vẫn là nợ Medium đang mở**, và là điều kiện tiên quyết của M7. App vẫn placeholder-local.
+
+## 4s. Provider contract transport — system channel (issue identity/localization ĐÓNG, 2026-07-05)
+
+**Architecture Review (8 câu, bằng chứng code + API) — quyết định đổi CÓ bằng chứng, không suy luận:**
+- **Q1–3:** `AIProvider.complete(prompt:modelID:)` = 1 chuỗi; Gateway ghép `preamble+context+task` → gửi; `AnthropicProvider` map `messages:[{role:"user"}]`, **bỏ trống field `system`** dù API có.
+- **Q4 (bằng chứng API, 8/8 provider):** Anthropic `system` · OpenAI `role:system`/`developer` + Responses `instructions` · Gemini `systemInstruction` · Grok/Mistral/Qwen/DeepSeek OpenAI-compat `role:system` · Llama chat-template + OpenAI-compat `role:system`. **Mọi provider có system channel riêng, hierarchy MẠNH HƠN user.**
+- **Q5:** gửi preamble bằng user-message = **SAI kiến trúc** — (a) system > user ở mọi provider; (b) **test thật cho thấy model phớt lờ "You are OSIRIS" ở user-role**. Bằng chứng đủ → đổi.
+- **Q6–8:** không phá abstraction (vẫn agnostic) · Gateway không phức tạp thêm (vẫn nơi ghép duy nhất) · không sửa từng provider (default lo) · **0 AD vi phạm** (AD-24 Gateway-ghép giữ; AD-13/23 preamble-1-Config giữ, nay đúng hơn = system prompt; AD-15 token giữ) · mở rộng `complete(systemPrompt,userPrompt)` provider-agnostic được · **cải tiến transport CHUNG, không fix riêng Claude**.
+
+**Refactor NHỎ NHẤT (thiết kế then chốt = default method → 0 churn test):**
+- `AIProvider`: +requirement `complete(systemPrompt:userPrompt:modelID:)` **CÓ default** = concat y nguyên hành vi cũ → **21 test double + Placeholder: 0 sửa** (kế thừa default). Vì là requirement (không phải extension-only) → dynamic dispatch đúng cho provider override.
+- `AnthropicProvider`: override → `systemPrompt`→field `system` (encodeIfPresent, rỗng thì bỏ field), `userPrompt`→user message; `complete(prompt:)` delegate `system:""`.
+- `DefaultAIGateway`: tách `assembleUserPrompt` (body, không preamble) khỏi `assemblePrompt` (full = preamble+body, GIỮ cho token/cache/trim byte-identical); 1 call-site đổi sang `complete(systemPrompt: preamble, userPrompt: body)`.
+- Test: chỉ `AnthropicProviderIntegrationTests` đổi — khẳng định preamble ở `system`, task ở user message, contract KHÔNG rò vào user.
+
+**Ràng buộc:** 0 Persona Engine · 0 Prompt Builder mới · 0 Provider Wrapper mới · 0 abstraction thừa · 0 `if provider==`. Gateway vẫn nơi ghép DUY NHẤT · preamble vẫn 1 Config DUY NHẤT.
+
+**Chất lượng:** 4 file (3 prod + 1 test) · **164 test / 2 opt-in skip / 0 fail** · release 0 warning · budget/cache byte-identical (mọi test cũ pass không sửa) · $0.00.
+
+**ĐÓNG ISSUE (kiến trúc):** identity + localization nay hoàn chỉnh 2 lớp — **content** (§4r luật preamble) + **transport** (§4s system channel, provider-agnostic). Không còn lever kiến trúc nào nữa: nếu model vẫn lệch sau khi USER test key thật, chỉ tinh chỉnh CHỮ trong `Config/preamble.md` (data, 1 chỗ) — không phải đổi kiến trúc. Trigger "system-role transport" ở §4r = ĐÃ GIẢI QUYẾT.
 
 ## 4r. Provider behaviour contract — identity + language (2026-07-05)
 

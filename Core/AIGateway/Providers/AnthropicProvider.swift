@@ -34,17 +34,26 @@ public struct AnthropicProvider: AIProvider {
         self.session = session
     }
 
-    public func complete(prompt: String, modelID: String) async throws -> ProviderResponse {
-        let (data, http) = try await perform(makeRequest(prompt: prompt, modelID: modelID))
+    /// The OSIRIS contract rides the Anthropic `system` field (its strongest
+    /// instruction channel); the task is the user message. Empty system omits
+    /// the field entirely.
+    public func complete(systemPrompt: String, userPrompt: String, modelID: String) async throws -> ProviderResponse {
+        let (data, http) = try await perform(makeRequest(systemPrompt: systemPrompt, userPrompt: userPrompt, modelID: modelID))
         guard http.statusCode == 200 else {
             throw AnthropicProviderError.httpStatus(http.statusCode, Self.userHint(forStatus: http.statusCode))
         }
         return try Self.parse(data)
     }
 
+    /// Single-prompt requirement: a prompt with no separate contract is just a
+    /// user message (empty system).
+    public func complete(prompt: String, modelID: String) async throws -> ProviderResponse {
+        try await complete(systemPrompt: "", userPrompt: prompt, modelID: modelID)
+    }
+
     /// Internal for tests: header/body correctness is asserted on the
     /// URLRequest directly, independent of platform networking quirks.
-    func makeRequest(prompt: String, modelID: String) throws -> URLRequest {
+    func makeRequest(systemPrompt: String, userPrompt: String, modelID: String) throws -> URLRequest {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -53,7 +62,8 @@ public struct AnthropicProvider: AIProvider {
         request.httpBody = try JSONEncoder().encode(RequestBody(
             model: modelID,
             maxTokens: maxOutputTokens,
-            messages: [RequestBody.Message(role: "user", content: prompt)]
+            system: systemPrompt.isEmpty ? nil : systemPrompt,
+            messages: [RequestBody.Message(role: "user", content: userPrompt)]
         ))
         return request
     }
@@ -96,12 +106,24 @@ public struct AnthropicProvider: AIProvider {
 
         let model: String
         let maxTokens: Int
+        let system: String?
         let messages: [Message]
 
         enum CodingKeys: String, CodingKey {
             case model
             case maxTokens = "max_tokens"
+            case system
             case messages
+        }
+
+        // encodeIfPresent so an empty contract omits `system` rather than
+        // sending `null` (which the API would reject).
+        func encode(to encoder: Encoder) throws {
+            var c = encoder.container(keyedBy: CodingKeys.self)
+            try c.encode(model, forKey: .model)
+            try c.encode(maxTokens, forKey: .maxTokens)
+            try c.encodeIfPresent(system, forKey: .system)
+            try c.encode(messages, forKey: .messages)
         }
     }
 

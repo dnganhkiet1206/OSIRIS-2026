@@ -93,7 +93,7 @@ final class AnthropicProviderIntegrationTests: XCTestCase {
         // Headers are asserted on the URLRequest directly (Linux's
         // URLProtocol does not surface request headers — platform quirk,
         // discovered in M0 final verification).
-        let request = try provider.makeRequest(prompt: "x", modelID: "m")
+        let request = try provider.makeRequest(systemPrompt: "sys", userPrompt: "x", modelID: "m")
         XCTAssertEqual(request.value(forHTTPHeaderField: "anthropic-version"), AnthropicProvider.apiVersion)
         XCTAssertEqual(request.value(forHTTPHeaderField: "x-api-key"), "test-key-not-real")
         XCTAssertEqual(request.value(forHTTPHeaderField: "Content-Type"), "application/json")
@@ -102,10 +102,14 @@ final class AnthropicProviderIntegrationTests: XCTestCase {
         let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: body) as? [String: Any])
         XCTAssertEqual(json["model"] as? String, "claude-haiku-4-5-20251001")
         XCTAssertEqual(json["max_tokens"] as? Int, 4000)
+        // The OSIRIS contract (preamble) rides the Anthropic `system` field —
+        // its strongest instruction channel — not the user message.
+        XCTAssertEqual(json["system"] as? String, "You are OSIRIS.", "Preamble must be the system prompt")
         let messages = try XCTUnwrap(json["messages"] as? [[String: Any]])
         XCTAssertEqual(messages.count, 1)
         let content = try XCTUnwrap(messages.first?["content"] as? String)
-        XCTAssertTrue(content.contains("You are OSIRIS."), "Preamble must be assembled into the prompt")
-        XCTAssertTrue(content.contains("Say hello"))
+        XCTAssertEqual(messages.first?["role"] as? String, "user")
+        XCTAssertTrue(content.contains("Say hello"), "The task is the user message")
+        XCTAssertFalse(content.contains("You are OSIRIS."), "The contract must not leak into the user message")
     }
 }
