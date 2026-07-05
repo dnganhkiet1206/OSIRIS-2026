@@ -109,7 +109,10 @@ final class ChatViewModel {
 
     func openDeliverable(path: String) {
         Task { @MainActor in
-            if let content = try? await projectDirectory.deliverableContent(path), let content {
+            // `deliverableContent` returns String?; `try?` flattens the nested
+            // optional (SE-0230), so a single binding is correct — the earlier
+            // double `let content` was a type error caught by the macOS CI.
+            if let content = try? await projectDirectory.deliverableContent(path) {
                 openedDeliverable = OpenedDeliverable(id: path, content: content)
             }
         }
