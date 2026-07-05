@@ -2,6 +2,15 @@
 
 ## [Unreleased — M8]
 
+### M8-1: Security review — fix the one proven hole, guard one documented contract
+
+- Architecture Review before code: audited the full secret path (storage → use → every logging route). One real hole, one unguarded documented contract; everything else verified clean, no change.
+- **Fixed:** `KeychainSecretsVault` stored the API key without `kSecAttrAccessible`, so it took the OS default (not device-only) and could migrate to another device via encrypted backup restore — wrong for a device-local billing secret. Now set to `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`, applied only on the add path (never in the search query, which would break read/update/delete matching). App-layer/Security-framework code, so it is compile-verified by CI macOS and not reachable from Linux `swift test`.
+- **Added test:** `AnthropicProviderSecurityTests.testProviderErrorNeverContainsKeyOrResponseBody` — the provider documents "errors NEVER contain the API key or response bodies" but nothing guarded it. A URLProtocol stub returns a 401 whose body echoes the key (worst case); the test asserts the thrown error and its hint contain neither the key nor the body.
+- **Verified clean (no change):** key sent only via the `x-api-key` header (never the URL); Gateway logs metrics only and never holds the key (prompt-absence already tested); error types carry status + a static hint by construction; zero hardcoded secrets in the repo; Config JSON holds no secrets.
+- Recorded a trigger: Keychain runtime behavior is only verifiable on device/simulator (add an on-device check when a UI/device test harness exists); revisit the accessibility level if background (BGTask) automation that reads the key while locked is ever built.
+- 162 tests / 2 opt-in skip / 0 fail; one-line production change in the App layer; architecture tests only added.
+
 ### M8-0: Core contract test coverage — cover two evidenced gaps, decline speculation
 
 - First M8 (Production Readiness) task. Architecture Review before code: 7 Core protocols + ~140 tests already give broad coverage, so padding a number was refused. Crash-recovery angle audited — `FileStorage.write` is already `.atomic`, so crash-truncation is already prevented; a `loadAll` "skip corrupt file" change would be speculative and was declined (trigger recorded for real corruption evidence).

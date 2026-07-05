@@ -31,6 +31,12 @@ final class KeychainSecretsVault: SecretsVault {
         let status = SecItemUpdate(query as CFDictionary, update as CFDictionary)
         if status == errSecItemNotFound {
             query[kSecValueData as String] = data
+            // Device-local secret: never leaves this device (excluded from
+            // encrypted backups and iCloud Keychain), and readable after first
+            // unlock so it is available without keeping the app foregrounded.
+            // Accessibility belongs only on the ADD — never in the search
+            // query, which would break matching on read/update/delete.
+            query[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
             let addStatus = SecItemAdd(query as CFDictionary, nil)
             guard addStatus == errSecSuccess else { throw KeychainError.writeFailed(addStatus) }
         } else if status != errSecSuccess {

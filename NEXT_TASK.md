@@ -9,16 +9,18 @@
 ## Trạng thái
 
 - **M7-0 ✅** (baseline nội bộ + provider sàn, quyết KHÔNG tối ưu — §4j). M7 provider-side HOÃN chờ key thường trực.
-- **M8-0 ✅** (Core contract test coverage — §4k): thêm 2 test canh property thật (dry-run không đầu độc cache; ranking `.anyWord`); từ chối resilience suy đoán (write đã atomic). 161 test / 2 skip / 0 fail.
+- **M8-0 ✅** (Core contract test coverage — §4k): 2 test canh property thật; từ chối resilience suy đoán (write đã atomic).
+- **M8-1 ✅** (Security review — §4l): sửa Keychain thiếu `kSecAttrAccessible` (→ `AfterFirstUnlockThisDeviceOnly`); thêm test "error không lộ key/body"; phần còn lại verify sạch. 162 test / 2 skip / 0 fail.
 
 ## Current Task — CHỜ USER CHỌN task M8 kế (KHÔNG tự mở)
 
 M8 Production Readiness còn các mảnh sau; **mỗi phiên làm ĐÚNG MỘT**, Architecture Review trước code, chỉ đổi khi có bằng chứng:
 
-1. **Security review** — API key chỉ trong Keychain (Infrastructure/Security), không lộ log (đã có nguyên tắc; cần test/audit canh: `git grep` không có key, log không in secret). Linux làm được. **Ứng viên tốt nhất kế tiếp** (không cần key, giá trị cao, thuần kiểm tra + test).
-2. **Backup & Recovery** — export/import ProjectState + Knowledge + deliverables. Cần Architecture Review: là data-copy (Store đọc/ghi) hay cần cơ chế mới? Không tạo Engine.
-3. **Crash recovery (khôi phục tiến độ dở)** — write đã atomic (record-level an toàn, §4k); phần còn lại: một goal đang chạy mà app chết giữa chừng → lần mở lại có nối lại/nhận biết không? Cần bằng chứng đây là vấn đề thật trước khi thêm code.
-4. **Docs / Accessibility** — rà tài liệu lệch thực tế; accessibility audit UI (cần Mac/simulator).
+1. **Backup & Recovery** — export/import ProjectState + Knowledge + deliverables. Cần Architecture Review: là data-copy (Store đọc/ghi) hay cần cơ chế mới? Không tạo Engine. **Ứng viên kế tiếp tốt (Linux làm được).**
+2. **Crash recovery (khôi phục tiến độ dở)** — write đã atomic (record-level an toàn, §4k); phần còn lại: một goal đang chạy mà app chết giữa chừng → lần mở lại có nối lại/nhận biết không? Cần bằng chứng đây là vấn đề thật trước khi thêm code.
+3. **Docs / Accessibility** — rà tài liệu lệch thực tế; accessibility audit UI (cần Mac/simulator).
+
+> **Security (M8-1) đã xong** — nếu sau này có on-device UI-test harness: thêm check hành vi `KeychainSecretsVault` (accessibility/read/write/delete) như trigger §4l ghi.
 
 ## Store-resilience — trigger đã ghi (§4k), CHƯA làm
 Chỉ thêm "loadAll skip file hỏng" khi có **bằng chứng file hỏng thật** (bit-rot, sync-conflict, encoding bug) — KHÔNG phải crash (atomic write đã chặn). Đến lúc đó: skip trong bulk-read, giữ `load` targeted vẫn throw; + test canh.

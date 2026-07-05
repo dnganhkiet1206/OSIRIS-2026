@@ -9,11 +9,11 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M8 — Production Readiness: đang triển khai** (M0→M6 nghiệm thu; tag local chờ push khi merge). M7-0 ✅ (baseline, §4j) đã chấp nhận; **M7 provider-side HOÃN chờ key thường trực**. M8-0 ✅ (§4k) |
-| Task hiện tại | **M8-0 (Core contract test coverage) ✅** — audit coverage, chỉ THÊM test cho 2 lỗ hổng thật (dry-run không được đầu độc cache; ranking `.anyWord`); từ chối thay đổi resilience suy đoán (write đã atomic). Chi tiết §4k. **Mac validation ✅ 2026-07-05 → nợ High UI RETIRED (§4i)** · kế tiếp: chờ USER chọn task M8 kế (xem NEXT_TASK) — KHÔNG tự mở |
+| Giai đoạn | **M8 — Production Readiness: đang triển khai** (M0→M6 nghiệm thu; tag local chờ push khi merge). M7-0 ✅ (baseline, §4j); **M7 provider-side HOÃN chờ key thường trực**. M8-0 ✅ (§4k) · M8-1 Security ✅ (§4l) |
+| Task hiện tại | **M8-1 (Security review) ✅** — audit đường đi secret; SỬA 1 lỗ hổng thật (Keychain thiếu `kSecAttrAccessible` → nay `AfterFirstUnlockThisDeviceOnly`, device-only/không backup); THÊM 1 test canh hợp đồng "error không lộ key/body"; phần còn lại verify sạch. Chi tiết §4l. **Mac validation ✅ (§4i)** · kế tiếp: chờ USER chọn task M8 kế (NEXT_TASK) — KHÔNG tự mở |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **19 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 161 test / 2 opt-in skip / 0 fail** (~1.0s offline; +2 test M8-0 cache/ranking) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, chạy iPhone 17 Pro sim (iOS 26.2), Automation UI + Chat + reuse end-to-end (§4i)** |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 162 test / 2 opt-in skip / 0 fail** (~1.1s offline; +1 test M8-1 provider-error-no-leak) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · Keychain fix (M8-1) = App-layer, verify qua CI macOS compile (không Linux-test được) · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, iPhone 17 Pro sim (iOS 26.2), UI end-to-end (§4i)** |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -80,7 +80,7 @@ M6 — Automation: nối trí tuệ với thực thi tự động, KHÔNG visual
 
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Chọn task M8 kế** (`NEXT_TASK.md`): security review · backup/recovery · crash-recovery (khôi phục tiến độ dở) · docs · accessibility. Không tự mở.
+1. **[USER] Chọn task M8 kế** (`NEXT_TASK.md`): backup/recovery · crash-recovery (khôi phục tiến độ dở) · docs · accessibility. (Security ✅ M8-1). Không tự mở.
 2. **[USER] Cấp API key THƯỜNG TRỰC** để mở **M7 provider-side** (tối ưu token/latency/cost qua Gateway) — hiện HOÃN; key một-lần đã thu sàn provider (§4j), cần key thường trực cho baseline qua-Gateway nhiều sample.
 3. M8-0 ✅ (§4k). CI macOS giữ chống regression UI.
 
@@ -128,6 +128,25 @@ User tự chạy toàn bộ stack trên Mac thật (branch `claude/osiris-arch-r
 **Ý nghĩa:** rủi ro lớn nhất của dự án (UI chưa qua compiler Mac, mang từ M0) **đóng lại bằng bằng chứng thật, không phải suy đoán**. M6-2 Automation UI — thứ mới nhất, chưa từng chạy trên UI thật — hoạt động đầy đủ ngay lần đầu. CI macOS giữ để chống regression tự động.
 
 **CHƯA test (có chủ đích, không phải lỗ hổng):** live Anthropic (chưa cấu hình key) → **baseline thật vẫn là nợ Medium đang mở**, và là điều kiện tiên quyết của M7. App vẫn placeholder-local.
+
+## 4l. M8-1 Closeout — Security review (2026-07-05)
+
+**Architecture Review TRƯỚC code (chỉ đổi khi có bằng chứng codebase):** audit toàn bộ đường đi secret (lưu trữ → dùng → mọi đường log).
+
+**1 lỗ hổng THẬT đã sửa:**
+- **Keychain thiếu `kSecAttrAccessible`** (`KeychainSecretsVault.baseQuery` → item lấy default OS, KHÔNG `ThisDeviceOnly` → API key phục hồi được sang máy khác qua encrypted backup — sai với secret device-local tính tiền vào tài khoản user). Bằng chứng: đọc code + hành vi mặc định Apple documented. **Sửa:** đặt `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` **chỉ trên đường ADD** (không nhét vào search query — sẽ vỡ matching read/update/delete). Device-only + loại khỏi backup/iCloud; `AfterFirstUnlock` = đọc được sau lần mở khoá đầu, không kẹt khi app nền. *App-layer (Security framework) → CI macOS compile-verify; `swift test` Linux không chạm được.*
+
+**1 hợp đồng bảo mật ĐÃ TÀI LIỆU nhưng CHƯA có test → thêm test (Linux-verified):**
+- `AnthropicProvider` doc ghi "errors NEVER contain the API key or response bodies" nhưng 0 test canh. `AnthropicProviderSecurityTests.testProviderErrorNeverContainsKeyOrResponseBody`: URLProtocol stub trả 401 với body **cố tình echo key** (worst case) → khẳng định error (và hint) KHÔNG chứa key/body. Regression gập key vào log/UI sẽ đỏ ngay.
+
+**Verify SẠCH — không đổi (audit ghi bằng chứng):**
+- Provider gửi key CHỈ ở header `x-api-key` (line 51), không bao giờ ở URL; error enum chỉ mang `Int + hint tĩnh` (không key/body by construction).
+- Logging: `DefaultAIGateway` log metrics-only (đã có test canh prompt-absence, line 99); Gateway KHÔNG giữ key (key sống ở provider). `ConsoleLogger` generic — an toàn nhờ kỷ luật call-site (Gateway kỷ luật).
+- 0 hardcoded secret toàn repo (`grep` sạch); Config/*.json không chứa secret (chỉ số budget/model).
+
+**Trigger đã ghi (chưa làm — không suy đoán):** hành vi `KeychainSecretsVault` (accessibility thật, read/write/delete) chỉ verify được on-device/simulator; thêm on-device check khi có harness UI/device test. Nếu M6 background firing (BGTask) hồi sinh và cần đọc key lúc khoá → xem lại mức accessibility (hiện `AfterFirstUnlock` đã hỗ trợ nền sau first-unlock).
+
+**Chất lượng:** build 0/0 · **162 test / 2 opt-in skip / 0 fail** ~1.1s · production đổi = 1 dòng+comment App-layer (0-warning, CI-macOS-compiled) · arch suite nguyên (test chỉ THÊM) · 0 rò rỉ key (đã quét) · AI spend **$0.00**.
 
 ## 4k. M8-0 Closeout — Core contract test coverage (2026-07-05)
 
