@@ -150,7 +150,18 @@ Cộng baseline pipeline-overhead (đo lại 6.3.3, release): **fresh ~3.8 ms/go
 
 **Trigger tái xét (ghi rõ để lần sau không đoán lại):** đụng lại `Store.search` chỉ khi (a) store thật > ~1000 Knowledge record, HOẶC (b) profiling latency thật cho thấy search chiếm phần đáng kể. Khi đó: in-memory index/cache theo key + giữ nguyên test hành vi (hits/ranking/tie-break) — đã có `StoreSearchBaselineTests` để chứng minh trước/sau.
 
-**Còn mở (đúng phạm vi):** tối ưu provider-side (context trimming nếu token-in cao / prompt-cache nếu latency cao / cache eviction khi có hit-rate thật) — TẤT CẢ cần baseline provider = **nợ Medium chờ key**. Không đoán.
+**Baseline provider THẬT — đo 2026-07-05 (nợ Medium ĐÓNG một phần):** user cấp key tạm (đã khoá ngay sau đo), chạy `LiveBaselineTests` (haiku `claude-haiku-4-5-20251001`, gọi thẳng provider, `maxOutputTokens=300`):
+
+| Prompt | tokensIn | tokensOut | latency |
+|---|---|---|---|
+| short (tóm tắt 1 câu) | 21 | 35 | 7.62 s |
+| medium (mô tả SP ~150 từ) | 28 | 207 | 2.98 s |
+
+Chi phí ≈ **$0.0013 / 2 call** (haiku $1/$5 per 1M — cost accounting đã xác minh offline từ M0). **Đọc trung thực:** (a) tokensIn rất nhỏ (21–28) vì harness gọi thẳng `AnthropicProvider` với prompt trần — CHƯA qua Gateway assembly (preamble + context), nên đây là sàn token provider, không phải token/goal thực tế qua Kernel; (b) latency biến thiên mạnh (short 7.6s > medium 3.0s dù ít token hơn) = **1 sample/prompt, latency do mạng/API chi phối, không phải steady-state** — đủ để biết bậc độ lớn (giây/call), chưa đủ để tối ưu latency cụ thể; (c) **out ≫ in** → nếu cần tối ưu cost, đòn bẩy là output tokens (giới hạn/nén output), không phải input.
+
+**Kết luận baseline:** bậc độ lớn xác nhận giả thuyết M7-0 — **AI call (3–8 s) áp đảo overhead nội bộ (đơn-con-số ms) ~1000×.** Vẫn 0 tối ưu ship: muốn tối ưu provider-side đúng cách cần đo QUA Gateway (token/goal thật gồm context) với nhiều sample — chưa có key thường trực. Đòn bẩy rõ nhất khi có: **output-token control** (out gấp ~7× in).
+
+**Còn mở (đúng phạm vi):** tối ưu provider-side qua Gateway (context trimming nếu token-in-qua-assembly cao / prompt-cache nếu latency ổn định cao / output-token cap / cache eviction khi có hit-rate thật) — cần baseline QUA-GATEWAY nhiều sample = **nợ Medium còn lại, chờ key thường trực**. Không đoán.
 
 **Chất lượng:** build 0/0 debug+release · **159 test / 2 opt-in skip / 0 fail** ~0.8s offline · 0 dòng Core/Presentation đổi (chỉ thêm 1 file test) · arch suite nguyên · AI spend tích lũy **$0.00**.
 
@@ -308,7 +319,7 @@ Cộng baseline pipeline-overhead (đo lại 6.3.3, release): **fresh ~3.8 ms/go
 | Pipeline overhead, goal mới (5 pha + search miss + ghi file, KHÔNG gồm provider) | **~4.65 ms/request** | mean 30 runs, `PipelineBaselineTests` |
 | Pipeline overhead, đường reuse (0 AI call) | **~2.54 ms/request** | mean 30 runs |
 | Cost accounting | ✅ xác minh: 1000 in + 500 out (haiku $1/$5 per 1M) = $0.0035 | integration test |
-| Token/latency/cost provider thật | **PENDING** | cần API key; đo ở M1-0 bằng 1–3 smoke call |
+| Token/latency/cost provider thật | ✅ **ĐO 2026-07-05** (haiku): in 21–28 tok, out 35–207 tok, latency 3–8 s/call, ~$0.0013/2-call — chi tiết §4j | key user (đã thu, đã khoá) |
 | Chi phí AI tích lũy toàn M0 | **$0.00** | |
 
 **Kết luận nghiệm thu:** M0 ĐẠT — mọi thứ kiểm chứng được trong môi trường hiện tại đều xanh; 2 mục pending (Mac type-check/simulator, baseline provider thật) đã khoanh vùng, có kế hoạch tại M1-0, không chặn kiến trúc M1.

@@ -10,6 +10,11 @@
 - Explicit re-visit trigger recorded: touch `Store.search` only if a real store exceeds ~1000 records or profiling shows it in a real latency path; then add an index/cache with the behavior tests intact.
 - The genuine optimization surface (token/latency/cost) is provider-side and stays blocked on the real baseline (Medium debt, needs key) — correctly deferred, not guessed.
 
+### 2026-07-05 — Real provider baseline captured (user's temporary key, revoked after)
+
+- Ran `LiveBaselineTests` against Anthropic haiku with a key the user provided and revoked immediately after. Numbers recorded in PROJECT_STATE §4b/§4j: in 21–28 tok, out 35–207 tok, latency 3–8 s/call, ≈ $0.0013 for 2 calls.
+- Confirms the M7-0 hypothesis by an order of magnitude: a real AI call (3–8 s) dwarfs internal overhead (single-digit ms) by ~1000×. Still zero optimization shipped — proper provider-side tuning needs a through-the-Gateway baseline (real per-goal tokens incl. context) with many samples, which needs a standing key. Clearest lever when it comes: output-token control (output ≈ 7× input). Key never written to disk or committed.
+
 ## [M6] — 2026-07-04 (tag `M6`, core)
 
 ### 2026-07-05 — Mac validation: High debt (UI compile) RETIRED
