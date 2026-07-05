@@ -2,51 +2,56 @@
 
 > Quy trình phiên làm việc: đọc `Docs/PROJECT_STATE.md` → đọc file này → đọc các file liên quan → thiết kế → kiểm tra tái sử dụng → triển khai → Self Review → Architecture Review → refactor nếu cần → cập nhật tài liệu → cập nhật PROJECT_STATE → tạo NEXT_TASK mới → kết thúc. Không bỏ qua bước nào.
 >
-> **Song song / nợ đang cháy:**
-> - **CI macOS** đã chạy: nếu run mới nhất (sau fix `ChatViewModel` + UI M6-2) còn lỗi SwiftUI → dán `error:` vào phiên, sửa trước (giống ChatViewModel). Cần cấp lại quyền GitHub (`/mcp`) để tôi tự đọc CI.
-> - **API key** cho `LiveBaselineTests` (nợ Medium) — user cấp qua env, đừng dán vào chat.
+> **Nợ đang cháy (song song):**
+> - **CI macOS:** UI M6-2 đã push — nếu run mới nhất còn lỗi SwiftUI, dán `error:` vào phiên (sửa trước, như `ChatViewModel`). Cấp lại quyền GitHub (`/mcp`) để tôi tự đọc CI.
+> - **API key** cho `LiveBaselineTests` — điều kiện tiên quyết của M7 (xem dưới).
 
 ## Current Milestone
 
-**M6 — Automation** (DEVELOPMENT_PLAN.md §2/M6)
+**M7 — Optimization** (DEVELOPMENT_PLAN.md §2/M7) — CHỜ USER XÁC NHẬN MỞ
 
 ## Current Task
 
-**M6-3 — M6 Milestone Review & Acceptance**
+**M7-0 — Đo trước, tối ưu sau: thu baseline thật + chỉ tối ưu cái số liệu chứng minh**
 
-## Vì sao review bây giờ
+## Nguyên tắc sống còn của M7 (đọc kỹ)
 
-Core testable/buildable của M6 đã xong: M6-0 (arch review + xoá ApprovalGate, AD-47), M6-1 (automation-as-data: record + port + run-now), M6-2 (Automation UI). Phần còn lại của phạm vi M6 (scheduled background firing, MCP remote tools, monitoring) đều **device/evidence-gated** — không build mù được (giống UI PENDING từ M0). Review đánh giá trung thực phần đã xong + khoanh vùng phần hoãn, như M1-5/M2-6/M3-4/M4-4/M5-2.
+M7 là milestone **dễ vi phạm "không sửa khi không có bằng chứng" nhất**: tối ưu không số liệu = đoán = churn. Toàn bộ nợ Low perf (cache eviction, search đọc-lại-file, WC cleanup, metrics history, tier-routing) đã được HOÃN suốt M1→M6 với đúng lý do: **chờ số liệu thật**. M7 chỉ hợp lệ khi có số liệu.
 
-## Phạm vi review
+**Điều kiện tiên quyết:** baseline provider thật (nợ Medium). Đầu phiên M7-0, kiểm tra `ANTHROPIC_API_KEY`:
+- **CÓ key:** chạy `LiveBaselineTests` → điền §4b → giờ có số liệu token/latency/cost thật → chọn 1 tối ưu mà số liệu chỉ rõ (vd nếu token in cao → context trimming; nếu latency cao → cache/prompt-cache).
+- **KHÔNG key:** M7 optimization phần lớn PHẢI HOÃN (đoán = vi phạm hiến pháp). Phần làm được không cần provider: đo **pipeline overhead** đã có (`PipelineBaselineTests` — fresh/reuse ms) và tối ưu thuật toán có bằng chứng NỘI BỘ (vd `Store.search` đọc lại toàn bộ file mỗi query — đo với store lớn, nếu chậm rõ thì thêm index/cache có test). KHÔNG đụng cái cần dữ liệu provider.
 
-1. **Bảng tiêu chí M6** (DEVELOPMENT_PLAN §2/M6: scheduling · background · automation rules · MCP · monitoring; "công việc lặp lại chạy tự động, hành động rủi ro qua approval gate") → ✅/⚠️/HOÃN từng mục, PENDING ghi địa chỉ (thiết bị/CI/AD-45).
-2. **ADR M6:** AD-46 (EventBus xoá) · AD-47 (risky-action cluster + automation design) — Decision→Evidence→Result.
-3. **Nợ rà toàn bộ:** CI macOS đã hạ nợ High từ "unknown" xuống "CI-visible, đang sửa" — cập nhật trạng thái theo kết quả CI mới nhất; baseline live-harness sẵn (chờ key); ChatViewModel trigger đã được tôn trọng (M6-2). Không gia hạn thiếu bằng chứng.
-4. **Risky action / ApprovalGate:** xác nhận điều kiện tái sinh (external-effect tool đầu tiên = mở tool-channel AD-45) chưa đến — automation v1 vẫn 0 risky action (chỉ sinh deliverable local).
-5. **Acceptance report + tag `M6`** (local) + DEVELOPMENT_PLAN (đánh dấu M6 + điều kiện kích hoạt scheduled-firing/MCP) + NEXT_TASK cho M7 (Optimization — nơi các nợ Low perf/cache/search có số liệu thật để tối ưu; ĐỌC kỹ §2/M7).
-6. **Open-source readiness:** cập nhật — CI macOS giờ compile UI tự động (contributor thấy build status); còn baseline thật + device UX.
+## Phạm vi (chọn theo điều kiện trên)
 
-## Điều kiện HOÃN có ghi (không build mù)
+1. **Baseline thật** (nếu có key): chạy harness, ghi §4b, KHÔNG giả số.
+2. **Tối ưu evidence-based, MỘT thứ một lần:** mỗi tối ưu phải kèm (a) số đo trước, (b) thay đổi, (c) số đo sau chứng minh cải thiện, (d) test giữ hành vi. Không "tối ưu phòng xa".
+3. **Không làm:** tối ưu suy đoán; đổi kiến trúc; micro-opt không đo được; đụng hot path mà không có test bảo vệ hành vi.
 
-- **Scheduled `.daily` firing:** iOS `BGTaskScheduler` adapter — kích hoạt khi có thiết bị/simulator để test bg task thật. Interface đã sẵn (trigger enum M6-1).
-- **MCP remote tools:** = mở tool-channel (AD-45) + risky action + ApprovalGate tái sinh — cụm quyết định M6+/M7 khi có use case thật + user consent network.
+## Ứng viên tối ưu (chỉ khi số liệu chỉ rõ — không làm cả loạt)
+
+- `Store.search` đọc lại toàn bộ file mỗi query (đo được trên Linux với store lớn) → index/cache nếu chậm thật.
+- `InMemoryResponseCache` không bound/TTL → eviction khi có hit-rate/bộ nhớ thật (cần usage → device/key).
+- WorkingContext hết hạn chưa xóa vật lý → cleanup (đo được Linux).
+- Tier routing Gateway-side (cần ≥2 model thật) → khi catalog có model thứ hai.
 
 ## Checklist
 
-- [ ] Không sửa code trừ lỗi thật (vd CI macOS lộ thêm lỗi SwiftUI → sửa trước review).
-- [ ] Mọi PENDING có địa chỉ + chủ sở hữu; ADR cũ không sửa; tag M6 local.
-- [ ] Zero regression (157 test + 1 opt-in skip).
+- [ ] Đầu phiên: kiểm key, quyết CÓ-số-liệu hay HOÃN, ghi lập luận.
+- [ ] Mỗi tối ưu có số-trước/số-sau + test; 0 tối ưu suy đoán.
+- [ ] Zero regression 157 test + 1 opt-in skip.
+- [ ] Nếu phần lớn phải hoãn (không key): trung thực báo, làm phần Linux-đo-được, không vẽ tiến độ giả.
 
 ## Definition of Done
 
-Bảng tiêu chí M6 trung thực; AD-46/47 evidence; nợ cập nhật theo CI thật; scheduled-firing/MCP khoanh vùng điều kiện; tag `M6`; NEXT_TASK M7; DỪNG chờ user.
+Hoặc: baseline thật đã ghi + ≥1 tối ưu có số liệu chứng minh + test. Hoặc: báo cáo trung thực "M7 chờ số liệu (key)" + tối ưu Linux-đo-được nếu có ứng viên rõ. Không milestone nào của dự án chấp nhận số liệu giả.
 
 ## Estimated Complexity
 
-Thấp — đánh giá + tài liệu (trừ khi CI lộ thêm lỗi SwiftUI cần sửa).
+Biến thiên — nhỏ nếu chỉ thu baseline; trung bình nếu có tối ưu thuật toán đo được.
 
 ## Những phần tuyệt đối không được sửa
 
-- Core 6; ModuleManifest; matcher; 3 module; `AutomationRule` schema; ApprovalGate không tái tạo tới khi có risky action thật.
+- Core 6; ModuleManifest; matcher; 3 module; AutomationRule schema; ApprovalGate không tái tạo tới khi có risky action thật.
 - Architecture Test rules (chỉ THÊM/siết); ADR cũ (AD-01…AD-47).
+- Hành vi đang có test — mọi tối ưu phải giữ test xanh (tối ưu là đổi HIỆU NĂNG, không đổi KẾT QUẢ).

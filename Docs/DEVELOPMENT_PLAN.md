@@ -102,9 +102,9 @@ M8 Production Readiness  ── ổn định lâu dài: test, security, backup, 
 
 **Tiêu chí hoàn thành:** ≥ 3 module mới hoạt động mà Core không đổi (chứng minh plugin architecture). *(✅ ĐẠT: YouTube M4 + TikTok M5-0 + Shopify M5-1 — 3 module, 0 dòng Core. Nghiệm thu chính thức tại M5-2.)*
 
-### M6 — Automation *(đang triển khai)*
+### M6 — Automation — ✅ CORE NGHIỆM THU 2026-07-04 (tag `M6`; chi tiết PROJECT_STATE §4h)
 
-> **M6-0 (2026-07-04):** Architecture Review chốt 4 quyết định (AD-47): xóa ApprovalGate (0 consumer/6 milestone — tái sinh cùng risky action thật); tool-channel không mở; EventBus không tái sinh; automation = data + Kernel hiện có (không engine). Risky action THẬT chờ external-effect tools (AD-45) + user consent — chưa đến ở M6-0.
+> **M6-0/1/2/3 (2026-07-04):** AD-47 (4 quyết định: xóa ApprovalGate, tool-channel không mở, EventBus không tái sinh, automation=data). M6-1 automation-as-data (record+port+run-now), M6-2 Automation UI (VM riêng, tôn trọng trigger M2-6). **HOÃN CÓ ĐIỀU KIỆN:** *scheduled background firing* (iOS BGTaskScheduler) — kích hoạt khi có thiết bị/simulator test bg task; *MCP remote tools* (AD-18) = mở tool-channel (AD-45) + risky action + ApprovalGate tái sinh, chờ use case thật + user consent network. Risky action vẫn chưa tồn tại (automation chỉ sinh deliverable local).
 
 **Mục tiêu:** Nối trí tuệ với thực thi tự động — *không* xây visual workflow builder.
 

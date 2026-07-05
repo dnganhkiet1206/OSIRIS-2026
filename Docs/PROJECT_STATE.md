@@ -9,8 +9,8 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M6 — Automation, đang triển khai** (M0→M5 nghiệm thu; tag local chờ push khi merge) |
-| Task hiện tại | M6-1 ✅ · Debt-sweep ✅ (bug tiếng Việt + CI macOS + baseline harness; CI đã bắt & sửa 1 lỗi SwiftUI thật `ChatViewModel`) · **M6-2 (Automation UI v1) ✅** — surface tạo/chạy/xoá rule qua port M6-1, ViewModel RIÊNG (không nhồi ChatViewModel) · kế tiếp: M6-3 review (xem `NEXT_TASK.md`) · **[USER]: cấp API key cho baseline; CI macOS xác nhận UI** |
+| Giai đoạn | **M6 — Automation: NGHIỆM THU CORE 2026-07-04** (tag `M6` local; scheduling/MCP hoãn có điều kiện — xem §4h). M0→M6 tag local chờ push khi merge |
+| Task hiện tại | **M6-3 (Milestone Review) ✅ — M6 core ĐẠT** (automation rules data+UI+run manual); scheduling background + MCP = device/evidence-gated · kế tiếp: M7-0 Optimization (xem `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN · **[USER]: cấp API key (baseline) + theo dõi CI macOS (UI)** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **19 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 157/157 test pass** (+1 live-baseline opt-in skip mặc định) (Swift 6.0.3, Linux) · offline |
@@ -80,8 +80,35 @@ M6 — Automation: nối trí tuệ với thực thi tự động, KHÔNG visual
 
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Cấp API key** (baseline live-harness) + **theo dõi CI macOS** (xác nhận UI M6-2 type-check xanh; relay lỗi nếu có như đã làm với `ChatViewModel`).
-2. **M6-3 — M6 Milestone Review & Acceptance** (chi tiết: `NEXT_TASK.md`): M6-0 (arch) + M6-1 (data) + M6-2 (UI) = core M6 xong; scheduled-firing (iOS BGTask) + MCP remote tools = device/evidence-pending, đánh giá tại review; tag `M6`.
+1. **[USER] Cấp API key** (baseline live-harness) + **theo dõi CI macOS** (UI M6-2 type-check; relay lỗi như `ChatViewModel`).
+2. **M7-0 — Optimization** (chi tiết: `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN mở M7; nơi các nợ Low perf (cache eviction, search re-read, WC cleanup, metrics history) có số liệu thật để tối ưu.
+
+## 4h. M6 Closeout (nghiệm thu core 2026-07-04, tag `M6`)
+
+**Tiêu chí M6 (DEVELOPMENT_PLAN §2/M6) — đánh giá trung thực (M6 là milestone PARTIAL rõ nhất: nửa nền-tảng hoãn):**
+
+| Tiêu chí | Kết quả |
+|---|---|
+| Automation rules đơn giản (điều kiện → skill/composition) | ✅ `AutomationRule` = data (M6-1) + UI tạo/chạy/xoá (M6-2); "điều kiện" = `AutomationTrigger` (.manual chạy được / .daily schema) |
+| Công việc lặp lại chạy tự động | ⚠️ **thủ công xong** ("Run now" tái dùng Kernel, có test); **tự động theo lịch HOÃN** — iOS `BGTaskScheduler` là code nền tảng thuần, 0 đường verify Linux/CI (chỉ compile) |
+| MCP integration cho remote tools (AD-18) | **HOÃN** = mở tool-channel (AD-45) + risky action + ApprovalGate tái sinh — cụm 1 quyết định, chờ use case thật + user consent network |
+| Execution monitoring | ✅ tái dùng Dashboard M2-4 (automation chạy qua cùng Kernel → cùng metrics/activity) |
+| "Mọi hành động rủi ro qua approval gate" | ✅ **thỏa mãn rỗng đúng nghĩa**: automation v1 KHÔNG có risky action (chỉ sinh deliverable local-reversible); ApprovalGate đã xóa (AD-47) chính vì 0 risky action — tái sinh CÙNG risky action thật đầu tiên |
+
+**ADR M6:** AD-46 (xóa EventBus — 146/146 pass 0 test sửa) ✅ PROVEN · AD-47 (4 quyết định: xóa ApprovalGate + tool-channel không mở + EventBus không tái sinh + automation=data) ✅ PROVEN (M6-1 build đúng thiết kế, 0 engine, arch rule cấm engine).
+
+**Nợ — cập nhật theo hành động phiên debt-sweep:**
+- **Nợ High (UI compile Mac):** hạ từ "unknown 6 milestone" → **CI macOS đang chạy**; run #1 bắt lỗi thật `ChatViewModel` (đã sửa); UI M6-2 pushed chờ CI kế xác nhận. Cơ chế hoạt động — nợ đang cháy, không còn là unknown.
+- **Nợ Medium (baseline thật):** harness `LiveBaselineTests` sẵn, chạy Linux khi có key — chờ [USER].
+- Bug tiếng Việt (Low): ĐÃ SỬA. ChatViewModel 5-vai: trigger tôn trọng (M6-2 dùng VM riêng). ApprovalGate: XÓA. Tier-routing/nhóm Low perf: chờ M7 + số liệu thật.
+
+**Risky action / ApprovalGate — xác nhận điều kiện:** vẫn 0 risky action thật (external/irreversible effect cần external tools = tool-channel AD-45 chưa mở + chưa có user consent network). Gate + tool-channel + MCP tái sinh CÙNG NHAU khi có use case thật — không tách rời.
+
+**Chất lượng:** build 0/0 debug+release · **157/157 test + 1 live-baseline opt-in skip** offline ~1.8s · baseline nội bộ không đổi (M6 không chạm hot path) · AI spend tích lũy **$0.00** · arch suite giữ (Presentation/App type-check do CI macOS).
+
+**Open-source (cập nhật):** CI macOS giờ compile-check UI tự động (contributor + tôi thấy build status thật) — bước tiến lớn cho readiness. Còn: baseline thật (key) + device UX + scheduled-firing/MCP.
+
+**Kết luận: M6 CORE ĐẠT** (automation-as-data + UI + manual run, kiến trúc sạch AD-46/47). Nửa nền-tảng (scheduled background firing, MCP) HOÃN CÓ ĐIỀU KIỆN rõ ràng — nhất quán cách M0/M2 tag với mục PENDING thiết bị. Tag `M6` đánh dấu core code-complete.
 
 ## 4g. M5 Closeout (nghiệm thu 2026-07-04, tag `M5`)
 

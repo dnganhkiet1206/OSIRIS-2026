@@ -1,6 +1,14 @@
 # CHANGELOG
 
-## [Unreleased — M6]
+## [M6] — 2026-07-04 (tag `M6`, core)
+
+### M6-3: Milestone Review & Acceptance — automation core accepted, platform half deferred
+
+- **M6 CORE ĐẠT** — nghiệm thu tại PROJECT_STATE §4h. Automation-as-data (M6-1) + UI (M6-2) + manual run qua Kernel = phần testable/kiến trúc xong. **Trung thực: M6 là milestone partial rõ nhất** — nửa nền-tảng (scheduled background firing qua iOS BGTaskScheduler, MCP remote tools) HOÃN CÓ ĐIỀU KIỆN (0 đường verify Linux/CI; MCP = cụm tool-channel/risky-action/ApprovalGate chờ use case + consent).
+- **ADR:** AD-46 (xóa EventBus) + AD-47 (xóa ApprovalGate + tool-channel không mở + EventBus không tái sinh + automation=data) — cả hai PROVEN.
+- **Risky action:** vẫn không tồn tại (automation chỉ sinh deliverable local-reversible) → "hành động rủi ro qua approval gate" thỏa mãn rỗng; ApprovalGate + tool-channel + MCP tái sinh cùng nhau khi có external tool thật.
+- **Nợ:** High (UI Mac) hạ từ unknown → CI-visible đang cháy (run #1 bắt+sửa lỗi `ChatViewModel` thật); Medium baseline chờ key; Vietnamese fixed; ApprovalGate deleted; perf-Low → M7.
+- Bằng chứng: build 0/0; 157/157 + 1 opt-in skip; AI spend $0.00. Tag `M6` = automation core code-complete.
 
 ### 2026-07-04 — M6-2: Automation UI v1 — saved goals reachable, ViewModel split honored
 
