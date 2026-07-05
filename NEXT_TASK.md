@@ -18,14 +18,20 @@
 - **M8-6 ✅** (Accessibility audit — §4q): audit 10 view; sửa `MessageRow` sender cho VoiceOver.
 - **Provider identity/localization ✅ (ĐÓNG kiến trúc)** — 2 lớp: (§4r) CONTENT preamble +2 luật; (§4s) TRANSPORT preamble nay đi qua **system channel** mọi provider (Anthropic `system`…), refactor nhỏ nhất (default method → 21 test double 0 sửa). 0 `if provider==`, 0 component mới. **[USER] test lại key thật** — nếu còn lệch chỉ tinh chỉnh chữ preamble (data), không đổi kiến trúc. 164 test / 2 skip / 0 fail.
 
+- **M9-0 ✅** (Product Experience Architecture Review — §4t): audit 10 câu, KHÔNG code. Design System rỗng · 0 animation · 0 app icon/brand · card/button duplicate · spacing/radius ad-hoc; responsive cấu trúc OK. Giải pháp nhỏ nhất = `Shared/DesignSystem` data + ViewModifier, KHÔNG framework.
+
 ## Current Milestone
 
-**M8 NGHIỆM THU (tag `M8`) — 7/7 hạng mục code-complete.** Còn lại đều evidence-gated / chờ USER — **KHÔNG tự mở M9:**
+**M9 — Product Experience & UI/UX.** M9-0 (Architecture Review) xong. **M9-1 CHỜ USER XÁC NHẬN — KHÔNG tự mở.**
 
-1. **[USER] Test lại provider contract với key thật** (§4r+§4s): hỏi tiếng Việt → OSIRIS phải trả lời tiếng Việt, KHÔNG tự nhận là Claude. Kiến trúc đã hoàn chỉnh (content + system-channel transport). Nếu VẪN lệch → chỉ tinh chỉnh CHỮ trong `Config/preamble.md` (data, 1 chỗ), KHÔNG còn đổi kiến trúc.
-2. **[USER] A11y runtime pass** (Mac): checklist §4q (VoiceOver/keyboard/Dynamic Type/contrast).
-3. **M7 provider-side optimization** — cần **key thường trực** (baseline qua-Gateway nhiều sample).
-4. **Mở M9** (nếu roadmap có) — chờ USER xác nhận.
+### Đề xuất M9-1 (bước Consistency #1 — ưu tiên cao nhất)
+1. Tạo `Shared/DesignSystem/` — **hằng số thuần (data)**: `enum Spacing` (scale thay 2/4/6/8/… ad-hoc), `enum Radius` (thống nhất 8 vs 14). KHÔNG Theme/Style/Component Manager.
+2. 1–2 `ViewModifier` extension chuẩn hóa duplication CÓ BẰNG CHỨNG (§4t Q4): `.osirisCard()` (thay `.background(.quaternary.opacity, in: RoundedRectangle)` lặp), có thể `.osirisIconButton`.
+3. Áp dụng vào view hiện có — **KHÔNG redesign, KHÔNG animation** (animation = ưu tiên #5, làm sau), KHÔNG đổi a11y (giữ mọi accessibilityLabel/SecureField/LabeledContent, semantic font).
+4. Ràng buộc: chuẩn hóa qua semantic; zero regression; Presentation là Xcode-only → verify qua CI macOS (không Linux-test được UI).
+
+> **Nhắc USER (chưa xong, cần Mac/key):** test lại provider contract key thật (§4r+§4s) · a11y runtime pass (§4q). Không chặn M9-1.
+> **Thứ tự M9 (KHÔNG làm ngược):** Consistency → Clarity → Responsive → Accessibility → Animation → Polish.
 
 > **Nguyên tắc giữ nguyên:** mỗi phiên ĐÚNG MỘT task · Architecture Review trước code · chỉ đổi khi có bằng chứng · test chỉ THÊM/siết · ADR cũ bất biến · không số liệu giả.
 > **Trigger nhỏ (Low, không chặn Production):** Keychain on-device check; `.atomic` fsync; Store-level dangling-path test; migration-discipline rule; reuse `limit:10` starvation — chỉ làm khi có bằng chứng/harness.

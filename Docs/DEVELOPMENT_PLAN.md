@@ -25,6 +25,7 @@ M5 Platform Expansion    ── nhân bản mô hình module (TikTok, Shopify, �
 M6 Automation            ── scheduling, background, MCP mở rộng
 M7 Optimization          ── hạ chi phí vận hành toàn hệ thống
 M8 Production Readiness  ── ổn định lâu dài: test, security, backup, recovery
+M9 Product Experience    ── prototype → sản phẩm production: UI/UX, consistency, responsive, polish
 ```
 
 ---
@@ -131,6 +132,18 @@ M8 Production Readiness  ── ổn định lâu dài: test, security, backup, 
 **Phạm vi:** Test coverage cho Core contracts · Performance review · Security review (API keys, dữ liệu người dùng) · Backup & Recovery (Project State, Memory, Files) · Crash recovery (không mất tiến độ) · Documentation cập nhật · Accessibility audit.
 
 **Tiêu chí hoàn thành:** Mất điện thoại giữa chừng task → mở lại không mất trạng thái; toàn bộ Definition of Done đạt.
+
+### M9 — Product Experience & UI/UX *(đang triển khai — M9-0 Architecture Review xong)*
+
+> **M9-0 (2026-07-05):** Architecture Review & Design Audit (không code) — 10 câu bằng bằng chứng, chi tiết PROJECT_STATE §4t. Kết luận: Design System (`Shared/`) rỗng, 0 animation, 0 app icon/brand, card/button duplicate, spacing/radius ad-hoc; responsive cấu trúc OK nhưng chưa audit iPhone. Giải pháp nhỏ nhất = `Shared/DesignSystem` hằng số + ViewModifier (data), KHÔNG framework.
+
+**Mục tiêu:** Biến OSIRIS từ architecture-prototype thành **ứng dụng production** (iPhone/iPad/macOS) mà người dùng muốn dùng mỗi ngày. **KHÔNG mở rộng AI** — không thêm provider/module/MCP/automation/workflow/tool/intelligence/architecture.
+
+**Phạm vi:** Consistency (typography/spacing/radius/card/button chuẩn hóa) · Clarity (hierarchy, empty/loading states) · Responsive (iPhone/iPad/macOS adaptive, không hardcode Mac) · Accessibility (giữ nguyên đã có) · Animation (transition, micro-interaction) · Visual polish (bản sắc màu/icon). Học nguyên lý (Apple HIG/Raycast/Linear/Notion) — KHÔNG clone.
+
+**Ràng buộc:** không redesign toàn bộ, không viết lại app; **KHÔNG Theme/Design/UI/Animation/Component/Style Engine/Manager/Framework**; reusable component chỉ khi có bằng chứng duplication. Thứ tự: Consistency → Clarity → Responsive → Accessibility → Animation → Polish (không làm ngược).
+
+**Tiêu chí hoàn thành:** Đánh giá bằng TRẢI NGHIỆM (nhanh/rõ/hiện đại/chuyên nghiệp/tự nhiên/đáng tin) trên cả 3 nền tảng, không bằng số dòng code/component. UI khiến người dùng quên đây là dự án kỹ thuật.
 
 ---
 

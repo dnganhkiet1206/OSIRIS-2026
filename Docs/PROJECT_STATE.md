@@ -9,8 +9,8 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M8 — Production Readiness: NGHIỆM THU (tag `M8`)** — 7/7 hạng mục code-complete (M8-0…M8-6). M7-0 ✅ (§4j); M7 provider-side + a11y-runtime-verify = evidence-gated. M8-5 review ✅ (§4p) · M8-6 Accessibility ✅ (§4q) |
-| Task hiện tại | **Provider contract transport → system channel ✅ (issue identity/localization ĐÓNG kiến trúc):** hoàn tất 2 lớp — (1) CONTENT: preamble +2 luật identity/ngôn ngữ (§4r); (2) TRANSPORT: preamble nay đi qua **system channel** mạnh nhất của MỌI provider (Anthropic `system` / OpenAI-compat `role:system` / Gemini `systemInstruction`), không còn user-message yếu. Refactor nhỏ nhất: `AIProvider` +method `complete(systemPrompt:userPrompt:)` CÓ default concat (21 test double 0 sửa); Anthropic route `system`; Gateway tách preamble/body tại 1 call-site (token/cache byte-identical). 0 `if provider==`, 0 component mới. Chi tiết §4s. **[USER] test lại key thật để xác nhận** (không còn lever kiến trúc — chỉ tinh chỉnh chữ preamble nếu cần). · kế tiếp: chờ USER — KHÔNG tự mở |
+| Giai đoạn | **M9 — Product Experience & UI/UX: đang triển khai** (M0→M8 nghiệm thu; tag local chờ push). M9-0 Architecture Review ✅ (§4t). KHÔNG mở rộng AI/module/tool — chỉ biến prototype → sản phẩm production |
+| Task hiện tại | **M9-0 (Architecture Review & Design Audit) ✅ — KHÔNG code (đúng "không viết code trước").** Audit 10 câu bằng bằng chứng (§4t): Design System `Shared/` RỖNG · 0 animation · 0 app icon/brand color · card/button DUPLICATE inconsistent · spacing/radius ad-hoc · responsive cấu trúc OK (NavigationSplitView adaptive, 0 fixed frame) nhưng chưa audit iPhone từng màn. **Giải pháp nhỏ nhất: `Shared/DesignSystem` = hằng số + ViewModifier (data), KHÔNG framework/engine.** kế tiếp: **M9-1 chờ USER xác nhận** (bước Consistency đầu — thứ tự Consistency→Clarity→Responsive→A11y→Animation→Polish) — KHÔNG tự mở |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **18 Architecture Test (function) chống drift** (cưỡng chế đồ thị phụ thuộc + eliminated-components: EventBus AD-46, automation-engine AD-47) · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 164 test / 2 opt-in skip / 0 fail** (~1.1s offline; +1 test provider-contract) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · Keychain fix (M8-1) + MessageRow a11y (M8-6) = verify qua CI macOS · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, iPhone 17 Pro sim (iOS 26.2), UI end-to-end (§4i)** |
@@ -80,7 +80,8 @@ M6 — Automation: nối trí tuệ với thực thi tự động, KHÔNG visual
 
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Chọn hướng sau M8** (`NEXT_TASK.md`): a11y runtime pass trên Mac (checklist §4q, đóng nốt Accessibility) · M7 provider-side (cần key thường trực) · mở M9. **M8 NGHIỆM THU ✅ 7/7 code-complete (tag `M8`, §4p/§4q).** Không tự mở.
+1. **[USER] Xác nhận mở M9-1** (`NEXT_TASK.md`): bước Consistency #1 (design tokens + card/button ViewModifier, data). M9-0 Architecture Review ✅ (§4t). **KHÔNG tự mở M9-1.**
+2. **[USER] Mac/key (không chặn M9):** test provider contract key thật (§4r+§4s) · a11y runtime pass (§4q) · M7 provider-side (key thường trực).
 2. **[USER] Cấp API key THƯỜNG TRỰC** để mở **M7 provider-side** (tối ưu token/latency/cost qua Gateway) — hiện HOÃN; key một-lần đã thu sàn provider (§4j), cần key thường trực cho baseline qua-Gateway nhiều sample.
 3. M8-0 ✅ (§4k). CI macOS giữ chống regression UI.
 
@@ -128,6 +129,31 @@ User tự chạy toàn bộ stack trên Mac thật (branch `claude/osiris-arch-r
 **Ý nghĩa:** rủi ro lớn nhất của dự án (UI chưa qua compiler Mac, mang từ M0) **đóng lại bằng bằng chứng thật, không phải suy đoán**. M6-2 Automation UI — thứ mới nhất, chưa từng chạy trên UI thật — hoạt động đầy đủ ngay lần đầu. CI macOS giữ để chống regression tự động.
 
 **CHƯA test (có chủ đích, không phải lỗ hổng):** live Anthropic (chưa cấu hình key) → **baseline thật vẫn là nợ Medium đang mở**, và là điều kiện tiên quyết của M7. App vẫn placeholder-local.
+
+## 4t. M9-0 Closeout — Product Experience Architecture Review & Design Audit (2026-07-05)
+
+**M9 mở (USER xác nhận):** biến OSIRIS từ architecture-prototype → **ứng dụng production** (iPhone/iPad/macOS). KHÔNG thêm provider/module/MCP/automation/workflow/tool/intelligence/architecture. Chỉ trải nghiệm. Thứ tự ưu tiên: **Consistency → Clarity → Responsive → Accessibility → Animation → Polish.**
+
+**M9-0 = Architecture Review only (KHÔNG code).** 10 câu, bằng chứng codebase:
+
+| # | Câu | Bằng chứng |
+|---|---|---|
+| 1 | UI còn "developer tool" ở đâu? | empty/loading = text trần; 0 app icon/brand color (system accent); Dashboard/Advanced = bảng LabeledContent khô; 0 animation; message bubble không avatar/timestamp |
+| 2 | Lần đầu mở chưa production? | emptyState text phẳng, 0 onboarding/welcome/identity; sidebar List generic; 0 app icon |
+| 3 | Design System có/thiếu? | CÓ: SF Symbols, semantic font (Dynamic Type), semantic color (dark-safe), NavigationSplitView adaptive. THIẾU: `Shared/DesignSystem/` **0 file swift**, 0 token spacing/radius, 0 brand accent, **0 Assets.xcassets** (0 app icon), 0 component chuẩn, 0 animation |
+| 4 | Duplicate? chuẩn hóa? | card-bg `.background(.quaternary.opacity(X), in: RoundedRectangle(cornerRadius:Y))` lặp (ProjectResume 8/0.4 & 14/0.25, Chat bubble 14) — X/Y inconsistent; icon-only button lặp (Chat+Automation). → ViewModifier nhỏ, KHÔNG manager |
+| 5 | Typo/spacing/radius/card/button/toolbar/sidebar/nav/list/sheet/dialog thống nhất? | typo semantic nhưng role→style chưa rõ; spacing ad-hoc (2/4/6/8/10/14/80); radius 8 vs 14; card duplicate; button mix; toolbar chỉ navigationTitle; nav/list/sheet/dialog native (nhất quán mức native, chưa polish) |
+| 6 | Animation? | **0** (grep NONE, chỉ spinner). Thiếu: transition đổi màn, list insert/remove, sheet, state-change, micro-interaction |
+| 7 | Responsive iPhone? | cấu trúc TỐT (NavigationSplitView collapse, maxWidth:.infinity, 0 fixed frame). Rủi ro chưa verify: split-view iPhone compact, composer/sheet màn nhỏ. Chưa audit từng màn iPhone thật |
+| 8 | A11y ảnh hưởng nếu chuẩn hóa? | KHÔNG nếu qua semantic. Phải GIỮ: accessibilityLabel (MessageRow M8-6), SecureField, LabeledContent, semantic font. Ràng buộc: không hardcode size/màu |
+| 9 | Cần framework? nhỏ nhất? | **KHÔNG framework/engine.** Nhỏ nhất = `Shared/DesignSystem/` hằng số (enum Spacing/Radius) + ViewModifier (`.osirisCard()`) + Assets.xcassets (accent+icon). Constants+modifier, không Theme/Style/Component Manager |
+| 10 | Sau M9 khác gì? | nhất quán · rõ ràng · hiện đại (animation+bản sắc) · responsive thật 3 nền tảng · vẫn nhanh & accessible → quên đây là dự án kỹ thuật |
+
+**Quyết định kiến trúc M9 (KHÔNG ADR mới — chỉ hướng thực thi):** giải pháp nhỏ nhất = **`Shared/DesignSystem/` = data + ViewModifier**, tuyệt đối KHÔNG Theme/Design/UI/Animation/Component/Style Engine/Manager/Framework. Reusable component chỉ tạo khi có bằng chứng duplication (Q4 đã có). Không redesign toàn bộ, không viết lại app. Chuẩn hóa qua semantic để không hỏng a11y/Dynamic Type/dark-mode đã có.
+
+**Đề xuất M9-1 (chờ USER xác nhận — KHÔNG tự mở):** bước **Consistency #1** — tạo `Shared/DesignSystem/` token spacing+radius (data) + 1–2 ViewModifier chuẩn hóa card/button (bằng chứng Q4), áp dụng vào view hiện có. KHÔNG animation (ưu tiên #5, sau), KHÔNG redesign. Zero regression a11y (giữ mọi label/SecureField/LabeledContent).
+
+**Chất lượng M9-0:** 0 dòng code · 0 test đổi · suite giữ **164 test / 2 opt-in skip / 0 fail** · $0.00. Deliverable = bằng chứng + hướng nhỏ nhất, đánh giá bằng trải nghiệm không phải dòng code.
 
 ## 4s. Provider contract transport — system channel (issue identity/localization ĐÓNG, 2026-07-05)
 

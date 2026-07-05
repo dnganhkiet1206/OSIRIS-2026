@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [Unreleased — M9]
+
+### M9-0: Product Experience Architecture Review & Design Audit — no code
+
+- Opened M9 (Product Experience & UI/UX): turn the architecture prototype into a production-quality app across iPhone/iPad/macOS. No AI/module/tool/architecture expansion — experience only.
+- Architecture Review before any code (evidence from the codebase), answering ten questions (PROJECT_STATE §4t). Findings: `Shared/DesignSystem/` is empty (0 Swift files); there are zero animations anywhere; no `Assets.xcassets` (no app icon, no brand accent — uses the system default); the card-background pattern is duplicated with inconsistent radius/opacity (ProjectResumeView 8/0.4 & 14/0.25, ChatView bubble 14) and the icon-only action button is duplicated (ChatView + AutomationView); spacing (2/4/6/8/10/14/80) and corner radius (8 vs 14) are ad-hoc. Strengths: semantic fonts (Dynamic Type), semantic colors (dark-mode safe), and `NavigationSplitView` with no fixed frames (structurally responsive).
+- Decision (no new ADR — direction only): the smallest solution is a small `Shared/DesignSystem/` of plain constants (Spacing/Radius) plus a couple of `ViewModifier` extensions, and an `Assets.xcassets` for the accent color and app icon — never a Theme/Design/UI/Animation/Component/Style engine, manager, or framework. Standardise through semantic styling so existing accessibility, Dynamic Type, and dark mode are preserved. Priority order: Consistency → Clarity → Responsive → Accessibility → Animation → Polish.
+- Proposed M9-1 (awaiting user confirmation, not opened): the first Consistency pass — design tokens + card/button modifiers applied to existing views, no redesign, no animation yet.
+- No code; test suite unchanged at 164 / 2 opt-in skip / 0 fail; $0.00.
+
 ## [M8] — 2026-07-05 (tag `M8`, core)
 
 ### Provider contract transport — deliver the contract via each provider's system channel
