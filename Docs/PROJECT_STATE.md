@@ -9,11 +9,11 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M7 — Optimization: đang triển khai** (M0→M6 nghiệm thu; tag local chờ push khi merge). M7-0 ✅ đo baseline nội bộ — xem §4j |
-| Task hiện tại | **M7-0 (Optimization) ✅ — ĐO XONG, QUYẾT KHÔNG TỐI ƯU** (bằng chứng: path nội bộ đã ở mức đơn-con-số ms; §4j). Bề mặt tối ưu thật = provider-side (token/latency/cost) CHẶN bởi key. **Mac validation ✅ 2026-07-05 → nợ High UI RETIRED (§4i)** · kế tiếp: chờ USER (cấp key mở M7 provider-side, hoặc mở M8) |
+| Giai đoạn | **M8 — Production Readiness: đang triển khai** (M0→M6 nghiệm thu; tag local chờ push khi merge). M7-0 ✅ (baseline, §4j) đã chấp nhận; **M7 provider-side HOÃN chờ key thường trực**. M8-0 ✅ (§4k) |
+| Task hiện tại | **M8-0 (Core contract test coverage) ✅** — audit coverage, chỉ THÊM test cho 2 lỗ hổng thật (dry-run không được đầu độc cache; ranking `.anyWord`); từ chối thay đổi resilience suy đoán (write đã atomic). Chi tiết §4k. **Mac validation ✅ 2026-07-05 → nợ High UI RETIRED (§4i)** · kế tiếp: chờ USER chọn task M8 kế (xem NEXT_TASK) — KHÔNG tự mở |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **19 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 159 test / 2 opt-in skip / 0 fail** (~0.8s offline; +1 store-search baseline opt-in từ M7-0) (Swift 6.0.3 CI · đo M7-0 trên 6.3.3 Linux) · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, chạy iPhone 17 Pro sim (iOS 26.2), Automation UI + Chat + reuse end-to-end (§4i)** |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 161 test / 2 opt-in skip / 0 fail** (~1.0s offline; +2 test M8-0 cache/ranking) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, chạy iPhone 17 Pro sim (iOS 26.2), Automation UI + Chat + reuse end-to-end (§4i)** |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -80,8 +80,9 @@ M6 — Automation: nối trí tuệ với thực thi tự động, KHÔNG visual
 
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Cấp API key** (baseline live-harness) + **theo dõi CI macOS** (UI M6-2 type-check; relay lỗi như `ChatViewModel`).
-2. **M7-0 — Optimization** (chi tiết: `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN mở M7; nơi các nợ Low perf (cache eviction, search re-read, WC cleanup, metrics history) có số liệu thật để tối ưu.
+1. **[USER] Chọn task M8 kế** (`NEXT_TASK.md`): security review · backup/recovery · crash-recovery (khôi phục tiến độ dở) · docs · accessibility. Không tự mở.
+2. **[USER] Cấp API key THƯỜNG TRỰC** để mở **M7 provider-side** (tối ưu token/latency/cost qua Gateway) — hiện HOÃN; key một-lần đã thu sàn provider (§4j), cần key thường trực cho baseline qua-Gateway nhiều sample.
+3. M8-0 ✅ (§4k). CI macOS giữ chống regression UI.
 
 ## 4h. M6 Closeout (nghiệm thu core 2026-07-04, tag `M6`)
 
@@ -127,6 +128,23 @@ User tự chạy toàn bộ stack trên Mac thật (branch `claude/osiris-arch-r
 **Ý nghĩa:** rủi ro lớn nhất của dự án (UI chưa qua compiler Mac, mang từ M0) **đóng lại bằng bằng chứng thật, không phải suy đoán**. M6-2 Automation UI — thứ mới nhất, chưa từng chạy trên UI thật — hoạt động đầy đủ ngay lần đầu. CI macOS giữ để chống regression tự động.
 
 **CHƯA test (có chủ đích, không phải lỗ hổng):** live Anthropic (chưa cấu hình key) → **baseline thật vẫn là nợ Medium đang mở**, và là điều kiện tiên quyết của M7. App vẫn placeholder-local.
+
+## 4k. M8-0 Closeout — Core contract test coverage (2026-07-05)
+
+**Bối cảnh:** user chấp nhận M7-0, chọn "tiếp tục theo NEXT_TASK" + đã khoá key → Đường A (M7 provider-side) cần key thường trực nên bất khả thi → đường khả thi = **Đường B, task M8 đầu tiên: Core contract test coverage** (Linux, không key, chỉ THÊM test).
+
+**Architecture Review TRƯỚC code (kỷ luật "chỉ đổi khi có bằng chứng"):**
+- Khảo sát 7 public protocol Core + ~140 test → coverage đã rộng. **Nhồi test cho đủ số = over-engineering → từ chối.** Chỉ vá lỗ hổng THẬT có bằng chứng.
+- **Góc crash-recovery (phạm vi M8):** `FileStorage.write` dùng `.atomic` → crash giữa chừng để lại file cũ nguyên vẹn, KHÔNG bao giờ file cụt. Vector crash-corruption **đã đóng sẵn**. → Sửa `loadAll` cho "resilient skip file hỏng" lúc này = **suy đoán** (chống đường mà atomic đã chặn) → **HOÃN** (ghi trigger: chỉ thêm khi có bằng chứng file hỏng thật, vd bit-rot/sync-conflict, không phải crash).
+- **Tìm được 2 property production-quan-trọng nhưng CHƯA có test canh (thêm test không đổi hành vi):**
+  1. **Dry-run KHÔNG được đầu độc cache** — `DefaultAIGateway` bước 5a chỉ có comment "would poison the cache", không test canh. Regression → phục vụ "[dry-run]…" như câu trả lời thật. → `testDryRunDoesNotPoisonCache` (chung 1 cache instance qua gateway dry-run + gateway thật, cùng task; rò rỉ = cache-hit trên call thật).
+  2. **Ranking `.anyWord`** (hits desc, tie-break theo thứ tự walk = id tăng, tôn trọng limit) — chỉ được perf-test (§4j đo tốc độ), CHƯA test tính đúng. Ranking này nuôi Gateway context retrieval (`retrieveContext` search `.anyWord`) → quyết định context AI thấy. → `testAnyWordSearchRanksByHitCountThenStableOrder`.
+
+**Quyết định:** thêm ĐÚNG 2 test cho 2 lỗ hổng có bằng chứng; **từ chối** đổi resilience suy đoán; **0 dòng production đổi.** Đúng mẫu M7-0: audit → vá lỗ hổng thật → từ chối suy đoán → ghi trigger.
+
+**Chất lượng:** build 0/0 · **161 test / 2 opt-in skip / 0 fail** ~1.0s offline · diff chỉ test (production 0-warning nguyên) · arch suite nguyên (chỉ THÊM test, không nới) · CI macOS không ảnh hưởng (không chạm Presentation/App) · AI spend **$0.00**.
+
+**Còn mở trong M8 (chờ USER chọn task kế — không tự mở):** Performance review (đã có baseline §4j/§4b) · Security review (API key/dữ liệu) · Backup & Recovery · Crash recovery (write đã atomic — phần còn lại: khôi phục tiến độ dở) · Docs · Accessibility. Store-resilience có trigger riêng ở trên.
 
 ## 4j. M7-0 Closeout — Đo baseline nội bộ, quyết KHÔNG tối ưu (2026-07-05)
 

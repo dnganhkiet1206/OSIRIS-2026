@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [Unreleased — M8]
+
+### M8-0: Core contract test coverage — cover two evidenced gaps, decline speculation
+
+- First M8 (Production Readiness) task. Architecture Review before code: 7 Core protocols + ~140 tests already give broad coverage, so padding a number was refused. Crash-recovery angle audited — `FileStorage.write` is already `.atomic`, so crash-truncation is already prevented; a `loadAll` "skip corrupt file" change would be speculative and was declined (trigger recorded for real corruption evidence).
+- Added exactly two tests for genuinely unguarded, production-relevant contract properties (zero production code change):
+  - `AIGatewayTests.testDryRunDoesNotPoisonCache` — a dry-run must never leave `[dry-run] …` in the cache to be served as a real answer (property previously only a code comment). Shares one cache across a dry-run and a real gateway; a leak would show as a cache hit on the real call.
+  - `FileBackedStoreTests.testAnyWordSearchRanksByHitCountThenStableOrder` — `.anyWord` ranks by distinct-word hits (desc), ties break by stable walk order (ascending id), limit respected. This ranking feeds Gateway context retrieval, so it decides what context the AI sees; previously only perf-tested.
+- Evidence: 161 tests / 2 opt-in skip / 0 fail (~1.0s), test-only diff, production 0-warning intact, architecture tests only added (never loosened). Mirrors M7-0 discipline: audit → fill real gaps → decline speculation → record trigger.
+
 ## [Unreleased — M7]
 
 ### M7-0: Optimization — measured the internal baseline, decided NOT to optimize

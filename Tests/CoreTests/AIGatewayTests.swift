@@ -181,6 +181,38 @@ final class AIGatewayTests: XCTestCase {
         XCTAssertEqual(calls, 0)
     }
 
+    // 5b. Dry run must NOT poison the cache: a simulated request must never
+    // leave "[dry-run] ..." behind to be served as a real answer later. The
+    // property lives in a code comment (DefaultAIGateway step 5a); this guards
+    // it. Same cache instance shared across a dry-run gateway and a real one,
+    // same task, so a leak would surface as a cache hit on the real call.
+    func testDryRunDoesNotPoisonCache() async throws {
+        let cache = InMemoryResponseCache()
+        let counter = CallCounter()
+
+        let dryGateway = DefaultAIGateway(
+            provider: CountingProvider(counter: counter),
+            configuration: try makeConfiguration(dryRun: true),
+            cache: cache,
+            logger: RecordingLogger()
+        )
+        let dryResponse = try await dryGateway.complete(AIRequest(task: "same task"))
+        XCTAssertTrue(dryResponse.text.contains("dry-run"))
+
+        let realGateway = DefaultAIGateway(
+            provider: CountingProvider(counter: counter),
+            configuration: try makeConfiguration(dryRun: false),
+            cache: cache,
+            logger: RecordingLogger()
+        )
+        let realResponse = try await realGateway.complete(AIRequest(task: "same task"))
+
+        XCTAssertFalse(realResponse.metrics.cacheHit, "Dry-run output must not have been cached")
+        XCTAssertFalse(realResponse.text.contains("dry-run"), "Real call must return a real answer")
+        let calls = await counter.count
+        XCTAssertEqual(calls, 1, "Only the real call reaches the provider")
+    }
+
     // 6. Retry: declared policy recovers from transient failure.
     func testRetryRecoversWithinDeclaredPolicy() async throws {
         let counter = CallCounter()

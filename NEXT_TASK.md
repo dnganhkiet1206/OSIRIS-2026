@@ -3,44 +3,38 @@
 > Quy trình phiên làm việc: đọc `Docs/PROJECT_STATE.md` → đọc file này → đọc các file liên quan → thiết kế → kiểm tra tái sử dụng → triển khai → Self Review → Architecture Review → refactor nếu cần → cập nhật tài liệu → cập nhật PROJECT_STATE → tạo NEXT_TASK mới → kết thúc. Không bỏ qua bước nào.
 >
 > **Nợ đang cháy (song song):**
-> - **API key** cho `LiveBaselineTests` — điều kiện tiên quyết của **phần provider-side của M7** (token/latency/cost). Không có key, phần này HOÃN (đoán = vi phạm hiến pháp). Set qua env/secret, KHÔNG dán vào chat.
-> - **CI macOS:** UI đã xác thực trên Mac thật 2026-07-05 (§4i) — nợ High UI RETIRED. CI macOS giữ để chống regression tự động; nếu run đỏ, dán `error:` vào phiên.
+> - **API key THƯỜNG TRỰC** → mở **M7 provider-side** (tối ưu token/latency/cost qua Gateway). Key một-lần đã thu sàn provider (§4j); cần key thường trực cho baseline qua-Gateway nhiều sample. Set env/secret, KHÔNG dán chat.
+> - **CI macOS:** UI đã xác thực Mac thật (§4i, nợ High RETIRED). CI giữ chống regression; run đỏ → dán `error:`.
 
-## Trạng thái M7
+## Trạng thái
 
-**M7-0 ✅ ĐÃ XONG (2026-07-05):** đo baseline nội bộ thật, quyết KHÔNG tối ưu (path nội bộ đã đơn-con-số ms; AI call thật áp đảo ~100×). Chi tiết PROJECT_STATE §4j. Harness `StoreSearchBaselineTests` (opt-in) đã ship. **0 tối ưu code — đúng kỷ luật "đo trước, số liệu nói chưa cần".**
+- **M7-0 ✅** (baseline nội bộ + provider sàn, quyết KHÔNG tối ưu — §4j). M7 provider-side HOÃN chờ key thường trực.
+- **M8-0 ✅** (Core contract test coverage — §4k): thêm 2 test canh property thật (dry-run không đầu độc cache; ranking `.anyWord`); từ chối resilience suy đoán (write đã atomic). 161 test / 2 skip / 0 fail.
 
-## Current Task — CHỜ USER CHỌN HƯỚNG
+## Current Task — CHỜ USER CHỌN task M8 kế (KHÔNG tự mở)
 
-Hai đường đi hợp lệ, **dừng chờ lệnh** trước khi mở:
+M8 Production Readiness còn các mảnh sau; **mỗi phiên làm ĐÚNG MỘT**, Architecture Review trước code, chỉ đổi khi có bằng chứng:
 
-### Đường A — M7 provider-side (mở khi CÓ key)
-Đây là bề mặt tối ưu THẬT (M7-0 đã chứng minh nội bộ không cần tối ưu).
-1. User set `ANTHROPIC_API_KEY` (env/secret) → chạy `LiveBaselineTests` → điền §4b số token/latency/cost thật.
-2. Chọn **một** tối ưu mà số liệu chỉ rõ, có số-trước/số-sau + test:
-   - token-in cao → context trimming / prompt-cache preamble.
-   - latency cao → response cache / prompt cache.
-   - nhiều model thật trong catalog → tier routing Gateway-side.
-3. Mỗi tối ưu: (a) đo trước, (b) đổi, (c) đo sau chứng minh cải thiện, (d) test giữ hành vi. MỘT thứ một lần. Không "tối ưu phòng xa".
+1. **Security review** — API key chỉ trong Keychain (Infrastructure/Security), không lộ log (đã có nguyên tắc; cần test/audit canh: `git grep` không có key, log không in secret). Linux làm được. **Ứng viên tốt nhất kế tiếp** (không cần key, giá trị cao, thuần kiểm tra + test).
+2. **Backup & Recovery** — export/import ProjectState + Knowledge + deliverables. Cần Architecture Review: là data-copy (Store đọc/ghi) hay cần cơ chế mới? Không tạo Engine.
+3. **Crash recovery (khôi phục tiến độ dở)** — write đã atomic (record-level an toàn, §4k); phần còn lại: một goal đang chạy mà app chết giữa chừng → lần mở lại có nối lại/nhận biết không? Cần bằng chứng đây là vấn đề thật trước khi thêm code.
+4. **Docs / Accessibility** — rà tài liệu lệch thực tế; accessibility audit UI (cần Mac/simulator).
 
-### Đường B — M8 Production Readiness (mở nếu chưa muốn cấp key)
-M7 core-discipline đã xong (đo + quyết định); M7 provider-side có thể để mở, tiến sang M8:
-- Test coverage cho Core contracts · Performance review (đã có baseline §4j/§4b) · Security review (API keys, dữ liệu) · Backup & Recovery (ProjectState/Memory/Files) · Crash recovery · Docs · Accessibility audit.
-- M8 phần lớn Linux-làm-được (test, security, backup logic), không cần key.
+## Store-resilience — trigger đã ghi (§4k), CHƯA làm
+Chỉ thêm "loadAll skip file hỏng" khi có **bằng chứng file hỏng thật** (bit-rot, sync-conflict, encoding bug) — KHÔNG phải crash (atomic write đã chặn). Đến lúc đó: skip trong bulk-read, giữ `load` targeted vẫn throw; + test canh.
 
-## Nguyên tắc sống còn (giữ nguyên qua mọi hướng)
+## Nguyên tắc sống còn (mọi task)
 
-- **Đo trước, tối ưu sau.** Không tối ưu suy đoán. M7-0 đã đặt chuẩn: số liệu có thể nói "đừng tối ưu" — đó là kết quả hợp lệ.
-- Không đổi kiến trúc; không micro-opt không đo được; không đụng hot path thiếu test bảo vệ hành vi.
+- **Chỉ đổi khi có bằng chứng.** Audit có thể kết luận "không cần đổi" — kết quả hợp lệ (M7-0, M8-0 đã làm đúng vậy).
+- Architecture Review TRƯỚC code. Không Engine/abstraction không bằng chứng. Không nới arch test (chỉ THÊM/siết). ADR cũ bất biến (AD-01…AD-47).
+- Test chỉ THÊM/siết, không sửa để code sai qua được ("sửa code, không sửa test").
 - Không milestone nào chấp nhận số liệu giả.
 
 ## Những phần tuyệt đối không được sửa
 
 - Core 6; ModuleManifest; matcher; 3 module; AutomationRule schema; ApprovalGate không tái tạo tới khi có risky action thật.
-- Architecture Test rules (chỉ THÊM/siết); ADR cũ (AD-01…AD-47).
-- Hành vi đang có test — mọi tối ưu phải giữ test xanh (tối ưu là đổi HIỆU NĂNG, không đổi KẾT QUẢ).
+- Architecture Test rules; ADR cũ; hành vi đang có test.
 
-## Definition of Done (cho task kế)
+## Definition of Done (task M8 kế)
 
-- Đường A: baseline provider thật ghi §4b + ≥1 tối ưu có số-trước/số-sau + test.
-- Đường B: task M8 đầu tiên (vd Core contract test coverage) xong trọn quy trình.
+Task được chọn xong trọn quy trình: Architecture Review ghi lại + thay đổi (nếu có) kèm bằng chứng + test giữ/thêm xanh + docs (PROJECT_STATE §4x + CHANGELOG) + NEXT_TASK mới. Dừng, không tự mở task sau.
