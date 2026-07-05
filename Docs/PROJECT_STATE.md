@@ -10,10 +10,10 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M8 — Production Readiness: NGHIỆM THU (tag `M8`)** — 7/7 hạng mục code-complete (M8-0…M8-6). M7-0 ✅ (§4j); M7 provider-side + a11y-runtime-verify = evidence-gated. M8-5 review ✅ (§4p) · M8-6 Accessibility ✅ (§4q) |
-| Task hiện tại | **M8-6 (Accessibility audit) ✅ — audit code-level 10 view Presentation:** app đã tốt sẵn (LabeledContent, Label có text, SecureField, accessibilityLabel trên icon-only, semantic font/Dynamic Type). **1 lỗi thật đã sửa:** `MessageRow` sender (user/OSIRIS) chỉ báo bằng màu+căn lề → thêm `.accessibilityLabel` "You/OSIRIS: …". Diff 1 dòng, 0 redesign, 0 abstraction. **Runtime (VoiceOver/contrast/focus/keyboard) = checklist cho USER trên Mac** (tôi ở Linux, không chạy được). Chi tiết §4q. · kế tiếp: chờ USER (a11y runtime pass / M7 provider-side cần key / mở M9) — KHÔNG tự mở |
+| Task hiện tại | **Provider behaviour contract (identity + language) ✅ — sửa lỗ hổng kiến trúc từ test thật:** model tự nhận "I am Claude" + trả lời tiếng Anh khi user hỏi tiếng Việt. Nguyên nhân: `preamble` thiếu luật ngôn ngữ + kỷ luật-identity (KHÔNG phải bug per-provider). Sửa MỘT chỗ = `Config/preamble.md` +2 luật (data, provider-agnostic, Gateway prepend cho mọi provider) + 1 regression test. 0 code, 0 abstraction, 0 `if provider==`. Chi tiết §4r. **[USER] test lại với key thật để xác nhận model tuân thủ** (nếu chưa đủ → trigger system-role transport). · kế tiếp: chờ USER — KHÔNG tự mở |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **18 Architecture Test (function) chống drift** (cưỡng chế đồ thị phụ thuộc + eliminated-components: EventBus AD-46, automation-engine AD-47) · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 163 test / 2 opt-in skip / 0 fail** (~1.1s offline; +1 test M8-3 crash-reuse) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · Keychain fix (M8-1) = App-layer verify qua CI macOS · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, iPhone 17 Pro sim (iOS 26.2), UI end-to-end (§4i)** |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 164 test / 2 opt-in skip / 0 fail** (~1.1s offline; +1 test provider-contract) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · Keychain fix (M8-1) + MessageRow a11y (M8-6) = verify qua CI macOS · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, iPhone 17 Pro sim (iOS 26.2), UI end-to-end (§4i)** |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -128,6 +128,26 @@ User tự chạy toàn bộ stack trên Mac thật (branch `claude/osiris-arch-r
 **Ý nghĩa:** rủi ro lớn nhất của dự án (UI chưa qua compiler Mac, mang từ M0) **đóng lại bằng bằng chứng thật, không phải suy đoán**. M6-2 Automation UI — thứ mới nhất, chưa từng chạy trên UI thật — hoạt động đầy đủ ngay lần đầu. CI macOS giữ để chống regression tự động.
 
 **CHƯA test (có chủ đích, không phải lỗ hổng):** live Anthropic (chưa cấu hình key) → **baseline thật vẫn là nợ Medium đang mở**, và là điều kiện tiên quyết của M7. App vẫn placeholder-local.
+
+## 4r. Provider behaviour contract — identity + language (2026-07-05)
+
+**Bối cảnh:** test thật của USER — hỏi tiếng Việt, OSIRIS trả lời tiếng Anh + tự nhận "I am Claude… Current Model: Claude 3.5 Sonnet". Vi phạm mục tiêu OSIRIS. Yêu cầu: giải pháp cho MỌI provider (Claude/OpenAI/Gemini/Grok/DeepSeek/Qwen/Mistral/Llama…), KHÔNG `if provider==`, KHÔNG hardcode model.
+
+**Architecture Review (8 câu, bằng chứng) — tóm tắt:** identity OSIRIS đã nêu ở `preamble` nhưng **thiếu 2 luật**: (a) ngôn ngữ, (b) kỷ luật-identity. Prompt gửi provider = `preamble + context + task` (một chuỗi, `AnthropicProvider` gửi role `user`). Contract hành vi sống ở **preamble** (AD-13/23) — provider-agnostic, Gateway prepend cho mọi provider. **→ Đây là lỗ hổng CONTENT của contract, KHÔNG phải bug code Gateway/provider, KHÔNG per-provider.** Model tự nhận Claude vì bị hỏi thẳng mà không có luật cấm + không có luật ngôn ngữ → default English + factory persona. (Ghi chú: model tự báo "3.5 Sonnet" trong khi catalog dùng haiku → self-report của model KHÔNG đáng tin; nguồn model thật = metrics/UI của OSIRIS.)
+
+**Sửa MỘT chỗ (data, provider-agnostic):** `Config/preamble.md` +2 luật:
+- **7 (ngôn ngữ):** "Reply in the same language the user writes in, unless they request another."
+- **8 (identity):** "You are OSIRIS. Do not volunteer that you are any particular AI model or company… Discuss the underlying model/provider only when the user directly asks or for debugging — then be truthful: never invent a model name/version, never state a falsehood to maintain the persona. If asked who you are, answer as OSIRIS."
+
+Thỏa mọi ràng buộc contract USER nêu: ngôn ngữ user · default identity OSIRIS · không chủ động khai model/hãng · minh bạch khi hỏi thẳng · không nói sai để giữ persona.
+
+**Regression test (Linux):** `ShippedConfigurationTests.testShippedPreambleCarriesIdentityAndLanguageContract` — pin preamble chứa OSIRIS + luật ngôn ngữ + cấm-khai-model + trung-thực-khi-hỏi-thẳng. Token budget (≤`preambleMaxTokens`) vẫn pass → preamble mở rộng vẫn trong ngân sách.
+
+**KHÔNG làm (đúng ràng buộc):** 0 Persona Engine / Identity Manager / Localization Engine / Provider Wrapper · 0 abstraction · 0 code · 0 `if provider==`. Mở rộng contract có sẵn, đúng một chỗ.
+
+**Trigger đã ghi (chưa làm — chỉ khi bằng chứng):** preamble đi ở **user-role**, không phải **system-role**. Content-fix là điều kiện cần; nếu USER test lại với key thật mà model VẪN không tuân → nâng transport sang system-role (đổi protocol `AIProvider` để tách system/task — abstraction lớn hơn, chỉ làm khi có bằng chứng content-fix chưa đủ).
+
+**Chất lượng:** 0 code · 1 file data (`preamble.md`) + 1 test · **164 test / 2 opt-in skip / 0 fail** · preamble trong token budget · $0.00. **Runtime obedience = USER test lại với key thật** (điều kiện đủ nằm ở model, không verify được trên Linux).
 
 ## 4q. M8-6 Closeout — Accessibility audit (2026-07-05)
 

@@ -67,6 +67,29 @@ final class ShippedConfigurationTests: XCTestCase {
         XCTAssertGreaterThan(budgets.perRequestMaxOutputTokens, 0)
     }
 
+    /// The provider-agnostic behaviour contract lives in the preamble (one
+    /// place, every provider): OSIRIS identity, reply in the user's language,
+    /// and no proactive model/provider self-identification. Pins it so an
+    /// edit that drops the contract fails here rather than in production.
+    func testShippedPreambleCarriesIdentityAndLanguageContract() throws {
+        let loader = ConfigurationLoader(directory: Self.configDirectory)
+        let preamble = try loader.loadText(file: "preamble.md")
+
+        XCTAssertTrue(preamble.contains("OSIRIS"), "Default identity must be OSIRIS")
+        XCTAssertTrue(
+            preamble.contains("same language the user writes in"),
+            "Must contract to reply in the user's language"
+        )
+        XCTAssertTrue(
+            preamble.contains("any particular AI model"),
+            "Must forbid volunteering the underlying model/company"
+        )
+        XCTAssertTrue(
+            preamble.contains("directly asks"),
+            "Must stay truthful when the user directly asks about the model/provider"
+        )
+    }
+
     /// M3-3: the deliverable scaffold is Config data with a hard size
     /// budget — structure guidance, not a second preamble.
     func testShippedDeliverableScaffoldIsPresentAndSmall() throws {

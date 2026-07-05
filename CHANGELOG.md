@@ -2,6 +2,16 @@
 
 ## [M8] — 2026-07-05 (tag `M8`, core)
 
+### Provider behaviour contract — identity + language (provider-agnostic)
+
+- Real user test surfaced an architecture gap, not a Claude-specific bug: asked in Vietnamese, OSIRIS replied in English and introduced itself as "I am Claude … Current Model: Claude 3.5 Sonnet".
+- Architecture Review (evidence): the behaviour contract lives in `Config/preamble.md` (AD-13/23), which the Gateway prepends to every provider's prompt uniformly (`AIProvider.complete(prompt:)`). The preamble set OSIRIS as the identity but had no rule for (a) reply language or (b) not volunteering the underlying model. So this is a contract-content gap, not a Gateway/provider code bug, and not per-provider.
+- Fix in one place (data, provider-agnostic): added two preamble rules — reply in the user's language unless they ask otherwise; default identity is OSIRIS, never volunteer the underlying model/company, discuss it only when the user directly asks or for debugging and then truthfully (never invent a model/version, never lie to hold the persona), answer as OSIRIS when asked who you are.
+- No new component (no Persona Engine / Identity Manager / Localization Engine / Provider Wrapper), no abstraction, no code, no `if provider ==`. Extended the existing contract; one place.
+- Regression test `ShippedConfigurationTests.testShippedPreambleCarriesIdentityAndLanguageContract` pins the contract (Linux-runnable via Config load); the preamble token-budget test still passes, so the expanded preamble stays within budget.
+- Recorded a trigger: the preamble travels as a user-role message, not a system prompt; if a real-provider re-test shows the model still disobeys, escalate transport to the provider system channel (an `AIProvider` protocol change — a larger abstraction, only with evidence the content fix is insufficient).
+- 164 tests / 2 opt-in skip / 0 fail; $0.00. Runtime obedience needs a real-provider re-test (the sufficient condition lives in the model, unverifiable on Linux).
+
 ### M8-6: Accessibility audit — app already strong, one real fix
 
 - Architecture Review: audit only what exists, no UI redesign, no Accessibility Engine/Manager/abstraction — SwiftUI a11y is inline modifiers on existing views.

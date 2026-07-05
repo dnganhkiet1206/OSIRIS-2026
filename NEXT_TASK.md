@@ -15,15 +15,17 @@
 - **M8-3 ✅** (Crash Recovery review — §4n): **TÌM & SỬA 1 lỗ hổng thật** — reuse trả process-note WC thay vì deliverable. Fix A + Fix B + regression test.
 - **M8-4 ✅** (Documentation review — §4o): sửa 5 lỗi doc có bằng chứng. 0 code.
 - **M8-5 ✅** (Production Readiness Milestone Review — §4p): M8 core nghiệm thu (tag `M8`); dead-code scan sạch.
-- **M8-6 ✅** (Accessibility audit — §4q): audit code-level 10 view — app đã tốt sẵn; **sửa 1 lỗi thật** (`MessageRow` sender cho VoiceOver). Runtime = checklist USER trên Mac. 163 test / 2 skip / 0 fail.
+- **M8-6 ✅** (Accessibility audit — §4q): audit 10 view; sửa `MessageRow` sender cho VoiceOver.
+- **Provider behaviour contract ✅** (§4r): model tự nhận "I am Claude" + trả lời tiếng Anh → sửa `Config/preamble.md` +2 luật (ngôn ngữ + identity), provider-agnostic, 1 chỗ, 0 code, +1 regression test. **[USER] test lại với key thật** để xác nhận model tuân thủ. 164 test / 2 skip / 0 fail.
 
 ## Current Milestone
 
 **M8 NGHIỆM THU (tag `M8`) — 7/7 hạng mục code-complete.** Còn lại đều evidence-gated / chờ USER — **KHÔNG tự mở M9:**
 
-1. **[USER] A11y runtime pass** (Mac): chạy checklist §4q (VoiceOver/keyboard/Dynamic Type/contrast). Lỗi → dán quan sát, tôi sửa diff nhỏ. Không lỗi → Accessibility đóng hoàn toàn.
-2. **M7 provider-side optimization** — cần **key thường trực** (baseline qua-Gateway nhiều sample) → tối ưu token/latency/cost có số-trước-sau.
-3. **Mở M9** (nếu roadmap có) — chờ USER xác nhận.
+1. **[USER] Test lại provider contract với key thật** (§4r): hỏi tiếng Việt → OSIRIS phải trả lời tiếng Việt, KHÔNG tự nhận là Claude. Nếu VẪN sai → trigger nâng preamble sang **system-role transport** (đổi `AIProvider` protocol, có bằng chứng). Nếu đúng → contract đóng.
+2. **[USER] A11y runtime pass** (Mac): checklist §4q (VoiceOver/keyboard/Dynamic Type/contrast).
+3. **M7 provider-side optimization** — cần **key thường trực** (baseline qua-Gateway nhiều sample).
+4. **Mở M9** (nếu roadmap có) — chờ USER xác nhận.
 
 > **Nguyên tắc giữ nguyên:** mỗi phiên ĐÚNG MỘT task · Architecture Review trước code · chỉ đổi khi có bằng chứng · test chỉ THÊM/siết · ADR cũ bất biến · không số liệu giả.
 > **Trigger nhỏ (Low, không chặn Production):** Keychain on-device check; `.atomic` fsync; Store-level dangling-path test; migration-discipline rule; reuse `limit:10` starvation — chỉ làm khi có bằng chứng/harness.
