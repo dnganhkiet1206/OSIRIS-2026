@@ -122,7 +122,9 @@ M8 Production Readiness  ── ổn định lâu dài: test, security, backup, 
 
 > **M7-0 (2026-07-05):** Đo baseline nội bộ thật (cài Swift 6.3.3 Linux để đo, không đoán). `Store.search` = 1.3/6.7/28 ms ở 100/500/2000 record (O(n), harness opt-in `StoreSearchBaselineTests`); pipeline ~3.8 ms/goal. **Quyết KHÔNG tối ưu:** ở quy mô một-người-dùng thật (≤ vài trăm record) path nội bộ = đơn-con-số ms, AI call thật áp đảo ~100× → tối ưu bây giờ = premature (vi phạm nguyên tắc M7). Deliverable = hạ tầng đo + số liệu + quyết định không-churn (PROJECT_STATE §4j). **Bề mặt tối ưu thật = provider-side (token/latency/cost) CHẶN bởi baseline key (nợ Medium).** Trigger tái xét: store > ~1000 record hoặc profiling latency thật.
 
-### M8 — Production Readiness
+### M8 — Production Readiness — ✅ CORE NGHIỆM THU 2026-07-05 (tag `M8`; chi tiết PROJECT_STATE §4p)
+
+> **M8-0…M8-5 (2026-07-05):** Test coverage (M8-0), Security (M8-1: sửa Keychain accessibility), Backup&Recovery (M8-2: no-hole), Crash Recovery (M8-3: sửa lỗ hổng reuse-trả-process-note), Documentation (M8-4: sửa 5 lỗi doc), Milestone Review (M8-5). Completion criterion "crash → mở lại không mất trạng thái" + DoD ĐẠT. **Evidence-gated (chưa đủ Production):** Accessibility audit (cần Mac/a11y harness) · provider-side optimization (cần key thường trực). 163 test / 2 opt-in skip / 0 fail · release 0/0 · $0.00.
 
 **Mục tiêu:** Sẵn sàng sử dụng hằng ngày lâu dài.
 

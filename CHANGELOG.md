@@ -1,6 +1,15 @@
 # CHANGELOG
 
-## [Unreleased — M8]
+## [M8] — 2026-07-05 (tag `M8`, core)
+
+### M8-5: Production Readiness Milestone Review — core accepted
+
+- Architecture Review reconciling every M8 criterion against code/tests/docs; no new features, no new ADR (summary only), no code change beyond one doc-accuracy fix.
+- Verdict — production-ready (core): Test coverage (M8-0), Performance (M7-0 baseline; re-measured fresh 4.07 / reuse 2.52 ms — no regression despite M8-3's reuse change), Security (M8-1), Backup & Recovery (M8-2), Crash Recovery (M8-3), Documentation (M8-4). Completion criterion "phone dies mid-task → reopen without losing state" met; Definition of Done 8/8.
+- Not yet production-ready (evidence-gated, with reasons): Accessibility audit (needs a Mac/simulator + a11y harness — VoiceOver/Dynamic Type are runtime UI, unverifiable on Linux); provider-side cost/latency optimization (needs a standing key for a through-the-Gateway baseline). Scheduled automation (BGTask) and MCP/tool-channel remain deferred from M6 (AD-45/47).
+- Dead-code scan: nothing to delete — all public symbols have consumers, no TODO/FIXME; the real dead code (EventBus/ApprovalGate) was already removed at M4-4/M6-0. The arch ban-list intentionally bans EventBus but not ApprovalGate (AD-47 has the gate return with the first real risky action) — left as-is.
+- Doc accuracy fix: the stage line said "19 Architecture Test" but there are 18 test functions — corrected.
+- Evidence: 163 tests / 2 opt-in skip / 0 fail; release build 0/0; AI spend $0.00. Tag `M8` = production-readiness core code-complete.
 
 ### M8-4: Documentation review — fix five evidenced doc defects, no rewrites
 

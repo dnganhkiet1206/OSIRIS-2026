@@ -9,10 +9,10 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M8 — Production Readiness: đang triển khai** (M0→M6 nghiệm thu; tag local chờ push khi merge). M7-0 ✅ (§4j); M7 provider-side HOÃN chờ key. M8-0 ✅ (§4k) · M8-1 Security ✅ (§4l) · M8-2 Backup&Recovery ✅ (§4m) · M8-3 Crash Recovery ✅ (§4n) · M8-4 Docs ✅ (§4o) |
-| Task hiện tại | **M8-4 (Documentation review) ✅ — SỬA 5 lỗi tài liệu có bằng chứng:** MODULE_GUIDE harness dùng `RequireUserApprovalGate` đã xóa (không compile) + list cấm còn `EventBus` đã xóa; SYSTEM_COMPONENTS còn mô tả approval-gate present-tense (AD-47) và "quyết định EventBus chờ M4" (mâu thuẫn chính nó, AD-46); RUNBOOK "49/49" → 163. Chi tiết §4o. 0 dòng code · 0 doc mới · không đụng roadmap/history. **Mac validation ✅ (§4i)** · kế tiếp: chờ USER chọn task M8 kế (NEXT_TASK) — KHÔNG tự mở |
+| Giai đoạn | **M8 — Production Readiness: CORE NGHIỆM THU 2026-07-05 (tag `M8`)** (M0→M6 + M8 core; tag local chờ push khi merge). M7-0 ✅ (§4j); M7 provider-side + Accessibility = evidence-gated (xem §4p). M8-0…M8-4 ✅ · M8-5 review ✅ (§4p) |
+| Task hiện tại | **M8-5 (Production Readiness Milestone Review) ✅ — M8 CORE ĐẠT.** Đối chiếu 7 hạng mục M8 bằng bằng chứng (§4p): Test coverage/Security/Backup/Crash/Docs ✅; Performance ✅ (baseline §4j, no-regression); **Accessibility HOÃN (evidence-gated: cần Mac/a11y harness)**. Criterion "crash → không mất trạng thái" ĐẠT (M8-3). Dead-code scan sạch (0 xóa). **Mac validation ✅ (§4i)** · kế tiếp: chờ USER (Accessibility cần Mac / M7 provider-side cần key / mở M9) — KHÔNG tự mở |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
-| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **19 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
+| Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **18 Architecture Test (function) chống drift** (cưỡng chế đồ thị phụ thuộc + eliminated-components: EventBus AD-46, automation-engine AD-47) · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 163 test / 2 opt-in skip / 0 fail** (~1.1s offline; +1 test M8-3 crash-reuse) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · Keychain fix (M8-1) = App-layer verify qua CI macOS · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, iPhone 17 Pro sim (iOS 26.2), UI end-to-end (§4i)** |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
@@ -80,7 +80,7 @@ M6 — Automation: nối trí tuệ với thực thi tự động, KHÔNG visual
 
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Chọn task M8 kế** (`NEXT_TASK.md`): accessibility (cần Mac) · hoặc nghiệm thu/đóng M8. (Security ✅ M8-1 · Backup&Recovery ✅ M8-2 · Crash Recovery ✅ M8-3 · Docs ✅ M8-4). Không tự mở.
+1. **[USER] Chọn hướng sau M8** (`NEXT_TASK.md`): Accessibility audit (đóng nốt M8, cần Mac) · M7 provider-side (cần key thường trực) · mở M9. **M8 CORE NGHIỆM THU ✅ (tag `M8`, §4p).** Không tự mở.
 2. **[USER] Cấp API key THƯỜNG TRỰC** để mở **M7 provider-side** (tối ưu token/latency/cost qua Gateway) — hiện HOÃN; key một-lần đã thu sàn provider (§4j), cần key thường trực cho baseline qua-Gateway nhiều sample.
 3. M8-0 ✅ (§4k). CI macOS giữ chống regression UI.
 
@@ -128,6 +128,37 @@ User tự chạy toàn bộ stack trên Mac thật (branch `claude/osiris-arch-r
 **Ý nghĩa:** rủi ro lớn nhất của dự án (UI chưa qua compiler Mac, mang từ M0) **đóng lại bằng bằng chứng thật, không phải suy đoán**. M6-2 Automation UI — thứ mới nhất, chưa từng chạy trên UI thật — hoạt động đầy đủ ngay lần đầu. CI macOS giữ để chống regression tự động.
 
 **CHƯA test (có chủ đích, không phải lỗ hổng):** live Anthropic (chưa cấu hình key) → **baseline thật vẫn là nợ Medium đang mở**, và là điều kiện tiên quyết của M7. App vẫn placeholder-local.
+
+## 4p. M8-5 Closeout — Production Readiness Milestone Review (nghiệm thu core, tag `M8`, 2026-07-05)
+
+**Architecture Review (đối chiếu bằng chứng, không tính năng mới, không ADR mới — chỉ tổng kết).** Đối chiếu từng hạng mục M8 (DEVELOPMENT_PLAN §2/M8) với code + test + docs:
+
+| Hạng mục M8 | Bằng chứng | Đủ Production? |
+|---|---|---|
+| **Test coverage cho Core contracts** | M8-0: audit + 2 test canh property thật (dry-run cache poison, `.anyWord` ranking); 163 test tổng, mọi public protocol có test | ✅ ĐỦ |
+| **Performance review** | M7-0 §4j: baseline nội bộ thật (search 1–7ms scale thật, pipeline ~3.8ms); M8-5 đo lại **fresh 4.07 / reuse 2.52 ms — no-regression** dù M8-3 đổi reuse | ✅ ĐỦ (nội bộ). Provider-side tối ưu = evidence-gated (key) |
+| **Security review** | M8-1 §4l: SỬA Keychain accessibility (device-only); test canh "error không lộ key/body"; key chỉ header, log metrics-only, 0 hardcoded secret | ✅ ĐỦ (App-layer verify qua CI macOS) |
+| **Backup & Recovery** | M8-2 §4m: atomic write, restore = copy thư mục Store, migration versioned + test; **no-hole** | ✅ ĐỦ |
+| **Crash recovery (không mất tiến độ)** | M8-3 §4n: SỬA lỗ hổng reuse-trả-process-note; data-trước-index; state sống sót restart (test); in-flight = re-run an toàn | ✅ ĐỦ (criterion "crash → không mất trạng thái" ĐẠT) |
+| **Documentation** | M8-4 §4o: sửa 5 lỗi doc có bằng chứng (harness compile-được, docs phản ánh AD-46/47) | ✅ ĐỦ |
+| **Accessibility audit** | CHƯA làm — cần Mac/simulator + a11y harness (VoiceOver/Dynamic Type là runtime UI, không verify được trên Linux) | ⚠️ **CHƯA ĐỦ — evidence-gated** |
+
+**Definition of Done (§3) — 8/8 ✅:** feature qua Verify · kiến trúc sạch (18 arch test) · PROJECT_STATE cập nhật · docs cập nhật · test contract quan trọng · token review (no-regression) · nợ phân loại Critical=0 · next work ghi.
+
+**Dead-code scan (bằng chứng — chỉ xóa nếu chết rõ):** quét public symbol + switch + marker → **KHÔNG có dead code để xóa.** `ResponseCache`/`Reflection`/`ComplexityEstimate`/`TokenEstimator`… đều có consumer; 0 TODO/FIXME. `StoreSearchResult.Kind.projectState` không được search PRODUCE nhưng được switch CONSUME (defensive/exhaustive) — không phải dead-code có hại, xóa = đổi public contract vô ích → GIỮ. Dead-code thật (EventBus/ApprovalGate) đã xóa ở M4-4/M6-0.
+
+**Arch ban-list — asymmetry CÓ CHỦ Ý (không sửa):** `testEliminatedComponentsAreNotRecreated` cấm EventBus (AD-46) + automation-engine (AD-47) nhưng KHÔNG cấm ApprovalGate — đúng: AD-47 nói gate **tái sinh cùng risky action thật đầu tiên** (cấm sẽ tạo tripwire cho tính năng dự kiến), khác EventBus (return khó xảy ra). Không thêm ban.
+
+**Nợ còn lại + evidence-gated (bằng chứng, có địa chỉ):**
+- **Accessibility audit** — cần Mac/a11y harness. *Chưa đủ Production vì:* chưa verify VoiceOver/Dynamic Type/contrast trên thiết bị.
+- **M7 provider-side optimization** — cần key thường trực (baseline qua-Gateway nhiều sample). Nội bộ đã tối ưu-đủ (no-regression); provider-side chưa đo → chưa tối ưu.
+- **Scheduled automation (BGTask) + MCP/tool-channel** — HOÃN từ M6 (AD-45/47), chờ use case + consent + thiết bị.
+- **Trigger nhỏ (Low, không chặn Production):** Keychain on-device check; `.atomic` fsync; Store-level dangling-path test; migration-discipline rule; reuse `limit:10` starvation. Tất cả có trigger, chỉ làm khi có bằng chứng.
+
+**Đủ điều kiện Production (core):** Core 6 + Application + 3 module + persistence crash-safe + security hardened + provider thật (validate Mac §4i) + offline placeholder. 163 test / 2 opt-in skip / 0 fail · release 0/0 · $0.00.
+**Chưa đủ (lý do):** Accessibility (chưa audit thiết bị) · UX thật trên thiết bị lâu dài (mới smoke §4i) · provider-side cost/latency chưa tối ưu (chưa có baseline key).
+
+**Kết luận: M8 CORE NGHIỆM THU** — completion criterion ("crash → mở lại không mất trạng thái" + DoD) ĐẠT bằng bằng chứng. Accessibility là hạng mục M8 SCOPE duy nhất chưa làm, evidence-gated rõ ràng (nhất quán cách M6 tag core với phần device-gated). Tag `M8` = production-readiness core code-complete. **Không ADR mới (chỉ tổng kết), 0 dòng code đổi (chỉ 1 sửa số liệu doc 19→18).**
 
 ## 4o. M8-4 Closeout — Documentation review (2026-07-05)
 

@@ -13,16 +13,19 @@
 - **M8-1 ✅** (Security review — §4l): sửa Keychain thiếu `kSecAttrAccessible`; thêm test "error không lộ key/body".
 - **M8-2 ✅** (Backup & Recovery review — §4m): audit 6 ưu tiên → **KHÔNG lỗ hổng**; backup = copy thư mục Store; 0 dòng đổi. Ghi 3 trigger.
 - **M8-3 ✅** (Crash Recovery review — §4n): **TÌM & SỬA 1 lỗ hổng thật** — reuse trả process-note WC thay vì deliverable. Fix A + Fix B + regression test.
-- **M8-4 ✅** (Documentation review — §4o): sửa 5 lỗi doc có bằng chứng (harness compile-được, SYSTEM_COMPONENTS phản ánh AD-46/47, RUNBOOK count). 0 code, 0 doc mới. 163 test / 2 skip / 0 fail.
+- **M8-4 ✅** (Documentation review — §4o): sửa 5 lỗi doc có bằng chứng. 0 code.
+- **M8-5 ✅** (Production Readiness Milestone Review — §4p): **M8 CORE NGHIỆM THU (tag `M8`)** — 6/7 hạng mục đủ Production; Accessibility evidence-gated. Dead-code scan sạch (0 xóa). 163 test / 2 skip / 0 fail · release 0/0.
 
-## Current Task — CHỜ USER CHỌN task M8 kế (KHÔNG tự mở)
+## Current Milestone
 
-M8 Production Readiness còn các mảnh sau; **mỗi phiên làm ĐÚNG MỘT**, Architecture Review trước code, chỉ đổi khi có bằng chứng:
+**M8 CORE ĐẠT (tag `M8`).** Các đường đi tiếp — **CHỜ USER CHỌN, KHÔNG tự mở M9:**
 
-1. **Accessibility audit** — cần Mac/simulator (UI). Chưa có harness → phần lớn PHẢI trên thiết bị; Linux chỉ rà được code (VoiceOver label/Dynamic Type trong SwiftUI source).
-2. **M8 nghiệm thu** — nếu USER thấy đủ, đóng M8 (tag) và cân nhắc: M7 provider-side (cần key thường trực) là mảnh mở lớn nhất còn lại.
+1. **Accessibility audit (đóng nốt M8)** — cần Mac/simulator + a11y harness. Linux chỉ rà được code (label/Dynamic Type trong SwiftUI source); phần verify PHẢI trên thiết bị.
+2. **M7 provider-side optimization** — cần **key thường trực** (baseline qua-Gateway nhiều sample) → tối ưu token/latency/cost có số-trước-sau.
+3. **Mở M9** (nếu roadmap có) — chờ USER xác nhận.
 
-> **Đã xong & ghi trigger:** Security (M8-1) · Backup&Recovery (M8-2) · Crash Recovery (M8-3) · Docs (M8-4). Trigger nhỏ (Keychain on-device check; fsync durability; Store-level dangling-path test; migration-discipline rule; reuse `limit:10` starvation) — chỉ làm khi có bằng chứng/harness, KHÔNG suy đoán.
+> **Nguyên tắc giữ nguyên:** mỗi phiên ĐÚNG MỘT task · Architecture Review trước code · chỉ đổi khi có bằng chứng · test chỉ THÊM/siết · ADR cũ bất biến · không số liệu giả.
+> **Trigger nhỏ (Low, không chặn Production):** Keychain on-device check; `.atomic` fsync; Store-level dangling-path test; migration-discipline rule; reuse `limit:10` starvation — chỉ làm khi có bằng chứng/harness.
 
 ## Store-resilience — trigger đã ghi (§4k), CHƯA làm
 Chỉ thêm "loadAll skip file hỏng" khi có **bằng chứng file hỏng thật** (bit-rot, sync-conflict, encoding bug) — KHÔNG phải crash (atomic write đã chặn). Đến lúc đó: skip trong bulk-read, giữ `load` targeted vẫn throw; + test canh.
