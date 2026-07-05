@@ -112,13 +112,15 @@ M8 Production Readiness  ── ổn định lâu dài: test, security, backup, 
 
 **Tiêu chí hoàn thành:** Công việc lặp lại chạy tự động, mọi hành động rủi ro vẫn qua approval gate.
 
-### M7 — Optimization
+### M7 — Optimization *(đang triển khai — M7-0 đo xong, phần provider chờ key)*
 
 **Mục tiêu:** Hạ chi phí vận hành, dựa trên số liệu đã tích lũy từ M0.
 
 **Phạm vi:** Context loading, caching, memory compression, model routing (dùng model nhỏ hơn khi số liệu cho phép), tốc độ thực thi, network, battery, UI performance.
 
 **Tiêu chí hoàn thành:** Chất lượng giữ nguyên hoặc tăng trong khi token/cost/latency giảm có số liệu.
+
+> **M7-0 (2026-07-05):** Đo baseline nội bộ thật (cài Swift 6.3.3 Linux để đo, không đoán). `Store.search` = 1.3/6.7/28 ms ở 100/500/2000 record (O(n), harness opt-in `StoreSearchBaselineTests`); pipeline ~3.8 ms/goal. **Quyết KHÔNG tối ưu:** ở quy mô một-người-dùng thật (≤ vài trăm record) path nội bộ = đơn-con-số ms, AI call thật áp đảo ~100× → tối ưu bây giờ = premature (vi phạm nguyên tắc M7). Deliverable = hạ tầng đo + số liệu + quyết định không-churn (PROJECT_STATE §4j). **Bề mặt tối ưu thật = provider-side (token/latency/cost) CHẶN bởi baseline key (nợ Medium).** Trigger tái xét: store > ~1000 record hoặc profiling latency thật.
 
 ### M8 — Production Readiness
 

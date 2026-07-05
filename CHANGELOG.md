@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [Unreleased — M7]
+
+### M7-0: Optimization — measured the internal baseline, decided NOT to optimize
+
+- Opened M7 without a provider key (user's choice). M7 forbids optimizing without numbers, so — since this fresh container had no Swift — installed a Swift 6.3.3 Linux toolchain to measure for real. Suite stays green on 6.3.3 (158→159 tests).
+- New opt-in harness `StoreSearchBaselineTests` (`OSIRIS_SEARCH_BASELINE=1`, skips by default so the lean ~0.8s suite is unaffected) benchmarks `Store.search`, the standing "re-reads every file per query" candidate. Release-mode numbers: **1.3 ms @ 100 records, 6.7 ms @ 500, 28 ms @ 2000** (linear O(n)). Pipeline overhead re-measured: **~3.8 ms/goal fresh, ~3.4 ms reuse**.
+- **Decision: zero code optimization shipped.** At realistic single-user scale (≤ a few hundred Knowledge records) search is 1–7 ms — imperceptible — and any real AI call (network, hundreds of ms) dwarfs all internal overhead ~100×. Optimizing now would be premature and would violate M7's own principle. The deliverable is the reusable measurement infra + real numbers + the honest "don't churn" call (PROJECT_STATE §4j).
+- Explicit re-visit trigger recorded: touch `Store.search` only if a real store exceeds ~1000 records or profiling shows it in a real latency path; then add an index/cache with the behavior tests intact.
+- The genuine optimization surface (token/latency/cost) is provider-side and stays blocked on the real baseline (Medium debt, needs key) — correctly deferred, not guessed.
+
 ## [M6] — 2026-07-04 (tag `M6`, core)
 
 ### 2026-07-05 — Mac validation: High debt (UI compile) RETIRED

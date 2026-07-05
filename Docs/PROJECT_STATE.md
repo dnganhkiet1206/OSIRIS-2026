@@ -9,11 +9,11 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M6 — Automation: NGHIỆM THU CORE 2026-07-04** (tag `M6` local; scheduling/MCP hoãn có điều kiện — xem §4h). M0→M6 tag local chờ push khi merge |
-| Task hiện tại | **M6-3 (Milestone Review) ✅ — M6 core ĐẠT** (automation rules data+UI+run manual) · **Mac validation ✅ 2026-07-05 → nợ High UI RETIRED (§4i)** · kế tiếp: M7-0 Optimization (xem `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN, **chặn bởi baseline thật (cần API key)** |
+| Giai đoạn | **M7 — Optimization: đang triển khai** (M0→M6 nghiệm thu; tag local chờ push khi merge). M7-0 ✅ đo baseline nội bộ — xem §4j |
+| Task hiện tại | **M7-0 (Optimization) ✅ — ĐO XONG, QUYẾT KHÔNG TỐI ƯU** (bằng chứng: path nội bộ đã ở mức đơn-con-số ms; §4j). Bề mặt tối ưu thật = provider-side (token/latency/cost) CHẶN bởi key. **Mac validation ✅ 2026-07-05 → nợ High UI RETIRED (§4i)** · kế tiếp: chờ USER (cấp key mở M7 provider-side, hoặc mở M8) |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **19 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 157/157 test pass** (+1 live-baseline opt-in skip mặc định) (Swift 6.0.3, Linux) · offline · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, chạy iPhone 17 Pro sim (iOS 26.2), Automation UI + Chat + reuse chạy end-to-end (§4i)** |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 159 test / 2 opt-in skip / 0 fail** (~0.8s offline; +1 store-search baseline opt-in từ M7-0) (Swift 6.0.3 CI · đo M7-0 trên 6.3.3 Linux) · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, chạy iPhone 17 Pro sim (iOS 26.2), Automation UI + Chat + reuse end-to-end (§4i)** |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -127,6 +127,32 @@ User tự chạy toàn bộ stack trên Mac thật (branch `claude/osiris-arch-r
 **Ý nghĩa:** rủi ro lớn nhất của dự án (UI chưa qua compiler Mac, mang từ M0) **đóng lại bằng bằng chứng thật, không phải suy đoán**. M6-2 Automation UI — thứ mới nhất, chưa từng chạy trên UI thật — hoạt động đầy đủ ngay lần đầu. CI macOS giữ để chống regression tự động.
 
 **CHƯA test (có chủ đích, không phải lỗ hổng):** live Anthropic (chưa cấu hình key) → **baseline thật vẫn là nợ Medium đang mở**, và là điều kiện tiên quyết của M7. App vẫn placeholder-local.
+
+## 4j. M7-0 Closeout — Đo baseline nội bộ, quyết KHÔNG tối ưu (2026-07-05)
+
+**Bối cảnh:** user chọn "mở M7 ngay, không key". M7 cấm tối ưu-không-số-liệu (đoán = churn = vi phạm hiến pháp). Vì container fresh không có Swift, tôi **cài toolchain Swift 6.3.3 trên Linux** để đo thật (không đoán). 158→159 test vẫn xanh trên 6.3.3.
+
+**Đối tượng đo — `Store.search` đọc-lại-toàn-bộ-file mỗi query** (ứng viên số 1 suốt M1→M6, comment code tự ghi "measured optimization belongs to M3/M7"). Harness mới `StoreSearchBaselineTests` (opt-in `OSIRIS_SEARCH_BASELINE=1`, không nặng suite mặc định) seed Knowledge tăng dần, đo mean 20 query, release mode:
+
+| Store size | `.exact` (early-exit) | `.anyWord` (đi hết, worst case) |
+|---|---|---|
+| 100 records | ~1.3 ms | ~1.5 ms |
+| 500 records | ~6.7 ms | ~7.5 ms |
+| 2000 records | ~28 ms | ~30 ms |
+
+Cộng baseline pipeline-overhead (đo lại 6.3.3, release): **fresh ~3.8 ms/goal · reuse ~3.4 ms/goal**.
+
+**Đọc số liệu — trung thực:**
+- Tuyến tính O(n) đúng như dự đoán code — NHƯNG hằng số tí xíu và **N thật rất nhỏ**. Knowledge = "cách hệ thống hoạt động", một-người-dùng, đời-app chỉ hàng-chục→trăm bản; WorkingContext có TTL (nhỏ); Deliverable KHÔNG bị walk toàn cục (search chỉ đọc theo `ProjectState.deliverablePaths` của project hỏi — AD-10 index). Ở quy mô thật (≤ vài trăm bản) search = **1–7 ms, không cảm nhận được**.
+- Path nội bộ (pipeline + search) đều **đơn-con-số ms**. Một AI call thật (mạng) = hàng-trăm ms→giây → **áp đảo toàn bộ overhead nội bộ ~100×**. Bề mặt tối ưu thật là **provider-side (token/latency/cost)** — đúng thứ CHẶN bởi key.
+
+**Quyết định: 0 tối ưu code trong M7-0.** Đo rồi, số liệu nói "chưa cần". Ship optimization bây giờ = premature = vi phạm chính nguyên tắc M7. **Deliverable của M7-0 = hạ tầng đo lặp-lại-được + số liệu thật + quyết định không-churn** — đây là kỷ luật M7 hoạt động đúng, không phải milestone rỗng.
+
+**Trigger tái xét (ghi rõ để lần sau không đoán lại):** đụng lại `Store.search` chỉ khi (a) store thật > ~1000 Knowledge record, HOẶC (b) profiling latency thật cho thấy search chiếm phần đáng kể. Khi đó: in-memory index/cache theo key + giữ nguyên test hành vi (hits/ranking/tie-break) — đã có `StoreSearchBaselineTests` để chứng minh trước/sau.
+
+**Còn mở (đúng phạm vi):** tối ưu provider-side (context trimming nếu token-in cao / prompt-cache nếu latency cao / cache eviction khi có hit-rate thật) — TẤT CẢ cần baseline provider = **nợ Medium chờ key**. Không đoán.
+
+**Chất lượng:** build 0/0 debug+release · **159 test / 2 opt-in skip / 0 fail** ~0.8s offline · 0 dòng Core/Presentation đổi (chỉ thêm 1 file test) · arch suite nguyên · AI spend tích lũy **$0.00**.
 
 ## 4g. M5 Closeout (nghiệm thu 2026-07-04, tag `M5`)
 
