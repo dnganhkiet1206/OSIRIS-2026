@@ -2,6 +2,13 @@
 
 ## [M6] — 2026-07-04 (tag `M6`, core)
 
+### 2026-07-05 — Mac validation: High debt (UI compile) RETIRED
+
+- User ran the full stack on a real Mac (branch `claude/osiris-arch-review-docs-w3na6h`): `swift test` 158/1-skip/0-fail on macOS; `xcodegen generate` + Xcode build **0 compile errors** across App/Presentation; launched on iPhone 17 Pro Simulator (iOS 26.2).
+- **M6-2 Automation UI verified end-to-end on a real device for the first time:** Add rule · Run Now · Enable/Disable · Delete · empty state. Chat + reuse ("Recently completed…", deliverable reused) confirmed.
+- **The project's largest standing risk since M0 — UI never through the Mac compiler — is now closed by device evidence, not inference.** Recorded PROJECT_STATE §4i. CI macOS retained for automated regression.
+- Live Anthropic intentionally not tested (no key configured) → real baseline remains open (Medium debt), the M7 prerequisite.
+
 ### M6-3: Milestone Review & Acceptance — automation core accepted, platform half deferred
 
 - **M6 CORE ĐẠT** — nghiệm thu tại PROJECT_STATE §4h. Automation-as-data (M6-1) + UI (M6-2) + manual run qua Kernel = phần testable/kiến trúc xong. **Trung thực: M6 là milestone partial rõ nhất** — nửa nền-tảng (scheduled background firing qua iOS BGTaskScheduler, MCP remote tools) HOÃN CÓ ĐIỀU KIỆN (0 đường verify Linux/CI; MCP = cụm tool-channel/risky-action/ApprovalGate chờ use case + consent).

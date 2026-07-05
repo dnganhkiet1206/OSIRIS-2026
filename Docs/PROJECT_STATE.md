@@ -10,10 +10,10 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M6 — Automation: NGHIỆM THU CORE 2026-07-04** (tag `M6` local; scheduling/MCP hoãn có điều kiện — xem §4h). M0→M6 tag local chờ push khi merge |
-| Task hiện tại | **M6-3 (Milestone Review) ✅ — M6 core ĐẠT** (automation rules data+UI+run manual); scheduling background + MCP = device/evidence-gated · kế tiếp: M7-0 Optimization (xem `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN · **[USER]: cấp API key (baseline) + theo dõi CI macOS (UI)** |
+| Task hiện tại | **M6-3 (Milestone Review) ✅ — M6 core ĐẠT** (automation rules data+UI+run manual) · **Mac validation ✅ 2026-07-05 → nợ High UI RETIRED (§4i)** · kế tiếp: M7-0 Optimization (xem `NEXT_TASK.md`) — CHỜ USER XÁC NHẬN, **chặn bởi baseline thật (cần API key)** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **19 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 157/157 test pass** (+1 live-baseline opt-in skip mặc định) (Swift 6.0.3, Linux) · offline |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 157/157 test pass** (+1 live-baseline opt-in skip mặc định) (Swift 6.0.3, Linux) · offline · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, chạy iPhone 17 Pro sim (iOS 26.2), Automation UI + Chat + reuse chạy end-to-end (§4i)** |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -98,7 +98,7 @@ M6 — Automation: nối trí tuệ với thực thi tự động, KHÔNG visual
 **ADR M6:** AD-46 (xóa EventBus — 146/146 pass 0 test sửa) ✅ PROVEN · AD-47 (4 quyết định: xóa ApprovalGate + tool-channel không mở + EventBus không tái sinh + automation=data) ✅ PROVEN (M6-1 build đúng thiết kế, 0 engine, arch rule cấm engine).
 
 **Nợ — cập nhật theo hành động phiên debt-sweep:**
-- **Nợ High (UI compile Mac):** hạ từ "unknown 6 milestone" → **CI macOS đang chạy**; run #1 bắt lỗi thật `ChatViewModel` (đã sửa); UI M6-2 pushed chờ CI kế xác nhận. Cơ chế hoạt động — nợ đang cháy, không còn là unknown.
+- **Nợ High (UI compile Mac): ✅ RETIRED 2026-07-05** — user build & chạy trên iPhone 17 Pro sim (iOS 26.2), 0 compile error toàn App/Presentation, Automation UI chạy end-to-end (§4i). Đây là rủi ro lớn nhất suốt M0→M6 (UI chưa qua compiler Mac), nay đóng bằng bằng chứng thiết bị thật — KHÔNG còn "unknown". CI macOS vẫn giữ để bắt regression tự động về sau.
 - **Nợ Medium (baseline thật):** harness `LiveBaselineTests` sẵn, chạy Linux khi có key — chờ [USER].
 - Bug tiếng Việt (Low): ĐÃ SỬA. ChatViewModel 5-vai: trigger tôn trọng (M6-2 dùng VM riêng). ApprovalGate: XÓA. Tier-routing/nhóm Low perf: chờ M7 + số liệu thật.
 
@@ -109,6 +109,24 @@ M6 — Automation: nối trí tuệ với thực thi tự động, KHÔNG visual
 **Open-source (cập nhật):** CI macOS giờ compile-check UI tự động (contributor + tôi thấy build status thật) — bước tiến lớn cho readiness. Còn: baseline thật (key) + device UX + scheduled-firing/MCP.
 
 **Kết luận: M6 CORE ĐẠT** (automation-as-data + UI + manual run, kiến trúc sạch AD-46/47). Nửa nền-tảng (scheduled background firing, MCP) HOÃN CÓ ĐIỀU KIỆN rõ ràng — nhất quán cách M0/M2 tag với mục PENDING thiết bị. Tag `M6` đánh dấu core code-complete.
+
+## 4i. Mac Validation — nợ High đóng bằng bằng chứng thiết bị (2026-07-05)
+
+User tự chạy toàn bộ stack trên Mac thật (branch `claude/osiris-arch-review-docs-w3na6h`). Đây là lần đầu App/Presentation qua compiler + runtime trên thiết bị Apple sau M0→M6.
+
+| Hạng mục | Kết quả |
+|---|---|
+| `swift test` (macOS) | 158 executed / 1 skipped (live-baseline opt-in) / **0 failures** — khớp Linux |
+| `xcodegen generate` + Xcode build | ✅ OSIRIS.xcodeproj sinh & build **0 compile error** toàn App/Presentation |
+| Chạy | iPhone 17 Pro Simulator, iOS 26.2 — app mở thẳng vào Chat |
+| Chat | Gửi goal chạy; placeholder provider trả đúng |
+| Settings | Offline mode + trường API key + Save Key + Advanced Mode toggle — đủ |
+| **Automation UI (M6-2)** | ✅ Add rule · Run Now · Enable/Disable · Delete · empty state sau xoá — **end-to-end đúng** |
+| Reuse (AD lifecycle) | ✅ lặp goal → "Recently completed…", deliverable cũ tái dùng, không sinh lại |
+
+**Ý nghĩa:** rủi ro lớn nhất của dự án (UI chưa qua compiler Mac, mang từ M0) **đóng lại bằng bằng chứng thật, không phải suy đoán**. M6-2 Automation UI — thứ mới nhất, chưa từng chạy trên UI thật — hoạt động đầy đủ ngay lần đầu. CI macOS giữ để chống regression tự động.
+
+**CHƯA test (có chủ đích, không phải lỗ hổng):** live Anthropic (chưa cấu hình key) → **baseline thật vẫn là nợ Medium đang mở**, và là điều kiện tiên quyết của M7. App vẫn placeholder-local.
 
 ## 4g. M5 Closeout (nghiệm thu 2026-07-04, tag `M5`)
 
