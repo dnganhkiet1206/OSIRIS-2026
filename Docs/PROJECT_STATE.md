@@ -9,8 +9,8 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M8 — Production Readiness: CORE NGHIỆM THU 2026-07-05 (tag `M8`)** (M0→M6 + M8 core; tag local chờ push khi merge). M7-0 ✅ (§4j); M7 provider-side + Accessibility = evidence-gated (xem §4p). M8-0…M8-4 ✅ · M8-5 review ✅ (§4p) |
-| Task hiện tại | **M8-5 (Production Readiness Milestone Review) ✅ — M8 CORE ĐẠT.** Đối chiếu 7 hạng mục M8 bằng bằng chứng (§4p): Test coverage/Security/Backup/Crash/Docs ✅; Performance ✅ (baseline §4j, no-regression); **Accessibility HOÃN (evidence-gated: cần Mac/a11y harness)**. Criterion "crash → không mất trạng thái" ĐẠT (M8-3). Dead-code scan sạch (0 xóa). **Mac validation ✅ (§4i)** · kế tiếp: chờ USER (Accessibility cần Mac / M7 provider-side cần key / mở M9) — KHÔNG tự mở |
+| Giai đoạn | **M8 — Production Readiness: NGHIỆM THU (tag `M8`)** — 7/7 hạng mục code-complete (M8-0…M8-6). M7-0 ✅ (§4j); M7 provider-side + a11y-runtime-verify = evidence-gated. M8-5 review ✅ (§4p) · M8-6 Accessibility ✅ (§4q) |
+| Task hiện tại | **M8-6 (Accessibility audit) ✅ — audit code-level 10 view Presentation:** app đã tốt sẵn (LabeledContent, Label có text, SecureField, accessibilityLabel trên icon-only, semantic font/Dynamic Type). **1 lỗi thật đã sửa:** `MessageRow` sender (user/OSIRIS) chỉ báo bằng màu+căn lề → thêm `.accessibilityLabel` "You/OSIRIS: …". Diff 1 dòng, 0 redesign, 0 abstraction. **Runtime (VoiceOver/contrast/focus/keyboard) = checklist cho USER trên Mac** (tôi ở Linux, không chạy được). Chi tiết §4q. · kế tiếp: chờ USER (a11y runtime pass / M7 provider-side cần key / mở M9) — KHÔNG tự mở |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **18 Architecture Test (function) chống drift** (cưỡng chế đồ thị phụ thuộc + eliminated-components: EventBus AD-46, automation-engine AD-47) · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 163 test / 2 opt-in skip / 0 fail** (~1.1s offline; +1 test M8-3 crash-reuse) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · Keychain fix (M8-1) = App-layer verify qua CI macOS · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, iPhone 17 Pro sim (iOS 26.2), UI end-to-end (§4i)** |
@@ -80,7 +80,7 @@ M6 — Automation: nối trí tuệ với thực thi tự động, KHÔNG visual
 
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Chọn hướng sau M8** (`NEXT_TASK.md`): Accessibility audit (đóng nốt M8, cần Mac) · M7 provider-side (cần key thường trực) · mở M9. **M8 CORE NGHIỆM THU ✅ (tag `M8`, §4p).** Không tự mở.
+1. **[USER] Chọn hướng sau M8** (`NEXT_TASK.md`): a11y runtime pass trên Mac (checklist §4q, đóng nốt Accessibility) · M7 provider-side (cần key thường trực) · mở M9. **M8 NGHIỆM THU ✅ 7/7 code-complete (tag `M8`, §4p/§4q).** Không tự mở.
 2. **[USER] Cấp API key THƯỜNG TRỰC** để mở **M7 provider-side** (tối ưu token/latency/cost qua Gateway) — hiện HOÃN; key một-lần đã thu sàn provider (§4j), cần key thường trực cho baseline qua-Gateway nhiều sample.
 3. M8-0 ✅ (§4k). CI macOS giữ chống regression UI.
 
@@ -128,6 +128,38 @@ User tự chạy toàn bộ stack trên Mac thật (branch `claude/osiris-arch-r
 **Ý nghĩa:** rủi ro lớn nhất của dự án (UI chưa qua compiler Mac, mang từ M0) **đóng lại bằng bằng chứng thật, không phải suy đoán**. M6-2 Automation UI — thứ mới nhất, chưa từng chạy trên UI thật — hoạt động đầy đủ ngay lần đầu. CI macOS giữ để chống regression tự động.
 
 **CHƯA test (có chủ đích, không phải lỗ hổng):** live Anthropic (chưa cấu hình key) → **baseline thật vẫn là nợ Medium đang mở**, và là điều kiện tiên quyết của M7. App vẫn placeholder-local.
+
+## 4q. M8-6 Closeout — Accessibility audit (2026-07-05)
+
+**Architecture Review (audit cái đã tồn tại, không redesign UI, không tạo Accessibility Engine/Manager/abstraction).** SwiftUI a11y = modifier inline trên view có sẵn.
+
+**Ràng buộc trung thực:** môi trường dev = **Linux, không Mac/Xcode/VoiceOver** → không chạy app được. Audit làm ở **cấp SOURCE** (bằng chứng code, quan sát được thật); phần chỉ-quan-sát-lúc-chạy giao **checklist runtime cho USER** trên Mac.
+
+**Kết quả audit 10 view Presentation — app đã tốt sẵn (bằng chứng code):**
+| Hạng mục | Bằng chứng code | KL |
+|---|---|---|
+| VoiceOver labels | mọi control có text (`Label(text,…)`) hoặc `.accessibilityLabel` (3 icon-only: send/save/deliverable); Dashboard dùng `LabeledContent` | ✅ tốt |
+| Icon-only controls | `plus.circle.fill`/`arrow.up.circle.fill`/`doc.text` đều có `.accessibilityLabel` | ✅ |
+| Dynamic Type | 0 `.font(.system(size:))` cứng — toàn semantic (`.title2/.caption/.callout/.subheadline`) → scale | ✅ |
+| Sheet/Dialog | `.alert` New Project + `.sheet` Deliverable = native (NavigationStack, title) | ✅ native |
+| Sidebar navigation | `NavigationSplitView` + `List(selection:)` + `Label` có text → native keyboard/focus | ✅ native |
+| Key field | `SecureField` (masked, VoiceOver không đọc secret) | ✅ (cả security) |
+| Status line | `ExecutionStatusView` `.accessibilityElement(children: .combine)` | ✅ |
+
+**1 lỗi THẬT đã sửa (bằng chứng code, diff nhỏ nhất):**
+- `MessageRow` (ChatView): sender user/OSIRIS chỉ báo bằng **màu nền + căn lề (Spacer)** — `message.role` chỉ dùng cho styling, KHÔNG có text a11y. VoiceOver đọc chuỗi message text không phân biệt được ai nói. → thêm 1 dòng `.accessibilityLabel("\(You/OSIRIS): \(text)")`. **0 redesign, 0 abstraction, 0 type mới.**
+
+**Regression test:** KHÔNG khả thi — Presentation là Xcode-only (không trong SPM test target); tách `role→text` thành helper testable = tạo abstraction (bạn cấm) cho một ternary. → verify qua **CI macOS compile** + **VoiceOver runtime của USER**. (Nhất quán giới hạn Keychain M8-1.)
+
+**Checklist RUNTIME cho USER (trên Mac — chỉ quan sát được lúc chạy):**
+1. **VoiceOver** (⌘F5): duyệt sidebar → Chat/Search/Dashboard/Automation/Settings đọc đúng tên; gõ goal → transcript đọc "You: …" / "OSIRIS: …" (fix M8-6).
+2. **Keyboard nav / focus order**: Tab qua composer → send; sidebar ↑↓; sheet/alert focus vào field đầu, Esc đóng.
+3. **Dynamic Type**: Settings → text lớn nhất → UI không vỡ/cắt (kỳ vọng OK vì semantic font).
+4. **Color contrast**: message bubble (accent .opacity(0.15) / quaternary .opacity(0.5)) + secondary/tertiary text — kiểm bằng Accessibility Inspector Contrast; nếu < WCAG AA, dán số cho tôi (fix = tăng opacity/đổi style, diff nhỏ).
+5. **Icon-only**: VoiceOver trên nút gửi/lưu/xoá/run đọc đúng nhãn.
+> Nếu bước nào lỗi → dán quan sát cho tôi (như CI errors); sửa diff nhỏ nhất. Không lỗi → runtime coi như pass.
+
+**Chất lượng:** production diff = 1 dòng + comment (Presentation, CI-macOS verify) · SPM suite không đổi **163 test / 2 opt-in skip / 0 fail** · 0 abstraction/type mới · AI spend **$0.00**.
 
 ## 4p. M8-5 Closeout — Production Readiness Milestone Review (nghiệm thu core, tag `M8`, 2026-07-05)
 

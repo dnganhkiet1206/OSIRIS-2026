@@ -185,6 +185,9 @@ private struct MessageRow: View {
                         : AnyShapeStyle(.quaternary.opacity(0.5)),
                     in: RoundedRectangle(cornerRadius: 14)
                 )
+                // Sender is otherwise conveyed only by colour + alignment,
+                // invisible to VoiceOver — name it so the transcript is legible.
+                .accessibilityLabel("\(message.role == .user ? "You" : "OSIRIS"): \(message.text)")
             if message.role == .osiris { Spacer(minLength: 40) }
         }
     }

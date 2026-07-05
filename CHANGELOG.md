@@ -2,6 +2,15 @@
 
 ## [M8] — 2026-07-05 (tag `M8`, core)
 
+### M8-6: Accessibility audit — app already strong, one real fix
+
+- Architecture Review: audit only what exists, no UI redesign, no Accessibility Engine/Manager/abstraction — SwiftUI a11y is inline modifiers on existing views.
+- Honest constraint: the dev environment is Linux with no Mac/Xcode/VoiceOver, so the audit is source-level (real, code-observable evidence); runtime-only checks are handed to the user as a Mac checklist (PROJECT_STATE §4q).
+- Audit of all 10 Presentation views found the app already well-built: every control has a text `Label` or an explicit `.accessibilityLabel` (including the 3 icon-only buttons), Dashboard uses `LabeledContent`, the key field is a `SecureField`, the status line combines its element, and there are no hardcoded `.font(.system(size:))` (semantic fonts scale with Dynamic Type).
+- One real, code-observable defect fixed with the smallest diff: `MessageRow` conveyed the sender (you vs OSIRIS) only through background colour and alignment — invisible to VoiceOver. Added one `.accessibilityLabel("You/OSIRIS: …")`. No redesign, no new type/abstraction.
+- No regression test: Presentation is Xcode-only (not in the SPM test target), and extracting the role→label ternary into a testable helper would be a forbidden abstraction; the fix is compile-verified by CI macOS and runtime-verified by the user's VoiceOver pass.
+- Presentation-only change; SPM suite unchanged at 163 / 2 opt-in skip / 0 fail; $0.00.
+
 ### M8-5: Production Readiness Milestone Review — core accepted
 
 - Architecture Review reconciling every M8 criterion against code/tests/docs; no new features, no new ADR (summary only), no code change beyond one doc-accuracy fix.

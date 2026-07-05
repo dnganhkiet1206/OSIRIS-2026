@@ -14,13 +14,14 @@
 - **M8-2 ✅** (Backup & Recovery review — §4m): audit 6 ưu tiên → **KHÔNG lỗ hổng**; backup = copy thư mục Store; 0 dòng đổi. Ghi 3 trigger.
 - **M8-3 ✅** (Crash Recovery review — §4n): **TÌM & SỬA 1 lỗ hổng thật** — reuse trả process-note WC thay vì deliverable. Fix A + Fix B + regression test.
 - **M8-4 ✅** (Documentation review — §4o): sửa 5 lỗi doc có bằng chứng. 0 code.
-- **M8-5 ✅** (Production Readiness Milestone Review — §4p): **M8 CORE NGHIỆM THU (tag `M8`)** — 6/7 hạng mục đủ Production; Accessibility evidence-gated. Dead-code scan sạch (0 xóa). 163 test / 2 skip / 0 fail · release 0/0.
+- **M8-5 ✅** (Production Readiness Milestone Review — §4p): M8 core nghiệm thu (tag `M8`); dead-code scan sạch.
+- **M8-6 ✅** (Accessibility audit — §4q): audit code-level 10 view — app đã tốt sẵn; **sửa 1 lỗi thật** (`MessageRow` sender cho VoiceOver). Runtime = checklist USER trên Mac. 163 test / 2 skip / 0 fail.
 
 ## Current Milestone
 
-**M8 CORE ĐẠT (tag `M8`).** Các đường đi tiếp — **CHỜ USER CHỌN, KHÔNG tự mở M9:**
+**M8 NGHIỆM THU (tag `M8`) — 7/7 hạng mục code-complete.** Còn lại đều evidence-gated / chờ USER — **KHÔNG tự mở M9:**
 
-1. **Accessibility audit (đóng nốt M8)** — cần Mac/simulator + a11y harness. Linux chỉ rà được code (label/Dynamic Type trong SwiftUI source); phần verify PHẢI trên thiết bị.
+1. **[USER] A11y runtime pass** (Mac): chạy checklist §4q (VoiceOver/keyboard/Dynamic Type/contrast). Lỗi → dán quan sát, tôi sửa diff nhỏ. Không lỗi → Accessibility đóng hoàn toàn.
 2. **M7 provider-side optimization** — cần **key thường trực** (baseline qua-Gateway nhiều sample) → tối ưu token/latency/cost có số-trước-sau.
 3. **Mở M9** (nếu roadmap có) — chờ USER xác nhận.
 
