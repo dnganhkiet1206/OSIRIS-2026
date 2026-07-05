@@ -12,16 +12,17 @@
 - **M8-0 ✅** (Core contract test coverage — §4k): 2 test canh property thật; từ chối resilience suy đoán (write đã atomic).
 - **M8-1 ✅** (Security review — §4l): sửa Keychain thiếu `kSecAttrAccessible`; thêm test "error không lộ key/body".
 - **M8-2 ✅** (Backup & Recovery review — §4m): audit 6 ưu tiên → **KHÔNG lỗ hổng**; backup = copy thư mục Store; 0 dòng đổi. Ghi 3 trigger.
-- **M8-3 ✅** (Crash Recovery review — §4n): **TÌM & SỬA 1 lỗ hổng thật** — reuse trả process-note WC thay vì deliverable (crash-resubmit → rác + bỏ làm lại). Fix A + Fix B + regression test (đã chứng minh fail nếu thiếu fix). 163 test / 2 skip / 0 fail.
+- **M8-3 ✅** (Crash Recovery review — §4n): **TÌM & SỬA 1 lỗ hổng thật** — reuse trả process-note WC thay vì deliverable. Fix A + Fix B + regression test.
+- **M8-4 ✅** (Documentation review — §4o): sửa 5 lỗi doc có bằng chứng (harness compile-được, SYSTEM_COMPONENTS phản ánh AD-46/47, RUNBOOK count). 0 code, 0 doc mới. 163 test / 2 skip / 0 fail.
 
 ## Current Task — CHỜ USER CHỌN task M8 kế (KHÔNG tự mở)
 
 M8 Production Readiness còn các mảnh sau; **mỗi phiên làm ĐÚNG MỘT**, Architecture Review trước code, chỉ đổi khi có bằng chứng:
 
-1. **Docs review** — rà tài liệu lệch thực tế (Linux làm được, thuần đọc/sửa doc). **Ứng viên kế tiếp tốt.**
-2. **Accessibility audit** — cần Mac/simulator (UI).
+1. **Accessibility audit** — cần Mac/simulator (UI). Chưa có harness → phần lớn PHẢI trên thiết bị; Linux chỉ rà được code (VoiceOver label/Dynamic Type trong SwiftUI source).
+2. **M8 nghiệm thu** — nếu USER thấy đủ, đóng M8 (tag) và cân nhắc: M7 provider-side (cần key thường trực) là mảnh mở lớn nhất còn lại.
 
-> **Đã xong & ghi trigger:** Security (M8-1, §4l) · Backup&Recovery (M8-2, §4m) · Crash Recovery (M8-3, §4n). Các trigger nhỏ (Keychain on-device check; fsync durability; Store-level dangling-path test; migration-discipline rule; reuse `limit:10` starvation) — chỉ làm khi có bằng chứng/harness, KHÔNG suy đoán.
+> **Đã xong & ghi trigger:** Security (M8-1) · Backup&Recovery (M8-2) · Crash Recovery (M8-3) · Docs (M8-4). Trigger nhỏ (Keychain on-device check; fsync durability; Store-level dangling-path test; migration-discipline rule; reuse `limit:10` starvation) — chỉ làm khi có bằng chứng/harness, KHÔNG suy đoán.
 
 ## Store-resilience — trigger đã ghi (§4k), CHƯA làm
 Chỉ thêm "loadAll skip file hỏng" khi có **bằng chứng file hỏng thật** (bit-rot, sync-conflict, encoding bug) — KHÔNG phải crash (atomic write đã chặn). Đến lúc đó: skip trong bulk-read, giữ `load` targeted vẫn throw; + test canh.

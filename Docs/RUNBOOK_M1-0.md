@@ -10,7 +10,7 @@
    ```
 2. Tại thư mục repo:
    ```bash
-   swift test          # kỳ vọng: 49/49 pass (xác nhận package trên macOS)
+   swift test          # kỳ vọng: toàn bộ test PASS (số lượng tăng theo milestone; xác nhận package trên macOS)
    xcodegen generate   # sinh OSIRIS.xcodeproj từ project.yml
    open OSIRIS.xcodeproj
    ```

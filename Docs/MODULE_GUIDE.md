@@ -108,7 +108,7 @@ let installedModules: [ModuleManifest] = [YouTubeModule.manifest, MyModule.manif
 ## 9. Tuyệt đối không được (Architecture Test sẽ đánh trượt build)
 
 - Import bất kỳ thứ gì ngoài `OsirisCore`.
-- Nhắc đến `Kernel`, `AIGateway`, `Store`, `ExecutionEngine`, `ExecutionPlan`, `WriteGate`, `EventBus`, `URLSession`, `FileManager`, `UserDefaults` — dù chỉ một chữ trong code.
+- Nhắc đến `Kernel`, `AIGateway`, `Store`, `ExecutionEngine`, `ExecutionPlan`, `WriteGate`, `URLSession`, `FileManager`, `UserDefaults` — dù chỉ một chữ trong code.
 - Logic: hàm, điều kiện, vòng lặp, state, persistence — module là struct literal.
 - Tên module của bạn xuất hiện trong Core/Application/Presentation/Infrastructure (rule quét chuỗi).
 - Sửa Core, contract, matcher, hay module khác "cho tiện". Cần thứ contract chưa có (tool/API/OAuth/event)? DỪNG — đó là quyết định kiến trúc M6 (AD-45), mang use case thật đến review, đừng tự mở.
@@ -174,7 +174,7 @@ final class MyModuleTests: XCTestCase {
             skills: InMemorySkillRegistry(registering: allSkills),
             engine: DefaultExecutionEngine(gateway: gateway),
             store: FileBackedStore(storage: try FileStorage(baseDirectory: directory)),
-            approvalGate: RequireUserApprovalGate(), publish: { _ in })
+            publish: { _ in })
     }
 
     func testEndToEnd() async throws {

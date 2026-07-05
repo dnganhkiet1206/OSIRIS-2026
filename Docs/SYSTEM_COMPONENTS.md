@@ -48,7 +48,7 @@
 
 ### 2.1. Kernel (Executive Brain)
 - **Hợp nhất từ:** Planner (P4) + Executive Brain (P18) + Intelligent Execution (P5) + Validation/Confidence (P5/P10/P18). *(AD-01, AD-05, AD-12)*
-- **Trách nhiệm:** Điều phối vòng đời chuẩn 5 pha (Intake → Decide → Execute → Verify → Persist); hiểu mục tiêu thật và xác định deliverable; chọn chiến lược theo thứ tự tài nguyên (data → cache → logic → tool → workflow → AI); duyệt mọi AI usage; giữ Confidence tier (High: chạy / Medium: chạy + ghi giả định / Low: hỏi lại); thực thi approval gates cho hành động rủi ro (publish, delete, chi tiêu lớn); tiếp nhận escalation từ Execution Engine khi tình huống vượt policy khai báo (AD-25).
+- **Trách nhiệm:** Điều phối vòng đời chuẩn 5 pha (Intake → Decide → Execute → Verify → Persist); hiểu mục tiêu thật và xác định deliverable; chọn chiến lược theo thứ tự tài nguyên (data → cache → logic → tool → workflow → AI); duyệt mọi AI usage; giữ Confidence tier (High: chạy / Medium: chạy + ghi giả định / Low: hỏi lại); gate cho hành động rủi ro — **hiện KHÔNG có** (ApprovalGate đã XÓA tại M6-0/AD-47: 0 risky action qua 6 milestone; tái sinh cùng risky action THẬT đầu tiên, external/irreversible); tiếp nhận escalation từ Execution Engine khi tình huống vượt policy khai báo (AD-25).
 - **Không làm:** tự tạo deliverable; gọi provider trực tiếp; chứa logic nghiệp vụ; **mọi I/O** (AD-33: Kernel chỉ phụ thuộc protocol Core, không import Infrastructure; progress events qua closure inject từ composition root — cưỡng chế bằng Architecture Test AD-34).
 - **Executive State:** view phái sinh trong bộ nhớ từ `Store.ProjectState` — không persist riêng (AD-08).
 
@@ -134,7 +134,7 @@
 
 **Module Contract v1 — ĐÃ SHIP tại M4-0 (AD-44):** module = `ModuleManifest` (id/version/purpose/**skills**) — thuần DATA, target `OsirisModules` chỉ import OsirisCore; skill namespace theo module id (precondition cưỡng chế); composition root là nơi DUY NHẤT biết module nào được cài, đăng ký skills vào MỘT Skill Registry chung; module không bao giờ thấy Kernel/Gateway/Store/Infrastructure (arch rules); Core không bao giờ biết module cụ thể (arch rule cấm cả tên module trong Core). **Tái dùng 100% Core — module cần sửa Core là red flag kiến trúc.**
 
-*Tầm nhìn đầy đủ (AD-21) — thêm theo bằng chứng khi module thật cần:* UI/Templates/Config/Docs riêng theo module; 4 trạng thái installed/enabled/disabled/archived; giao tiếp qua Event Bus + capability (chưa module nào cần event — đếm bằng chứng cho quyết định EventBus tại M4 review).
+*Tầm nhìn đầy đủ (AD-21) — thêm theo bằng chứng khi module thật cần:* UI/Templates/Config/Docs riêng theo module; 4 trạng thái installed/enabled/disabled/archived; capability. *(Giao tiếp Event Bus: quyết định TẠI M4 review = XÓA EventBus (AD-46) — 0 consumer động sau 4 milestone; tái sinh chỉ khi có audience động thật.)*
 
 | Module | Milestone | Capabilities chính (dạng tag) |
 |---|---|---|

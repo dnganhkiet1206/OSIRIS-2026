@@ -2,6 +2,13 @@
 
 ## [Unreleased — M8]
 
+### M8-4: Documentation review — fix five evidenced doc defects, no rewrites
+
+- Architecture Review across all living docs; only fixed what code proves wrong/outdated, no wording rewrites, no new docs. Key distinction: docs that declare themselves current-state (SYSTEM_COMPONENTS "official catalog", MODULE_GUIDE how-to, RUNBOOK guide) must be accurate and were fixed; the roadmap (DEVELOPMENT_PLAN) and immutable history (BLUEPRINT ADRs, PROJECT_STATE milestone checklists) were left as-is.
+- Fixed: (1) `MODULE_GUIDE.md` test harness used the deleted `RequireUserApprovalGate()`/`approvalGate:` (AD-47) and would not compile — removed, now matches `DeliverablePersistenceTests`; (2) `MODULE_GUIDE.md` forbidden-list named the deleted `EventBus` (AD-46) — removed; (3) `SYSTEM_COMPONENTS.md` §2.1 described the Kernel as "executing approval gates" present-tense though AD-47 deleted the gate — annotated as deleted/deferred; (4) `SYSTEM_COMPONENTS.md` §5 said the EventBus decision was pending "at M4 review", contradicting the same file's line 111 (deleted at M4-4, AD-46) — corrected; (5) `RUNBOOK_M1-0.md` "49/49 pass" (now 163) — made count-agnostic.
+- Left unchanged with reasons: DEVELOPMENT_PLAN approval-gate lines (roadmap intent — AD-47 defers, doesn't abandon); BLUEPRINT ADRs and PROJECT_STATE milestone checklists (immutable history — record what was true then, deletion recorded later); the PROJECT_STATE §5 ↔ BLUEPRINT §3 ADR pairing (index→detail, not a dual source); FOLDER_STRUCTURE's not-yet-created dirs (self-declared standard/target layout).
+- Docs only; test suite unchanged at 163 / 2 opt-in skip / 0 fail; $0.00.
+
 ### M8-3: Crash Recovery review — found and fixed a real reuse/crash correctness bug
 
 - Architecture Review before code; no speculative checkpoint/transaction/journal/recovery-manager/state-machine. Found one real, production-reachable correctness + crash-recovery bug and fixed it with the smallest diff.

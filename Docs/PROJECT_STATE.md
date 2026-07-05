@@ -9,8 +9,8 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M8 — Production Readiness: đang triển khai** (M0→M6 nghiệm thu; tag local chờ push khi merge). M7-0 ✅ (§4j); M7 provider-side HOÃN chờ key. M8-0 ✅ (§4k) · M8-1 Security ✅ (§4l) · M8-2 Backup&Recovery ✅ (§4m) · M8-3 Crash Recovery ✅ (§4n) |
-| Task hiện tại | **M8-3 (Crash Recovery review) ✅ — TÌM & SỬA 1 lỗ hổng thật:** reuse trả về *process-note* WorkingContext (assumption/reflection nhúng goal verbatim) thay vì deliverable thật → sau crash-resubmit trả rác & bỏ làm lại. Fix A (reuse chỉ trả created-result) + Fix B (không ghi lặp assumption khi reuse) + regression test (đã chứng minh fail nếu thiếu fix). Chi tiết §4n. **Mac validation ✅ (§4i)** · kế tiếp: chờ USER chọn task M8 kế (NEXT_TASK) — KHÔNG tự mở |
+| Giai đoạn | **M8 — Production Readiness: đang triển khai** (M0→M6 nghiệm thu; tag local chờ push khi merge). M7-0 ✅ (§4j); M7 provider-side HOÃN chờ key. M8-0 ✅ (§4k) · M8-1 Security ✅ (§4l) · M8-2 Backup&Recovery ✅ (§4m) · M8-3 Crash Recovery ✅ (§4n) · M8-4 Docs ✅ (§4o) |
+| Task hiện tại | **M8-4 (Documentation review) ✅ — SỬA 5 lỗi tài liệu có bằng chứng:** MODULE_GUIDE harness dùng `RequireUserApprovalGate` đã xóa (không compile) + list cấm còn `EventBus` đã xóa; SYSTEM_COMPONENTS còn mô tả approval-gate present-tense (AD-47) và "quyết định EventBus chờ M4" (mâu thuẫn chính nó, AD-46); RUNBOOK "49/49" → 163. Chi tiết §4o. 0 dòng code · 0 doc mới · không đụng roadmap/history. **Mac validation ✅ (§4i)** · kế tiếp: chờ USER chọn task M8 kế (NEXT_TASK) — KHÔNG tự mở |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **19 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 163 test / 2 opt-in skip / 0 fail** (~1.1s offline; +1 test M8-3 crash-reuse) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · Keychain fix (M8-1) = App-layer verify qua CI macOS · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, iPhone 17 Pro sim (iOS 26.2), UI end-to-end (§4i)** |
@@ -80,7 +80,7 @@ M6 — Automation: nối trí tuệ với thực thi tự động, KHÔNG visual
 
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Chọn task M8 kế** (`NEXT_TASK.md`): docs review · accessibility. (Security ✅ M8-1 · Backup&Recovery ✅ M8-2 · Crash Recovery ✅ M8-3). Không tự mở.
+1. **[USER] Chọn task M8 kế** (`NEXT_TASK.md`): accessibility (cần Mac) · hoặc nghiệm thu/đóng M8. (Security ✅ M8-1 · Backup&Recovery ✅ M8-2 · Crash Recovery ✅ M8-3 · Docs ✅ M8-4). Không tự mở.
 2. **[USER] Cấp API key THƯỜNG TRỰC** để mở **M7 provider-side** (tối ưu token/latency/cost qua Gateway) — hiện HOÃN; key một-lần đã thu sàn provider (§4j), cần key thường trực cho baseline qua-Gateway nhiều sample.
 3. M8-0 ✅ (§4k). CI macOS giữ chống regression UI.
 
@@ -128,6 +128,27 @@ User tự chạy toàn bộ stack trên Mac thật (branch `claude/osiris-arch-r
 **Ý nghĩa:** rủi ro lớn nhất của dự án (UI chưa qua compiler Mac, mang từ M0) **đóng lại bằng bằng chứng thật, không phải suy đoán**. M6-2 Automation UI — thứ mới nhất, chưa từng chạy trên UI thật — hoạt động đầy đủ ngay lần đầu. CI macOS giữ để chống regression tự động.
 
 **CHƯA test (có chủ đích, không phải lỗ hổng):** live Anthropic (chưa cấu hình key) → **baseline thật vẫn là nợ Medium đang mở**, và là điều kiện tiên quyết của M7. App vẫn placeholder-local.
+
+## 4o. M8-4 Closeout — Documentation review (2026-07-05)
+
+**Architecture Review (audit tài liệu, chỉ sửa cái có bằng chứng sai/lỗi thời — không viết lại vì diễn đạt, không tạo doc mới).** Rà toàn bộ docs sống, cross-check tuyên bố kiểm chứng được với code. **Phân biệt then chốt:** doc tự khai "trạng thái hiện tại" (SYSTEM_COMPONENTS "danh mục chính thức, chỉ thành phần trong file được tồn tại"; MODULE_GUIDE how-to; RUNBOOK guide) → PHẢI đúng hiện tại → sửa; doc roadmap (DEVELOPMENT_PLAN) + lịch sử bất biến (ADR trong BLUEPRINT, checklist milestone trong PROJECT_STATE) → giữ nguyên.
+
+**5 lỗi có bằng chứng đã sửa (diff nhỏ nhất, thuần factual):**
+| # | File | Lỗi (bằng chứng) | Sửa |
+|---|---|---|---|
+| 1 | `MODULE_GUIDE.md` khung test | `approvalGate: RequireUserApprovalGate()` — type + param đã XÓA (AD-47), `Kernel.init` không còn param này → **contributor copy harness sẽ KHÔNG compile** | bỏ arg; harness giờ khớp `DeliverablePersistenceTests` |
+| 2 | `MODULE_GUIDE.md` §9 list cấm | liệt kê `EventBus` — type đã XÓA (AD-46) | bỏ khỏi list |
+| 3 | `SYSTEM_COMPONENTS.md` §2.1 | "thực thi approval gates cho hành động rủi ro (publish/delete/…)" present-tense — ApprovalGate đã XÓA (AD-47); doc này tự khai "danh mục hiện tại" và đã đánh dấu EventBus xóa ở §111 nhưng bỏ sót ApprovalGate | ghi rõ "hiện KHÔNG có, xóa M6-0/AD-47, tái sinh cùng risky action thật" |
+| 4 | `SYSTEM_COMPONENTS.md` §5 | "đếm bằng chứng cho quyết định EventBus tại M4 review" — **mâu thuẫn chính dòng 111 cùng file** (đã ghi XÓA tại M4-4) | phản ánh quyết định đã ra: XÓA (AD-46) |
+| 5 | `RUNBOOK_M1-0.md` | `swift test # kỳ vọng: 49/49` — nay 163 test | count-agnostic ("toàn bộ PASS, tăng theo milestone") |
+
+**KHÔNG sửa (có lý do bằng chứng):**
+- `DEVELOPMENT_PLAN.md` (approval-gate ở M1/M6 criteria): là **roadmap/intent**; AD-47 HOÃN gate (tái sinh cùng risky action), không bỏ khái niệm → không sai. PROJECT_STATE §4h đã đối chiếu.
+- ADR trong `PROJECT_BLUEPRINT §3` + checklist milestone trong `PROJECT_STATE` (M2-4 "EventBus 2 consumer", M1 "ApprovalGate wired") = **lịch sử bất biến** (AD-14): ghi đúng cái đã đúng LÚC ĐÓ; deletion ghi sau tại §4h/AD-46/47. Sửa = viết lại lịch sử.
+- ADR log đôi (PROJECT_STATE §5 quick-ref ↔ BLUEPRINT §3 detail): quan hệ index→detail (§5 tự ghi "chi tiết tại BLUEPRINT §3"), không phải dual-source-of-truth drift → giữ.
+- `FOLDER_STRUCTURE.md` (Shared/DesignSystem… chưa tồn tại): doc tự khai là **cấu trúc CHUẨN/convention** (nơi thứ sẽ nằm khi có), không phải trạng thái hiện tại → không sai.
+
+**Chất lượng:** 0 dòng code · 0 doc mới · 3 file docs / 5 sửa factual · suite không đổi **163 test / 2 opt-in skip / 0 fail** · harness guide giờ compile-được (tương đương test đã ship) · AI spend **$0.00**.
 
 ## 4n. M8-3 Closeout — Crash Recovery review: TÌM & SỬA 1 lỗ hổng (2026-07-05)
 
