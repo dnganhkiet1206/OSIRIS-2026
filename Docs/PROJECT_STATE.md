@@ -9,11 +9,11 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M8 — Production Readiness: đang triển khai** (M0→M6 nghiệm thu; tag local chờ push khi merge). M7-0 ✅ (baseline, §4j); **M7 provider-side HOÃN chờ key thường trực**. M8-0 ✅ (§4k) · M8-1 Security ✅ (§4l) · M8-2 Backup&Recovery ✅ (§4m) |
-| Task hiện tại | **M8-2 (Backup & Recovery review) ✅ — KHÔNG có lỗ hổng** (audit 6 ưu tiên: durability/atomic/restart/restore/cross-record/migration đều sound & có test). Backup = copy thư mục Store; **KHÔNG cần backup manager/snapshot/cloud** (bằng chứng §4m). 0 dòng đổi (đúng khung "no-hole → document + dừng"). **Mac validation ✅ (§4i)** · kế tiếp: chờ USER chọn task M8 kế (NEXT_TASK) — KHÔNG tự mở |
+| Giai đoạn | **M8 — Production Readiness: đang triển khai** (M0→M6 nghiệm thu; tag local chờ push khi merge). M7-0 ✅ (§4j); M7 provider-side HOÃN chờ key. M8-0 ✅ (§4k) · M8-1 Security ✅ (§4l) · M8-2 Backup&Recovery ✅ (§4m) · M8-3 Crash Recovery ✅ (§4n) |
+| Task hiện tại | **M8-3 (Crash Recovery review) ✅ — TÌM & SỬA 1 lỗ hổng thật:** reuse trả về *process-note* WorkingContext (assumption/reflection nhúng goal verbatim) thay vì deliverable thật → sau crash-resubmit trả rác & bỏ làm lại. Fix A (reuse chỉ trả created-result) + Fix B (không ghi lặp assumption khi reuse) + regression test (đã chứng minh fail nếu thiếu fix). Chi tiết §4n. **Mac validation ✅ (§4i)** · kế tiếp: chờ USER chọn task M8 kế (NEXT_TASK) — KHÔNG tự mở |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **19 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 162 test / 2 opt-in skip / 0 fail** (~1.1s offline; +1 test M8-1 provider-error-no-leak) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · Keychain fix (M8-1) = App-layer, verify qua CI macOS compile (không Linux-test được) · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, iPhone 17 Pro sim (iOS 26.2), UI end-to-end (§4i)** |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 163 test / 2 opt-in skip / 0 fail** (~1.1s offline; +1 test M8-3 crash-reuse) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · Keychain fix (M8-1) = App-layer verify qua CI macOS · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, iPhone 17 Pro sim (iOS 26.2), UI end-to-end (§4i)** |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -80,7 +80,7 @@ M6 — Automation: nối trí tuệ với thực thi tự động, KHÔNG visual
 
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Chọn task M8 kế** (`NEXT_TASK.md`): crash-recovery (khôi phục tiến độ dở) · docs review · accessibility. (Security ✅ M8-1 · Backup&Recovery ✅ M8-2). Không tự mở.
+1. **[USER] Chọn task M8 kế** (`NEXT_TASK.md`): docs review · accessibility. (Security ✅ M8-1 · Backup&Recovery ✅ M8-2 · Crash Recovery ✅ M8-3). Không tự mở.
 2. **[USER] Cấp API key THƯỜNG TRỰC** để mở **M7 provider-side** (tối ưu token/latency/cost qua Gateway) — hiện HOÃN; key một-lần đã thu sàn provider (§4j), cần key thường trực cho baseline qua-Gateway nhiều sample.
 3. M8-0 ✅ (§4k). CI macOS giữ chống regression UI.
 
@@ -128,6 +128,32 @@ User tự chạy toàn bộ stack trên Mac thật (branch `claude/osiris-arch-r
 **Ý nghĩa:** rủi ro lớn nhất của dự án (UI chưa qua compiler Mac, mang từ M0) **đóng lại bằng bằng chứng thật, không phải suy đoán**. M6-2 Automation UI — thứ mới nhất, chưa từng chạy trên UI thật — hoạt động đầy đủ ngay lần đầu. CI macOS giữ để chống regression tự động.
 
 **CHƯA test (có chủ đích, không phải lỗ hổng):** live Anthropic (chưa cấu hình key) → **baseline thật vẫn là nợ Medium đang mở**, và là điều kiện tiên quyết của M7. App vẫn placeholder-local.
+
+## 4n. M8-3 Closeout — Crash Recovery review: TÌM & SỬA 1 lỗ hổng (2026-07-05)
+
+**Architecture Review (chỉ đổi khi có bằng chứng — không checkpoint/transaction/journal/recovery-manager/state-machine).** Vòng đời Kernel chỉ persist ở cuối (data-trước-index, §4m); mid-goal chỉ có 1 ghi sớm = memory note qua WriteGate. Đào theo 6 điểm crash → **phát hiện 1 lỗ hổng correctness+crash thật.**
+
+**Lỗ hổng (bằng chứng code, đã tái hiện bằng test):** `Kernel.reusableResult` search `.exact` (limit 1), thứ tự walk knowledge→**WorkingContext**→deliverable. HAI loại note WC **nhúng goal verbatim**: assumption medium-confidence (`"Assumption (medium confidence)… \"<goal>\""`) và reflection (`Reflection.swift:31` `"Recently completed: <goal> — deliverable at <path>"`). Cả hai match exact goal và được walk TRƯỚC deliverable → **run thứ 2 / crash-resubmit trả về NOTE thay vì deliverable thật, và bỏ làm lại việc thật** (mất dữ liệu: deliverable thật không được tạo). Production reachable: `makeWritePolicy()` admit `.reusableLater`. *(Bị che trong test cũ: dùng gate `.disabled` + goal 3 từ né reflection ≥4 từ.)*
+
+**Fix (diff nhỏ nhất, khu trú trong Kernel — vai trò decider hợp lệ):**
+- **Fix A (`reusableResult`):** reuse CHỈ trả created-result thật (`.deliverable`/`.knowledge`); bỏ qua `.workingContext`/`.projectState` (process-note, không phải câu trả lời). Miss → re-run (an toàn). Aligns reuse với đúng mục đích của nó.
+- **Fix B (ghi assumption):** chỉ ghi khi KHÔNG reuse (`!isReuse`). Trước đây assumption ghi mọi run kể cả reuse, id UUID mới mỗi lần → tích luỹ duplicate không giới hạn; nay chỉ 1 lần/goal.
+
+**Regression test:** `CrashRecoveryReuseTests.testReRunReusesDeliverableNotProcessNoteAndDoesNotDuplicate` — gate production-shaped, goal medium ≥4 từ (ghi cả 2 note), run 2 lần → khẳng định trả deliverable thật (không phải note) + provider gọi đúng 1 lần (reuse, không duplicate) + assumption count = 1. **Đã chứng minh test FAIL nếu revert Fix A** (trả "Recently completed: …" thay vì deliverable) → test có ý nghĩa, không tautology.
+
+**6 điểm crash — kết luận sau fix:**
+| Điểm | Kết luận |
+|---|---|
+| Kill giữa goal (trước Persist) | ✅ chưa persist gì (trừ note self-expiring) → resubmit chạy mới, không rác (nhờ Fix A) |
+| In-flight execution | ✅ Kernel không persist "executive state" (AD-08); engine không chạm Store |
+| Mở lại project sau crash | ✅ ProjectState là file độc lập, restart tests |
+| Deliverable ghi dở | ✅ atomic write (§4m) — không file cụt |
+| Store consistency | ✅ data-trước-index → tệ nhất orphan vô hình (§4m) |
+| Không duplicate/mất dữ liệu | ✅ Fix A (không rác + không bỏ làm lại) + Fix B (không tích luỹ note) |
+
+**Trigger đã ghi (không sửa — residual an toàn):** `reusableResult` dùng `limit:10`; nếu MỘT goal medium bị re-run rất nhiều lần trong TTL, note WC tích luỹ có thể đẩy deliverable (walk cuối) ra ngoài top-10 → reuse MISS (re-run an toàn, không rác). Fix B đã giảm mạnh (assumption không tích luỹ; reflection không ghi trên reuse) → thực tế chỉ ~1 assumption + ~1 reflection/goal, dưới 10 xa. Chỉ siết (kind-restricted search ở Store API) nếu có bằng chứng starvation thật.
+
+**Chất lượng:** build 0/0 · **163 test / 2 opt-in skip / 0 fail** ~1.1s · production diff = 2 sửa nhỏ khu trú Kernel + 1 test · arch suite nguyên · AI spend **$0.00**.
 
 ## 4m. M8-2 Closeout — Backup & Recovery review: KHÔNG lỗ hổng (2026-07-05)
 

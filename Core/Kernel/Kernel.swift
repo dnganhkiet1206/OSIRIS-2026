@@ -84,8 +84,12 @@ public final class Kernel: Sendable {
 
         // Medium confidence (AD-05/42): proceed, but the assumption is
         // documented — through the same Write Gate as every memory write.
-        // No second path exists.
-        if confidenceTier == .medium,
+        // No second path exists. Only on a run that actually interprets and
+        // executes the goal: a reuse run returns a prior result under the
+        // same interpretation already documented, so re-writing an identical
+        // note every re-run (fresh id each time) would accumulate unbounded.
+        let isReuse: Bool = { if case .reuse = strategy { return true } else { return false } }()
+        if confidenceTier == .medium, !isReuse,
            let assumption = writeGate.admit(MemoryCandidate(
                projectID: goal.projectID,
                content: "Assumption (medium confidence): interpreting the goal literally — \"\(objective)\"",
@@ -211,22 +215,30 @@ public final class Kernel: Sendable {
     }
 
     /// Reuse Before Create: strict match only — the full goal text must
-    /// appear in a stored record. Prefer a miss over a wrong reuse;
-    /// relevance ranking arrives in M1. Full content is fetched through
-    /// the Store so the reused deliverable is complete, not a snippet.
+    /// appear in a stored record. Prefer a miss over a wrong reuse. Reuse
+    /// returns prior CREATED results ONLY — deliverables and curated
+    /// knowledge. Working-context entries (medium-confidence assumptions and
+    /// "Recently completed" reflection notes) embed the goal verbatim, so an
+    /// exact search matches them; returning one would hand back a process
+    /// note as if it were the deliverable — and, after a crash mid-goal,
+    /// silently skip redoing the real work. Skip notes, keep looking for a
+    /// real result (a miss just re-runs — safe). Full content is fetched
+    /// through the Store so the reused deliverable is complete, not a snippet.
     private func reusableResult(for objective: String, in projectID: ProjectID) async throws -> String? {
-        guard let hit = try await store.search(
-            StoreQuery(text: objective, projectID: projectID, limit: 1)
-        ).first else { return nil }
-
-        switch hit.kind {
-        case .knowledge:
-            return try await store.knowledge(id: hit.id)?.body
-        case .deliverable:
-            return try await store.deliverableContent(at: hit.id)
-        case .projectState, .workingContext:
-            return hit.snippet
+        let hits = try await store.search(
+            StoreQuery(text: objective, projectID: projectID, limit: 10)
+        )
+        for hit in hits {
+            switch hit.kind {
+            case .deliverable:
+                if let content = try await store.deliverableContent(at: hit.id) { return content }
+            case .knowledge:
+                if let body = try await store.knowledge(id: hit.id)?.body { return body }
+            case .workingContext, .projectState:
+                continue
+            }
         }
+        return nil
     }
 }
 

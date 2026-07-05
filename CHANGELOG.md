@@ -2,6 +2,15 @@
 
 ## [Unreleased — M8]
 
+### M8-3: Crash Recovery review — found and fixed a real reuse/crash correctness bug
+
+- Architecture Review before code; no speculative checkpoint/transaction/journal/recovery-manager/state-machine. Found one real, production-reachable correctness + crash-recovery bug and fixed it with the smallest diff.
+- **Bug:** `Kernel.reusableResult` did an `.exact` search (limit 1) that walks knowledge → WorkingContext → deliverables. Two working-context notes embed the goal verbatim — the medium-confidence assumption (`"Assumption (medium confidence)… \"<goal>\""`) and the reflection note (`Reflection.swift`: `"Recently completed: <goal> — deliverable at <path>"`). Both match the exact goal and are walked before the deliverable, so a second run — exactly what a user does after the app is killed mid-goal — returned the note as if it were the deliverable and skipped redoing the real work (data loss). Reachable in production (`makeWritePolicy()` admits `.reusableLater`); masked in prior tests by the disabled gate and a 3-word goal that dodged the ≥4-word reflection note.
+- **Fix A** (`reusableResult`): reuse returns only real created results (`.deliverable`/`.knowledge`) and skips working-context/project-state process notes; a miss just re-runs (safe). **Fix B**: the medium-confidence assumption is written only on a non-reuse run — previously it was re-written on every run with a fresh id, accumulating unbounded duplicate notes.
+- **Regression test** `CrashRecoveryReuseTests`: production-shaped write gate, a medium ≥4-word goal (writes both notes), run twice → asserts the real deliverable is returned (not a note), the provider is called exactly once (reuse, no duplicate), and the assumption is documented once. Verified it FAILS if Fix A is reverted (returns "Recently completed: …"), so it is a real guard.
+- Recorded a safe residual trigger: `reusableResult` uses `limit: 10`; only if a single medium goal is re-run many times within the note TTL could notes crowd the deliverable out of the top-10 → a safe reuse miss (re-run), never garbage. Fix B makes this very unlikely (~1 assumption + ~1 reflection per goal).
+- 163 tests / 2 opt-in skip / 0 fail; production diff is two small localized Kernel edits; $0.00.
+
 ### M8-2: Backup & Recovery review — audit only, no hole found, no change
 
 - Architecture Review across the six requested priorities; audit-only, no speculative cloud sync / version history / snapshot engine / replication / backup manager. Conclusion: backup & recovery is already sound and adequately tested — zero code/test change.
