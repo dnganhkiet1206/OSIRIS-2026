@@ -2,7 +2,9 @@
 
 > Quy trình phiên làm việc: đọc `Docs/PROJECT_STATE.md` → đọc file này → đọc các file liên quan → thiết kế → kiểm tra tái sử dụng → triển khai → Self Review → Architecture Review → refactor nếu cần → cập nhật tài liệu → cập nhật PROJECT_STATE → tạo NEXT_TASK mới → kết thúc. Không bỏ qua bước nào.
 >
-> **Song song:** nợ High — user chưa chạy `Docs/RUNBOOK_M1-0.md`. Nếu kết quả được dán vào phiên: xử lý trước, task dưới sau.
+> **Song song / nợ đang cháy:**
+> - **CI macOS** đã chạy: nếu run mới nhất (sau fix `ChatViewModel` + UI M6-2) còn lỗi SwiftUI → dán `error:` vào phiên, sửa trước (giống ChatViewModel). Cần cấp lại quyền GitHub (`/mcp`) để tôi tự đọc CI.
+> - **API key** cho `LiveBaselineTests` (nợ Medium) — user cấp qua env, đừng dán vào chat.
 
 ## Current Milestone
 
@@ -10,49 +12,41 @@
 
 ## Current Task
 
-**M6-2 — Scheduled trigger interface + Automation UI (phần lớn PENDING thiết bị)**
+**M6-3 — M6 Milestone Review & Acceptance**
 
-## Cảnh báo phạm vi trung thực
+## Vì sao review bây giờ
 
-M6-2 chạm hai vùng KHÔNG kiểm chứng được trên Linux: (1) iOS background scheduling để fire `.daily` — API nền tảng, không có scheduler OSIRIS; (2) SwiftUI Presentation cho automation. Cả hai chỉ `swiftc -parse` được, giống toàn bộ UI M0→M5 (nợ High). **Cân nhắc mạnh:** có thể task này nên HOÃN tới khi user chạy runbook (có Mac) — nếu không, ta chồng thêm UI/nền-tảng chưa compile lên nợ High đang lớn. Tự đánh giá đầu phiên: nếu giá trị kiểm chứng được (Linux) quá mỏng so với rủi ro, đề xuất user chạy runbook trước, HOẶC chuyển sang M6-3 (phần automation còn testable) thay vì M6-2.
+Core testable/buildable của M6 đã xong: M6-0 (arch review + xoá ApprovalGate, AD-47), M6-1 (automation-as-data: record + port + run-now), M6-2 (Automation UI). Phần còn lại của phạm vi M6 (scheduled background firing, MCP remote tools, monitoring) đều **device/evidence-gated** — không build mù được (giống UI PENDING từ M0). Review đánh giá trung thực phần đã xong + khoanh vùng phần hoãn, như M1-5/M2-6/M3-4/M4-4/M5-2.
 
-## Phạm vi (NẾU tiến hành)
+## Phạm vi review
 
-1. **Scheduled trigger = interface + adapter mỏng, KHÔNG scheduler component:** định nghĩa protocol `AutomationScheduler` (App layer) mà iOS impl dùng `BGTaskScheduler`/`UNUserNotificationCenter`; impl thật là adapter nền tảng (Xcode-only), KHÔNG phải component OSIRIS (như AnthropicProvider là adapter, AD-31). Fire = gọi `Automation.runNow`. KHÔNG timer trên Linux.
-2. **Automation UI (Presentation):** màn hình list/create/toggle/run/delete rule qua port `Automation` có sẵn; sidebar thêm mục (sau Advanced?). ViewModel: **CẢNH BÁO trigger cứng M2-6** — ChatViewModel đã gánh 5 vai, task UI kế tiếp phải TÁCH; automation nên là ViewModel/surface RIÊNG, không nhồi vào ChatViewModel.
-3. **Không làm:** scheduler engine/dispatcher; rule điều kiện phức tạp; risky-action/ApprovalGate (chờ external tools).
+1. **Bảng tiêu chí M6** (DEVELOPMENT_PLAN §2/M6: scheduling · background · automation rules · MCP · monitoring; "công việc lặp lại chạy tự động, hành động rủi ro qua approval gate") → ✅/⚠️/HOÃN từng mục, PENDING ghi địa chỉ (thiết bị/CI/AD-45).
+2. **ADR M6:** AD-46 (EventBus xoá) · AD-47 (risky-action cluster + automation design) — Decision→Evidence→Result.
+3. **Nợ rà toàn bộ:** CI macOS đã hạ nợ High từ "unknown" xuống "CI-visible, đang sửa" — cập nhật trạng thái theo kết quả CI mới nhất; baseline live-harness sẵn (chờ key); ChatViewModel trigger đã được tôn trọng (M6-2). Không gia hạn thiếu bằng chứng.
+4. **Risky action / ApprovalGate:** xác nhận điều kiện tái sinh (external-effect tool đầu tiên = mở tool-channel AD-45) chưa đến — automation v1 vẫn 0 risky action (chỉ sinh deliverable local).
+5. **Acceptance report + tag `M6`** (local) + DEVELOPMENT_PLAN (đánh dấu M6 + điều kiện kích hoạt scheduled-firing/MCP) + NEXT_TASK cho M7 (Optimization — nơi các nợ Low perf/cache/search có số liệu thật để tối ưu; ĐỌC kỹ §2/M7).
+6. **Open-source readiness:** cập nhật — CI macOS giờ compile UI tự động (contributor thấy build status); còn baseline thật + device UX.
 
-## Files (nếu tiến hành)
+## Điều kiện HOÃN có ghi (không build mù)
 
-- `Application/` (AutomationScheduler protocol nếu cần), `Presentation/Automation*` (View + ViewModel riêng), `App/` (iOS scheduler adapter + wire), docs.
+- **Scheduled `.daily` firing:** iOS `BGTaskScheduler` adapter — kích hoạt khi có thiết bị/simulator để test bg task thật. Interface đã sẵn (trigger enum M6-1).
+- **MCP remote tools:** = mở tool-channel (AD-45) + risky action + ApprovalGate tái sinh — cụm quyết định M6+/M7 khi có use case thật + user consent network.
 
 ## Checklist
 
-- [ ] Tự đánh giá đầu phiên: tiến M6-2 hay hoãn chờ runbook (ghi lập luận).
-- [ ] Nếu tiến: scheduler thật là ADAPTER nền tảng, không component OSIRIS; 0 timer/scheduler trên Linux.
-- [ ] Automation UI là surface RIÊNG (không mở rộng ChatViewModel — trigger cứng M2-6).
-- [ ] Phần Linux-testable (nếu có) có test; phần thiết bị ghi PENDING trung thực.
-- [ ] Zero regression 153 test; đủ review + docs + NEXT_TASK.
+- [ ] Không sửa code trừ lỗi thật (vd CI macOS lộ thêm lỗi SwiftUI → sửa trước review).
+- [ ] Mọi PENDING có địa chỉ + chủ sở hữu; ADR cũ không sửa; tag M6 local.
+- [ ] Zero regression (157 test + 1 opt-in skip).
 
 ## Definition of Done
 
-Hoặc: interface scheduler + UI automation qua `swiftc -parse`, phần thiết bị PENDING rõ, zero regression. Hoặc: quyết định hoãn có lập luận + chuyển task testable-hơn.
+Bảng tiêu chí M6 trung thực; AD-46/47 evidence; nợ cập nhật theo CI thật; scheduled-firing/MCP khoanh vùng điều kiện; tag `M6`; NEXT_TASK M7; DỪNG chờ user.
 
 ## Estimated Complexity
 
-Trung bình — nhưng phần lớn không kiểm chứng được (rủi ro nợ High tăng).
-
-## Estimated AI Cost
-
-Dev session: trung bình. Runtime: 0.
-
-## Risk
-
-- **Chồng UI/nền-tảng chưa compile lên nợ High** — cân nhắc hoãn chờ runbook.
-- Scheduler dễ phình thành component — v1 là adapter mỏng gọi `runNow`, không hơn.
-- Nhồi automation vào ChatViewModel — vi phạm trigger cứng M2-6; phải tách.
+Thấp — đánh giá + tài liệu (trừ khi CI lộ thêm lỗi SwiftUI cần sửa).
 
 ## Những phần tuyệt đối không được sửa
 
-- Core 6; ModuleManifest; matcher; 3 module; `AutomationRule` schema (M6-1 vừa chốt — mở rộng chỉ khi trigger design cho bằng chứng).
-- Architecture Test rules (chỉ THÊM/siết); ADR cũ (AD-01…AD-47). ApprovalGate không tái tạo tới khi có risky action thật.
+- Core 6; ModuleManifest; matcher; 3 module; `AutomationRule` schema; ApprovalGate không tái tạo tới khi có risky action thật.
+- Architecture Test rules (chỉ THÊM/siết); ADR cũ (AD-01…AD-47).

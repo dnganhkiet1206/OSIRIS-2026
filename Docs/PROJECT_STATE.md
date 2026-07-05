@@ -10,7 +10,7 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M6 — Automation, đang triển khai** (M0→M5 nghiệm thu; tag local chờ push khi merge) |
-| Task hiện tại | M6-1 ✅ · **Debt-sweep (user cấp quyền) ✅**: sửa bug tiếng Việt; thêm CI macOS (gốc nợ High) + harness baseline live-gated (nợ Medium, chạy Linux khi có key) · kế tiếp: M6-2 (xem `NEXT_TASK.md`) · **[USER] cần: bật CI macOS + cấp API key** |
+| Task hiện tại | M6-1 ✅ · Debt-sweep ✅ (bug tiếng Việt + CI macOS + baseline harness; CI đã bắt & sửa 1 lỗi SwiftUI thật `ChatViewModel`) · **M6-2 (Automation UI v1) ✅** — surface tạo/chạy/xoá rule qua port M6-1, ViewModel RIÊNG (không nhồi ChatViewModel) · kế tiếp: M6-3 review (xem `NEXT_TASK.md`) · **[USER]: cấp API key cho baseline; CI macOS xác nhận UI** |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **19 Architecture Test chống drift** · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 157/157 test pass** (+1 live-baseline opt-in skip mặc định) (Swift 6.0.3, Linux) · offline |
@@ -72,14 +72,16 @@ M6 — Automation: nối trí tuệ với thực thi tự động, KHÔNG visual
 
 - [x] **M5-1 — Shopify Module (module thứ 3, domain e-commerce khác hẳn)**: guide-validation lần 2 — dựng từ `Docs/MODULE_GUIDE.md` + `ModuleManifest`; `shopify` (product-research, listing-optimization, store-analysis dùng dữ liệu user dán AD-45 + composition `shopify.research-to-listing` xuyên namespace `core.research-outline`→module); keyword single-skill CỐ Ý tránh từ built-in ("research"/"draft") để không tie với `core.*` (test precedence chứng minh goal "research…" thuần vẫn về core); **0 dòng Core/Infrastructure/contract** (lần 5); **MODULE_GUIDE nâng cấp tự-đủ**: Phụ lục A (built-in skill IDs) + Phụ lục B (khung test copy sẵn) — đóng finding M5-0; arch rule cấm-tên-module siết thêm "shopify"; **đạt tiêu chí M5 ≥3 module**; 7 test mới; 146/146.
 
+- [x] **M6-2 — Automation UI v1** (code-complete; type-check + UX chờ CI macOS/thiết bị như mọi UI từ M0): surface Presentation cho port `Automation` M6-1 — tạo rule từ 1 goal, **"Run now" thủ công** (tái dùng đúng Kernel qua ChatService, không path mới), toggle enabled, xoá, xem kết quả lần chạy; **`AutomationViewModel` RIÊNG** (không nhồi ChatViewModel — tôn trọng trigger cứng M2-6: "task UI kế tiếp phải TÁCH, không mở rộng god-object") + `AutomationView` + mục sidebar "Automation"; import chỉ OsirisApplication (arch rule giữ); rule v1 chạy trong project "default" (per-project chờ bằng chứng — AD-28); **scheduled `.daily` firing HOÃN** (iOS BGTaskScheduler — 0 đường verify, code nền tảng thuần; `.manual` + run-now đã đủ dùng); 5 file parse-sạch, 157+1 test không đổi (Presentation ngoài SPM — CI macOS type-check).
+
 - [x] **M6-1 — Automation-as-data v1** (AD-47 câu 4 hiện thực): `AutomationRule` = **record thứ 4 của Store** (schema tối thiểu AD-28: `id`, `projectID`, `goalText`, `trigger`, `enabled` — "goal" tách 2 trường, KHÔNG field để dành); `AutomationTrigger` enum data (`.manual` chạy được / `.daily(hour:)` = SCHEMA cho iOS scheduling, không fire trên Linux); Store CRUD (`automationRules`/`save`/`deleteAutomationRule`, layout `automation-rules/<id>`, persist qua Store duy nhất AD-32 — test restart); Application port `Automation` (closure struct, pattern AD-38) — **`runNow` gọi đúng `ChatService.submit` như goal thủ công, KHÔNG execution path thứ hai** (test: rule goal qua Kernel = 1 AI call ordinary); pure mapping `AutomationRuleSummary.from` testable; arch rule cấm-tái-tạo siết thêm `AutomationEngine/AutomationManager/RuleRunner/AutomationRuntime` (cưỡng chế "0 engine" của user); **0 component mới, 0 pipeline riêng**; 7 test mới; 153/153.
 
 - [x] **M6-0 — Automation Architecture Review + xóa ApprovalGate** (AD-47): review 4 quyết định bằng bằng chứng grep/git — **(1) XÓA ApprovalGate + RiskyAction/ApprovalDecision/RequireUserApprovalGate**: `evaluate(_:)` chưa từng gọi, `RiskyAction` chưa từng construct qua 6 milestone; automation sinh deliverable local-reversible ≠ risky action; xóa (Kernel init bớt 1 param, ~18 test site, file Gates/ xóa) — **146/146 pass, 0 test logic sửa = bằng chứng 0 consumer**; tái sinh cùng risky action THẬT đầu tiên (= mở tool-channel AD-45); **(2)** tool-channel KHÔNG mở (không module cần); **(3)** EventBus KHÔNG tái sinh (không audience động); **(4)** automation = DATA (rule: goal + trigger) + Kernel hiện có, KHÔNG Engine/Runtime/Scheduler — build M6-1; trigger lịch = iOS PENDING thiết bị.
 
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Chạy `Docs/RUNBOOK_M1-0.md`** — nợ **High** (nay 3 module + toàn UI tích trên nền chưa compiler Mac).
-2. **M6-2 — Scheduled trigger + Automation UI (phần lớn PENDING thiết bị)** (chi tiết: `NEXT_TASK.md`): iOS background firing cho `.daily` (không test được Linux) + Presentation surface cho automation port.
+1. **[USER] Cấp API key** (baseline live-harness) + **theo dõi CI macOS** (xác nhận UI M6-2 type-check xanh; relay lỗi nếu có như đã làm với `ChatViewModel`).
+2. **M6-3 — M6 Milestone Review & Acceptance** (chi tiết: `NEXT_TASK.md`): M6-0 (arch) + M6-1 (data) + M6-2 (UI) = core M6 xong; scheduled-firing (iOS BGTask) + MCP remote tools = device/evidence-pending, đánh giá tại review; tag `M6`.
 
 ## 4g. M5 Closeout (nghiệm thu 2026-07-04, tag `M5`)
 
@@ -325,7 +327,7 @@ Chi tiết đầy đủ tại PROJECT_BLUEPRINT.md §3.
 | ~~Low~~ | ~~Latent overlap tiếng Việt "viết" (core.draft) ⊂ "viết kịch bản đầy đủ"~~ — **ĐÃ SỬA tại debt-sweep**: bare "viết" → "viết bài" ở `core.draft` VÀ composition `core.research-then-draft` (không thì composition vẫn cướp theo id); 4 test precedence tiếng Việt pin (full-script→script-generation; viết bài/soạn→draft; kịch bản video→outline) | ✅ |
 | Low | Reuse per-project (đúng Project Isolation; chưa có cross-project reuse có kiểm soát) | M3 với policy rõ |
 | Low | Arch-test scanner cắt `//` theo dòng — string literal chứa URL có thể false-negative | Nâng parser khi có ca thật |
-| Medium | `ChatViewModel` gánh 5 vai (chat/projects/search/dashboard/skills) — 172 dòng, chưa đau nhưng trend rõ | **Trigger cứng:** task UI kế tiếp chạm file này phải TÁCH (không mở rộng thêm) |
+| Medium | `ChatViewModel` gánh 5 vai (chat/projects/search/dashboard/skills) — chưa đau nhưng trend rõ | **Trigger cứng ĐÃ được tôn trọng tại M6-2:** surface Automation dùng `AutomationViewModel` RIÊNG, KHÔNG chạm ChatViewModel (precedent "một VM/surface"). ChatViewModel vẫn 5 vai — tách khi có task UI thật chạm chính nó |
 | ~~Low~~ | ~~EventBus: 2 consumer tĩnh ≈ closure fan-out~~ — **ĐÃ XÓA tại M4-4 đúng deadline** (AD-46; 0 consumer động, thay bằng 2 dòng fan-out trực tiếp) | ✅ |
 | Low | Metrics chỉ session-only — restart mất "Today's usage" | Chấp nhận theo thiết kế; persist history là câu hỏi M7 với dữ liệu thật |
 

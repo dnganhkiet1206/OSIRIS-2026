@@ -2,6 +2,14 @@
 
 ## [Unreleased — M6]
 
+### 2026-07-04 — M6-2: Automation UI v1 — saved goals reachable, ViewModel split honored
+
+- **Surface Presentation cho automation** (port `Automation` M6-1 giờ có consumer UI): tạo rule từ 1 goal, **"Run now" thủ công**, toggle enabled, xoá, xem kết quả lần chạy. "Run now" gọi đúng `ChatService.submit` → Kernel (AD-47) — không path thực thi thứ hai.
+- **Tôn trọng trigger cứng M2-6:** tạo `AutomationViewModel` RIÊNG thay vì nhồi vai thứ 6 vào `ChatViewModel` (god-object đã 5 vai). Đây là precedent đúng cho mọi surface UI sau: một ViewModel/surface. `ChatViewModel` KHÔNG bị chạm.
+- `AutomationView` + mục sidebar "Automation" trong `ChatView`; import chỉ OsirisApplication (arch rule Presentation giữ); rule v1 chạy project "default" (per-project chờ bằng chứng — AD-28).
+- **Scheduled `.daily` firing HOÃN có lập luận:** iOS `BGTaskScheduler` là code nền tảng thuần, **0 đường verify** trên Linux/CI (chỉ compile, không chạy được bg task) — build code không kiểm chứng được là rủi ro thuần; `.manual` + "Run now" đã đủ dùng. Firing thật khi có thiết bị (M6-3+).
+- Presentation ngoài SPM package → chỉ `swiftc -parse` được trên Linux (5 file parse-sạch); type-check thật do **CI macOS** (đã chứng minh bắt lỗi thật với `ChatViewModel`). Package tests 157+1 không đổi.
+
 ### 2026-07-04 — Debt sweep (user cấp quyền "truy cập mọi thứ để giải quyết nợ")
 
 - **Trung thực về giới hạn:** "truy cập mọi thứ" là QUYỀN, nhưng 2 nợ lớn nhất bị chặn bởi TÀI NGUYÊN không phải quyền — kiểm chứng bằng bằng chứng: OS vẫn Linux (`uname` — không có macOS SDK để compile SwiftUI); `ANTHROPIC_API_KEY` unset (network tới api.anthropic.com trả 401 = reachable, chỉ thiếu auth). Quyền không tự sinh ra máy Mac hay API key. Nên tôi (a) sửa nợ làm được ngay, (b) dựng cơ chế để 2 nợ kia giải được với đúng 1 hành động của user.

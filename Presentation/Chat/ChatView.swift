@@ -7,7 +7,7 @@ import OsirisApplication
 /// gets restructured properly).
 struct ChatView: View {
     private enum SidebarItem: Hashable {
-        case chat, search, dashboard, advanced, project(String), settings
+        case chat, search, dashboard, automation, advanced, project(String), settings
     }
 
     @State private var model: ChatViewModel
@@ -17,10 +17,12 @@ struct ChatView: View {
     /// UI preference only (AD-40) — never platform data.
     @AppStorage("osiris.advancedMode") private var advancedMode = false
     private let settings: ProviderSettings
+    private let automation: Automation
 
-    init(model: ChatViewModel, settings: ProviderSettings) {
+    init(model: ChatViewModel, settings: ProviderSettings, automation: Automation) {
         _model = State(initialValue: model)
         self.settings = settings
+        self.automation = automation
     }
 
     var body: some View {
@@ -32,6 +34,8 @@ struct ChatView: View {
                     .tag(SidebarItem.search)
                 Label("Dashboard", systemImage: "gauge.with.needle")
                     .tag(SidebarItem.dashboard)
+                Label("Automation", systemImage: "clock.arrow.circlepath")
+                    .tag(SidebarItem.automation)
                 Section("Projects") {
                     ForEach(model.projects) { project in
                         Label(project.name, systemImage: "folder")
@@ -59,6 +63,8 @@ struct ChatView: View {
                 SearchResultsView(model: model) { selection = .chat }
             case .dashboard:
                 DashboardView(model: model)
+            case .automation:
+                AutomationView(automation: automation)
             case .advanced:
                 AdvancedView(model: model)
             default:

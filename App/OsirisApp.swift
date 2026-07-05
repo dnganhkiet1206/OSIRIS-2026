@@ -16,7 +16,8 @@ struct OsirisApp: App {
                     dashboard: dependencies.dashboard,
                     skillList: dependencies.skillList
                 ),
-                settings: dependencies.settings
+                settings: dependencies.settings,
+                automation: dependencies.automation
             )
         }
     }

@@ -28,6 +28,7 @@ OSIRIS/
 │   ├── Sidebar/                  # Điều hướng: Chat, Projects, Settings, (Advanced)
 │   ├── Projects/                 # Danh sách & chi tiết project
 │   ├── Dashboard/                # Nhận thức vận hành (goal, task, usage, status)
+│   ├── Automation/               # Automation UI (M6-2): ViewModel RIÊNG + View cho port Automation
 │   ├── Settings/                 # Cài đặt tối giản
 │   ├── Advanced/                 # Advanced/Developer Mode (ẩn mặc định)
 │   │   ├── StoreViewer/          # Memory/Knowledge Viewer = view trên Store
