@@ -2,6 +2,41 @@
 
 ## [Unreleased — M9]
 
+### M9-2: Spacing System (Consistency #2)
+
+- Groups the spacing literals that recur across the views into one scale
+  (`Shared/DesignSystem/Spacing.swift`) so spacing stops drifting per-view.
+  `enum Spacing { xs=4, sm=6, md=8, lg=12, xl=16 }` — CGFloat, data only; no
+  manager/engine/framework/singleton; no new SPM target (`Shared` is already in
+  the app target from M9-1). No new architecture decision (same pattern as
+  `Radius`).
+- Architecture Review first (evidence from a full grep of Presentation): the
+  values 2/4/6/8 each recur 3–4× across ≥3 views, 12 recurs 2×, and 16 (incl.
+  implicit `.padding()`) many — the real duplication. Dashboard and Settings
+  have no spacing literals (system List/Form spacing, already consistent) and
+  were left untouched.
+- Migration is by category, not by screen: every `VStack`/`HStack` `spacing:`
+  and every container `.padding` across the six views that had literals
+  (Chat, ProjectResume, Automation, Search, Advanced, ExecutionStatus) now uses
+  a token. Substitution is behavior-preserving except one evidence-based
+  consistency fix: the tight metadata-stack spacing was 2pt in SearchResults and
+  AdvancedView but 4pt in the reference (ProjectResumeView) — unified to `xs`
+  (4). That is the only visual change (it reduces inconsistency, per the new
+  Incremental Product Evolution principle — it does not introduce a second
+  visual language).
+- Kept literal by design (positional / component-internal, not rhythm): the
+  intentional zero-gap detail stack, the chat bubble's own padding (14/10) and
+  width inset (`Spacer(40)`), the empty-state top offset (80), and the capsule
+  badge's micro-padding (6/2).
+- Spacing only — no colour, typography, layout structure, icon, animation, or
+  accessibility change; Dynamic Type and dark mode are unaffected. No SPM target
+  changed, so the Linux suite is unaffected.
+- CI green: run 28766897615 concluded success — Linux `swift test` (arch tests
+  scanning the new file + the suite) and the macOS Xcode compile of
+  Shared/Presentation/App both passed. (Swift is uninstallable this session —
+  swift.org blocked by the network policy — so CI is the verification path.)
+  $0.00.
+
 ### M9-1: Design System Foundation (Consistency #1)
 
 - First build step of M9 (M9-0 was review-only). Establishes the OSIRIS Design

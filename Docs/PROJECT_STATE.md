@@ -9,8 +9,8 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M9 — Product Experience & UI/UX: đang triển khai** (M0→M8 nghiệm thu; tag local chờ push). M9-0 Architecture Review ✅ (§4t) · **M9-1 Design System Foundation ✅ (§4v)**. KHÔNG mở rộng AI/module/tool — chỉ biến prototype → sản phẩm production |
-| Task hiện tại | **M9-1 — Design System Foundation (Consistency #1) ✅ (§4v)** — Design Language V1 (USER cấp): **dark-only palette** hex cố định (nền #090909 / elevated #121212 / card #181818 / border #2B2B2B / text #F4F4F4·#A8A8A8·#7C7C7C / accent #F4F4F4). Tạo `Shared/DesignSystem/` (`OsirisColor`+`Radius`+`.osirisCard()` — data + 1 ViewModifier, **KHÔNG engine/manager/framework/package/singleton**) + thêm `Shared` vào app target (`project.yml`, 1 dòng — KHÔNG SPM target mới). Áp: dark-only ở root (`.preferredColorScheme(.dark)`+tint); **card-surface** qua `.osirisCard()` (`ProjectResumeView` container+rows, `ChatView` bubble). **Tinh chỉnh sau Design Review (Rec-2):** rollback text-color migration (về semantic — tránh ngôn ngữ thị giác thứ hai) + gỡ root `.background` (partial). Palette = catalog khai báo; text/nền áp ở rollout sau. **Scope tối thiểu (USER chốt Q2).** A11y (M8-6): tertiary #6D6D6D=3.85:1<AA → **nudge #7C7C7C (4.77:1)** USER duyệt (Q1); accessibilityLabel/semantic font/SecureField nguyên. **Dark-only = Product Decision có chủ đích** (§4v; di trú Light tương lai = adaptive token + `@AppStorage`). **+ Nguyên tắc Incremental Product Evolution (BLUEPRINT §2/#11).** **Verify = CI** (0 SPM target chạm → 165 test không đổi; macOS compile) — swift.org bị chặn policy. · kế tiếp: **M9-2 chờ USER** — KHÔNG tự mở |
+| Giai đoạn | **M9 — Product Experience & UI/UX: đang triển khai** (M0→M8 nghiệm thu; tag local chờ push). M9-0 Review ✅ (§4t) · **M9-1 Design System Foundation ✅ (§4v)** · **M9-2 Spacing System ✅ (§4w, CI xanh)**. KHÔNG mở rộng AI/module/tool — chỉ biến prototype → sản phẩm production |
+| Task hiện tại | **M9-2 — Spacing System (Consistency #2) ✅ (§4w) — CI XANH** (run 28766897615 success: Linux `swift test` + macOS compile). Tạo `Shared/DesignSystem/Spacing.swift` (`enum Spacing { xs=4, sm=6, md=8, lg=12, xl=16 }` — CGFloat data, các giá trị đang dùng gom lại; KHÔNG engine/manager/framework, KHÔNG SPM target mới). **Migrate theo LOẠI** (mọi `spacing:` của VStack/HStack + mọi `.padding` container) qua 6 view có literal; thay 1:1 giữ nguyên hành vi, **trừ 1 sửa nhất quán có bằng chứng:** tight metadata-stack 2pt ở `SearchResults`+`Advanced` → `xs` (4) khớp reference `ProjectResumeView` = **thay đổi thị giác DUY NHẤT**. Giữ literal có chủ đích (positional/component-internal): `spacing:0` (no-gap), bubble padding 14/10, `Spacer(40)`, empty-state 80, badge micro-pad 6/2. `Dashboard`/`Settings` = 0 literal (List/Form spacing hệ thống — đã nhất quán) → KHÔNG chạm. **Spacing-only:** 0 màu/typography/layout-structure/icon/animation/a11y; Dynamic Type + dark nguyên. Tuân BLUEPRINT §2/#11 (không ngôn ngữ thị giác thứ hai; unify GIẢM bất nhất). · kế tiếp: **M9-3 chờ USER** — KHÔNG tự mở |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **18 Architecture Test (function) chống drift** (cưỡng chế đồ thị phụ thuộc + eliminated-components: EventBus AD-46, automation-engine AD-47) · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 165 test / 2 opt-in skip / 0 fail** (~1.1s offline; +1 test placeholder-no-leak) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · Keychain fix (M8-1) + MessageRow a11y (M8-6) = verify qua CI macOS · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, iPhone 17 Pro sim (iOS 26.2), UI end-to-end (§4i)** |
@@ -130,6 +130,29 @@ User tự chạy toàn bộ stack trên Mac thật (branch `claude/osiris-arch-r
 **Ý nghĩa:** rủi ro lớn nhất của dự án (UI chưa qua compiler Mac, mang từ M0) **đóng lại bằng bằng chứng thật, không phải suy đoán**. M6-2 Automation UI — thứ mới nhất, chưa từng chạy trên UI thật — hoạt động đầy đủ ngay lần đầu. CI macOS giữ để chống regression tự động.
 
 **CHƯA test (có chủ đích, không phải lỗ hổng):** live Anthropic (chưa cấu hình key) → **baseline thật vẫn là nợ Medium đang mở**, và là điều kiện tiên quyết của M7. App vẫn placeholder-local.
+
+## 4w. M9-2 Closeout — Spacing System (Consistency #2) (2026-07-06, CI xanh)
+
+**Task:** tạo spacing system (spatial consistency). KHÔNG màu, KHÔNG typography, KHÔNG animation, KHÔNG redesign.
+
+**Architecture Review TRƯỚC code (bằng chứng grep toàn Presentation):**
+- **Literals lặp:** giá trị 2/4/6/8 mỗi cái lặp 3–4× qua ≥3 view; 12 lặp 2×; 16 (gồm `.padding()` ngầm) nhiều. Đó là duplication thật.
+- **Scale nhỏ:** `xs=4, sm=6, md=8, lg=12, xl=16` (5 rung) phủ mọi dùng rhythm.
+- **Giữ literal (positional/component-internal, KHÔNG rhythm):** `spacing:0` (no-gap detail stack), bubble padding 14/10, `Spacer(40)` (bubble width inset), empty-state 80, badge micro-pad 6/2.
+- **1 bất nhất same-role có bằng chứng:** tight metadata-stack = 2pt ở `SearchResults`+`Advanced` NHƯNG 4pt ở reference `ProjectResumeView` → unify về `xs` (4). Đây là thay đổi thị giác DUY NHẤT (đúng "reduce inconsistency" của BLUEPRINT §2/#11, không phải redesign).
+- **`Dashboard`/`Settings` = 0 literal** (List/Form spacing hệ thống — đã nhất quán) → audit kết luận KHÔNG chạm.
+- **Không AD mới:** `Spacing` là data, cùng pattern `Radius` (M9-1).
+
+**Thay đổi nhỏ nhất:**
+- `Shared/DesignSystem/Spacing.swift` (`enum Spacing`, CGFloat, data) — KHÔNG engine/manager/framework/singleton, KHÔNG SPM target mới (`Shared` đã trong app target từ M9-1).
+- Migrate **theo LOẠI, không theo màn hình:** mọi `spacing:` (VStack/HStack) + mọi `.padding` container qua 6 view có literal (Chat/ProjectResume/Automation/Search/Advanced/ExecutionStatus). Thay 1:1 giữ nguyên hành vi, trừ unify 2→4 nêu trên.
+- Token dùng đủ (không dead): xs×5, sm×3, md×4, lg×2, xl×6.
+
+**Self/Architecture/Quality Review:** 18 arch rule giữ (Presentation vẫn chỉ import OsirisApplication; `Spacing` không tên cấm); **spacing-only** → 0 màu/typography/layout-structure/icon/animation/a11y; Dynamic Type + dark nguyên; 0 SPM target chạm → suite Linux không đổi.
+
+**Verify = CI (xanh):** run **28766897615 conclusion success** — Linux `swift test` (arch-test scan file mới + suite) + macOS Xcode compile `Shared/Presentation/App` đều PASS. (M9-1 `dd74cb0`+`e9a1af6` cũng đã success — dark-only/card/DesignSystem compile Mac OK.) Swift.org bị chặn policy → không cài Swift local; CI là đường verify. AI spend **$0.00**.
+
+**Kết luận: M9-2 code-complete + CI xanh.** Spacing giờ có single source of truth + drift-proof; 1 unify giảm bất nhất thực. Ứng viên M9 sau (chờ USER): rationalize scale off-grid (2/6 → 4-grid, đổi giá trị — cần duyệt), rollout palette-màu (text/nền token), Clarity (type scale), app icon/brand.
 
 ## 4v. M9-1 Closeout — Design System Foundation (Consistency #1) (2026-07-06)
 

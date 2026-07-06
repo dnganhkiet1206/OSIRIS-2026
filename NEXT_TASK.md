@@ -22,17 +22,20 @@
 - **BUG FIX ✅ (offline placeholder leak — §4u):** placeholder echo nguyên prompt (preamble+context) → persist→retrieve→echo loop. Fix nhỏ nhất tại nguồn (placeholder trả câu offline cố định, không echo) + regression test. Vòng lặp đứt. **Caveat: rác đã persist trước fix còn tồn — xoá project/store offline để dọn.** 165 test / 2 skip / 0 fail.
 - **M9-1 ✅ (Design System Foundation — §4v):** Design Language V1 (USER): dark-only palette hex. Tạo `Shared/DesignSystem/` (`OsirisColor`+`Radius`+`.osirisCard()` = data + 1 ViewModifier) + `Shared` vào app target (`project.yml`). Áp: dark-only ở root + **card-surface** (`.osirisCard()`: ProjectResumeView container/rows + ChatView bubble). Scope tối thiểu (USER chốt Q2). A11y: tertiary #6D6D6D→#7C7C7C (AA, USER duyệt Q1). **Tinh chỉnh sau Design Review (Rec-2):** rollback text-color migration về semantic (tránh 2 ngôn ngữ thị giác) + gỡ root `.background` (partial) — palette catalog vẫn khai báo, text/nền rollout sau. **Dark-only = Product Decision** (di trú Light = adaptive token+`@AppStorage`). **+ BLUEPRINT §2/#11 Incremental Product Evolution.** Verify = CI (0 SPM target chạm → suite không đổi; macOS compile). Swift.org chặn policy → không test Swift local.
 
+- **M9-2 ✅ (Spacing System — §4w, CI xanh):** `Shared/DesignSystem/Spacing.swift` (`enum Spacing xs/sm/md/lg/xl` = data). Migrate theo LOẠI (mọi `spacing:` + `.padding` container) qua 6 view; thay 1:1 giữ hành vi, trừ 1 unify có bằng chứng (tight metadata-stack 2→4 ở Search/Advanced khớp reference). Giữ literal: 0/40/80/bubble 14·10/badge 6·2. Dashboard/Settings 0 literal → không chạm. Spacing-only, 0 a11y/DynamicType/dark impact. CI run 28766897615 **success** (Linux+macOS).
+
 ## Current Milestone
 
-**M9 — Product Experience & UI/UX.** M9-0 (Review) + M9-1 (Design System Foundation) xong. **M9-2 CHỜ USER XÁC NHẬN — KHÔNG tự mở.**
+**M9 — Product Experience & UI/UX.** M9-0 (Review) + M9-1 (Design System) + M9-2 (Spacing System) xong. **M9-3 CHỜ USER XÁC NHẬN — KHÔNG tự mở.**
 
-### Đề xuất M9-2 (bước Consistency tiếp — chờ USER chọn hướng)
-Hai ứng viên, đều đúng "Consistency over Creativity", chọn 1:
-1. **Rollout palette-màu** sang các view còn lại (Dashboard/Settings/Search/Advanced/Automation/ExecutionStatus/Sidebar) — thay `.secondary`/`.tertiary`/`.quaternary`/`.accentColor` semantic sang `OsirisColor` token. Diff cơ học, đưa toàn app lên palette V1. (M9-1 cố ý chưa sweep — Q2.)
-2. **Spacing scale** — literals 2/4/6/8/12/16 rải rác nhiều view → `enum Spacing` (data) + áp nơi lặp thật. Chuẩn hóa whitespace theo Design Language ("whitespace rộng").
+### Đề xuất M9-3 (bước tiếp — chờ USER chọn hướng)
+Ứng viên (đều "Consistency over Creativity"), chọn 1:
+1. **Rollout palette-màu** sang các view còn lại (Dashboard/Settings/Search/Advanced/Automation/ExecutionStatus/Sidebar) — thay `.secondary`/`.tertiary`/`.quaternary`/`.accentColor` semantic → `OsirisColor` token (`textSecondary`/`textTertiary`/`background`/`elevated` đang khai báo, chờ áp). Đưa toàn app lên palette V1. (Consistency, app-wide — không second-language vì làm trọn.)
+2. **Rationalize spacing scale (đổi giá trị — CẦN duyệt):** off-grid 2/6 → 4-grid (4/8/12/16) cho rhythm đều hơn. KHÁC M9-2 (chỉ tokenize): đây đổi giá trị thật = mini-restyle → cần USER duyệt từng đổi.
+3. **Clarity — type scale:** role→font/weight cố ý (hiện font semantic ad-hoc) + empty/loading states. Bước "Clarity" theo thứ tự M9.
 
-> **Ràng buộc M9 (giữ):** KHÔNG redesign · KHÔNG animation (ưu tiên #5, milestone riêng) · reusable chỉ khi có bằng chứng duplication · KHÔNG engine/manager/framework · a11y bất khả xâm phạm (M8-6) · Presentation Xcode-only → verify CI macOS.
-> **Nhắc USER (chưa xong, cần Mac/key):** verify M9-1 mắt thường trên iPhone (palette/card/bubble) · test lại provider contract key thật (§4r+§4s) · a11y runtime pass (§4q).
+> **Ràng buộc M9 (giữ):** KHÔNG redesign · KHÔNG animation (ưu tiên #5, milestone riêng) · reusable chỉ khi có bằng chứng duplication · KHÔNG engine/manager/framework · a11y bất khả xâm phạm (M8-6) · Presentation Xcode-only → verify CI macOS · BLUEPRINT §2/#11 (không second visual language trừ khi di trú trọn trong milestone).
+> **Nhắc USER (chưa xong, cần Mac/key):** verify M9-1/M9-2 mắt thường trên iPhone · test lại provider contract key thật (§4r+§4s) · a11y runtime pass (§4q).
 > **Thứ tự M9 (KHÔNG làm ngược):** Consistency → Clarity → Responsive → Accessibility → Animation → Polish.
 
 > **Nguyên tắc giữ nguyên:** mỗi phiên ĐÚNG MỘT task · Architecture Review trước code · chỉ đổi khi có bằng chứng · test chỉ THÊM/siết · ADR cũ bất biến · không số liệu giả.
