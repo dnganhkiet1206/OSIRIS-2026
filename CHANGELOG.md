@@ -23,11 +23,33 @@
   package, or singleton. `Shared` added to the existing Xcode app target
   (`project.yml`, one line); no new SPM target.
 - Applied: dark-only is guaranteed at the app root (`.preferredColorScheme(.dark)`
-  + `.tint(OsirisColor.accent)` + base background); `ProjectResumeView` becomes
-  the reference component fully on the palette (title/secondary/tertiary text
-  tokens + `.osirisCard()` for the container and the inset deliverable rows); the
-  chat bubble moves onto the accent + card tokens (and drops an `AnyShapeStyle`
-  now that both branches are `Color`).
+  + `.tint(OsirisColor.accent)`); the card surface is standardised via
+  `.osirisCard()` on the proven set (`ProjectResumeView` container + inset
+  deliverable rows, and the `ChatView` bubble, which also drops an `AnyShapeStyle`
+  now that both branches are `Color`). The palette is a declared catalog: M9-1
+  applies `card`/`elevated`/`border`/`accent`/`Radius`; `background` and the text
+  tokens stay defined and roll out in a later milestone (not dead code — the V1
+  single source of truth).
+- Refinement after an independent design review (approved as Rec-2 — a scoped
+  pass, not a new feature): rolled back the text-colour migration in
+  `ProjectResumeView` to system-semantic (`.secondary`/`.tertiary`) — applying
+  `OsirisColor.textX` in one view introduced a second visual language (its grays
+  differ from the semantic grays every other view still uses), the exact
+  inconsistency "Consistency #1" exists to remove; typography-colour rollout is
+  its own later milestone. Also removed the root `.background(OsirisColor.background)`
+  because `NavigationSplitView` still owns several system surfaces, making it only
+  a partial background; a complete surface migration is a later step. Kept the
+  foundation, the card-surface rollout, the dark-only lock, and the accent tint.
+- Dark Only is recorded as an intentional product decision (PROJECT_STATE §4v):
+  the fixed-hex palette requires it (adaptive would break on a light OS). Future
+  Auto/Light path (not implemented now): adaptive design tokens + a user
+  preference via `@AppStorage` (per AD-40) + a light palette.
+- New permanent architecture principle — "Incremental Product Evolution"
+  (PROJECT_BLUEPRINT.md §2, #11): a UI milestone must reduce visual
+  inconsistency and must never introduce a second visual language while the old
+  one still exists unless the migration completes within the same milestone. It
+  governs how the system may change over time (like AD-16), keeping every
+  milestone reviewable, reversible, and more consistent than the last.
 - Accessibility (M8-6 is inviolable): the spec's tertiary `#6D6D6D` measured
   3.85:1 on `#090909` — below WCAG AA (4.5:1) for body text. Nudged to `#7C7C7C`
   (4.77:1, AA) with the user's confirmation; the other seven tokens are exactly

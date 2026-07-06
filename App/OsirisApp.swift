@@ -19,11 +19,13 @@ struct OsirisApp: App {
                 settings: dependencies.settings,
                 automation: dependencies.automation
             )
-            // Design Language V1 (M9-1): OSIRIS is dark only; the accent is the
-            // single near-white tint. Per-surface backgrounds roll out in later
-            // M9 Consistency steps — this sets the base and the guarantee.
+            // Design Language V1 (M9-1): OSIRIS is dark only (an intentional
+            // product decision) with a single near-white accent. Per-surface
+            // backgrounds (OsirisColor.background/.elevated) roll out later as
+            // one complete surface migration — NavigationSplitView still owns
+            // several system surfaces, so a root background would only be
+            // partial. This keeps the guarantee (dark) and the accent.
             .tint(OsirisColor.accent)
-            .background(OsirisColor.background)
             .preferredColorScheme(.dark)
         }
     }

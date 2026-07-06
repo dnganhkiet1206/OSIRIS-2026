@@ -32,6 +32,7 @@ Các nguyên tắc sau **không được vi phạm** bởi bất kỳ quyết đ
 8. **Reuse Before Create** — tìm kiếm trước khi tạo mới bất cứ thứ gì.
 9. **Human Control** — người dùng sở hữu chiến lược; OSIRIS sở hữu thực thi.
 10. **Protect the Core** — Core nhỏ, ổn định; mọi tăng trưởng qua Modules.
+11. **Incremental Product Evolution** — Mỗi milestone UI phải **giảm** bất nhất thị giác. Một milestone **không bao giờ** được giới thiệu một ngôn ngữ thị giác thứ hai khi ngôn ngữ cũ còn tồn tại, **trừ khi việc di trú hoàn tất trong chính milestone đó**. Đây là **nguyên tắc tiến hoá kiến trúc**, không chỉ là guideline thiết kế: nó ràng buộc *cách hệ thống được phép thay đổi theo thời gian* (giống AD-16 walking skeleton) — giữ mỗi milestone **review được, đảo ngược được, và nhất quán hơn milestone trước**. Hệ quả kiến trúc: UI tiến hoá bằng nhiều tinh chỉnh nhỏ trên token/primitive tái dùng, **không** bằng redesign lớn (churn cao, khó review, phá consistency). Đây là bản UI của "Simplicity First" + "Protect the Core".
 
 **Ba quy tắc vàng:** Giảm độ phức tạp · Giảm mức dùng AI · Tăng chất lượng thực thi.
 

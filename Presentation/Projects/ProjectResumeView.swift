@@ -12,23 +12,22 @@ struct ProjectResumeView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(overview.name)
                     .font(.headline)
-                    .foregroundStyle(OsirisColor.textPrimary)
                 if let lastGoal = overview.lastGoal {
                     Text("Last goal: \(lastGoal)")
                         .font(.subheadline)
-                        .foregroundStyle(OsirisColor.textSecondary)
+                        .foregroundStyle(.secondary)
                         .lineLimit(2)
                 }
                 Text("\(overview.completedCount) completed task\(overview.completedCount == 1 ? "" : "s")")
                     .font(.caption)
-                    .foregroundStyle(OsirisColor.textTertiary)
+                    .foregroundStyle(.tertiary)
             }
 
             if !overview.deliverables.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Recent deliverables")
                         .font(.caption)
-                        .foregroundStyle(OsirisColor.textSecondary)
+                        .foregroundStyle(.secondary)
                     ForEach(overview.deliverables) { deliverable in
                         Button {
                             onOpenDeliverable(deliverable.id)
