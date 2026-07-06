@@ -2,6 +2,43 @@
 
 ## [Unreleased — M9]
 
+### M9-1: Design System Foundation (Consistency #1)
+
+- First build step of M9 (M9-0 was review-only). Establishes the OSIRIS Design
+  Language V1 as tokens and applies them to the surfaces already proven to be
+  duplicated — not a redesign. Scope was confirmed with the user: Foundation +
+  the proven card duplication only, no app-wide colour sweep.
+- Architecture Review before code (evidence): `Shared/` was in no build target,
+  so the design system had nowhere to compile; `Shared/DesignSystem/` was empty;
+  the card-background pattern was duplicated across three sites with inconsistent
+  radius/opacity (`ProjectResumeView` 8/0.4 & 14/0.25, `ChatView` bubble 14/0.5);
+  colours were 100% system-semantic. The icon-only button appears at only two
+  sites with a thin shared surface — recorded as a candidate, not abstracted
+  (evidence too weak per "don't abstract what isn't clearly repeated").
+- New `Shared/DesignSystem/` (SwiftUI, app-target only — verified by CI macOS):
+  `OsirisColor` (dark-only grayscale palette, one near-white accent), `Radius`
+  (`small`/`card` tokens), and `.osirisCard()` — a single filled, hairline-
+  bordered surface modifier replacing the three ad-hoc card backgrounds. Plain
+  data + one `ViewModifier`; no Theme/Style/Component engine, manager, framework,
+  package, or singleton. `Shared` added to the existing Xcode app target
+  (`project.yml`, one line); no new SPM target.
+- Applied: dark-only is guaranteed at the app root (`.preferredColorScheme(.dark)`
+  + `.tint(OsirisColor.accent)` + base background); `ProjectResumeView` becomes
+  the reference component fully on the palette (title/secondary/tertiary text
+  tokens + `.osirisCard()` for the container and the inset deliverable rows); the
+  chat bubble moves onto the accent + card tokens (and drops an `AnyShapeStyle`
+  now that both branches are `Color`).
+- Accessibility (M8-6 is inviolable): the spec's tertiary `#6D6D6D` measured
+  3.85:1 on `#090909` — below WCAG AA (4.5:1) for body text. Nudged to `#7C7C7C`
+  (4.77:1, AA) with the user's confirmation; the other seven tokens are exactly
+  as specified. All `.accessibilityLabel`s, semantic fonts (Dynamic Type), and
+  the `SecureField` are untouched.
+- Verification: no SPM target changed, so the Linux suite is unaffected (165 /
+  2 opt-in skip / 0 fail expected); the arch tests text-scan the new files and
+  pass (checked against all 18 rules). Swift could not be installed locally this
+  session (swift.org blocked by the network policy), so compile verification of
+  the SwiftUI is CI's macOS job — the project's standard path for UI. $0.00.
+
 ### Bug fix: offline placeholder leaked the prompt (preamble + context) into answers
 
 - User report (production): a fresh conversation ("Bạn nói được tiếng Việt không?") returned OSIRIS's own preamble inside a "Previous results" section, with the raw `[placeholder:placeholder-local]` marker.

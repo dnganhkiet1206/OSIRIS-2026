@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — Trạng Thái Dự Án OSIRIS
 
-> **Cập nhật lần cuối:** 2026-07-03
+> **Cập nhật lần cuối:** 2026-07-06
 > Đây là **nguồn sự thật duy nhất** về trạng thái dự án (nguyên tắc *State Over Chat*). Mọi phiên phát triển bắt đầu bằng việc đọc file này và kết thúc bằng việc cập nhật file này. Đây là **file duy nhất luôn được nạp** vào AI dev session (AD-29) — giữ file ngắn gọn, dạng cấu trúc.
 
 ---
@@ -9,8 +9,8 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M9 — Product Experience & UI/UX: đang triển khai** (M0→M8 nghiệm thu; tag local chờ push). M9-0 Architecture Review ✅ (§4t). KHÔNG mở rộng AI/module/tool — chỉ biến prototype → sản phẩm production |
-| Task hiện tại | **BUG FIX (production, offline mode): placeholder leak ✅** — offline (`PlaceholderAIProvider`) echo NGUYÊN prompt (preamble + retrieved context) làm "câu trả lời" → persist thành Deliverable → retrieval surface vào "Previous results" → echo lại (vòng lặp trong project "default"). Root ở **1 layer = placeholder output**. Fix nhỏ nhất: placeholder trả **câu offline cố định, KHÔNG echo prompt** (§4u) + regression test Gateway-level. Vòng lặp đứt tại nguồn. 0 abstraction. **Caveat: deliverable-rác đã persist trước fix còn tồn (xoá store/project để dọn).** · M9-0 ✅ (§4t) · kế tiếp: **M9-1 chờ USER xác nhận** — KHÔNG tự mở |
+| Giai đoạn | **M9 — Product Experience & UI/UX: đang triển khai** (M0→M8 nghiệm thu; tag local chờ push). M9-0 Architecture Review ✅ (§4t) · **M9-1 Design System Foundation ✅ (§4v)**. KHÔNG mở rộng AI/module/tool — chỉ biến prototype → sản phẩm production |
+| Task hiện tại | **M9-1 — Design System Foundation (Consistency #1) ✅ (§4v)** — Design Language V1 (USER cấp): **dark-only palette** hex cố định (nền #090909 / elevated #121212 / card #181818 / border #2B2B2B / text #F4F4F4·#A8A8A8·#7C7C7C / accent #F4F4F4). Tạo `Shared/DesignSystem/` (`OsirisColor`+`Radius`+`.osirisCard()` — data + 1 ViewModifier, **KHÔNG engine/manager/framework/package/singleton**) + thêm `Shared` vào app target (`project.yml`, 1 dòng — KHÔNG SPM target mới). Áp: dark-only ở root (`.preferredColorScheme(.dark)`+tint+nền); `ProjectResumeView` = reference component đủ palette; chat bubble sang accent/card token. **Scope tối thiểu (USER chốt Q2): foundation + card dup, KHÔNG sweep màu 10 view.** A11y (M8-6 bất khả xâm phạm): tertiary spec #6D6D6D = 3.85:1 < AA → **nudge #7C7C7C (4.77:1)** có USER duyệt (Q1); mọi accessibilityLabel/semantic font/SecureField giữ nguyên. Icon-button (2 site, surface mỏng) = ghi ứng viên, KHÔNG abstract. **Verify = CI** (Linux arch-test scan file mới + 165 test không đổi vì 0 SPM target chạm; macOS compile SwiftUI) — swift.org bị chặn network policy, không cài Swift local phiên này. · kế tiếp: **M9-2 chờ USER xác nhận** — KHÔNG tự mở |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **18 Architecture Test (function) chống drift** (cưỡng chế đồ thị phụ thuộc + eliminated-components: EventBus AD-46, automation-engine AD-47) · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 165 test / 2 opt-in skip / 0 fail** (~1.1s offline; +1 test placeholder-no-leak) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · Keychain fix (M8-1) + MessageRow a11y (M8-6) = verify qua CI macOS · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, iPhone 17 Pro sim (iOS 26.2), UI end-to-end (§4i)** |
@@ -80,8 +80,9 @@ M6 — Automation: nối trí tuệ với thực thi tự động, KHÔNG visual
 
 ## 4. Việc đang chờ (Next Tasks)
 
-1. **[USER] Xác nhận mở M9-1** (`NEXT_TASK.md`): bước Consistency #1 (design tokens + card/button ViewModifier, data). M9-0 Architecture Review ✅ (§4t). **KHÔNG tự mở M9-1.**
-2. **[USER] Mac/key (không chặn M9):** test provider contract key thật (§4r+§4s) · a11y runtime pass (§4q) · M7 provider-side (key thường trực).
+1. **[USER] Xác nhận mở M9-2** (`NEXT_TASK.md`): M9-1 ✅ (§4v). Ứng viên Consistency tiếp: spacing scale (literals 2/4/6/8/12/16 rải rác) HOẶC rollout palette-màu sang các view còn lại (Dashboard/Settings/Search/Advanced/Automation/ExecutionStatus). **KHÔNG tự mở M9-2.**
+2. **[USER] Verify M9-1 trên thiết bị/CI:** CI macOS compile `Shared/Presentation/App`; mắt thường trên iPhone (dark-only palette + card + bubble). Nếu contrast/nhìn lệch → dán quan sát, sửa diff nhỏ.
+3. **[USER] Mac/key (không chặn M9):** test provider contract key thật (§4r+§4s) · a11y runtime pass (§4q) · M7 provider-side (key thường trực).
 2. **[USER] Cấp API key THƯỜNG TRỰC** để mở **M7 provider-side** (tối ưu token/latency/cost qua Gateway) — hiện HOÃN; key một-lần đã thu sàn provider (§4j), cần key thường trực cho baseline qua-Gateway nhiều sample.
 3. M8-0 ✅ (§4k). CI macOS giữ chống regression UI.
 
@@ -129,6 +130,28 @@ User tự chạy toàn bộ stack trên Mac thật (branch `claude/osiris-arch-r
 **Ý nghĩa:** rủi ro lớn nhất của dự án (UI chưa qua compiler Mac, mang từ M0) **đóng lại bằng bằng chứng thật, không phải suy đoán**. M6-2 Automation UI — thứ mới nhất, chưa từng chạy trên UI thật — hoạt động đầy đủ ngay lần đầu. CI macOS giữ để chống regression tự động.
 
 **CHƯA test (có chủ đích, không phải lỗ hổng):** live Anthropic (chưa cấu hình key) → **baseline thật vẫn là nợ Medium đang mở**, và là điều kiện tiên quyết của M7. App vẫn placeholder-local.
+
+## 4v. M9-1 Closeout — Design System Foundation (Consistency #1) (2026-07-06)
+
+**Bối cảnh:** USER mở M9-1 kèm **Design Language V1** — dark-only, palette hex cố định (nền #090909 / elevated #121212 / card #181818 / border #2B2B2B / text #F4F4F4·#A8A8A8·#7C7C7C / accent #F4F4F4), một accent duy nhất, nổi bật bằng spacing/hierarchy/contrast không phải màu. iPhone-first.
+
+**Architecture Review TRƯỚC code (bằng chứng, đọc code thật):**
+- **Kết cấu build (phát hiện then chốt):** `Shared/` **không** nằm trong SPM target lẫn `project.yml` sources → DesignSystem chưa có nơi biên dịch. DesignSystem dùng SwiftUI (`Color`/`ViewModifier`) → không thể vào SPM target (SwiftUI vắng trên Linux) → là code **Xcode-only**, verify qua **CI macOS** như toàn bộ Presentation. Sửa: thêm 1 dòng `- Shared` vào `project.yml`. App target gộp App+Presentation+Shared thành 1 module → Presentation dùng token **không cần import** (không phá arch rule "Presentation chỉ import OsirisApplication").
+- **Duplication có bằng chứng:** card-bg lặp 3 site radius/opacity lệch (`ProjectResumeView:44` 8/.4, `:52` 14/.25, `ChatView:186` 14/.5). Icon-only button chỉ 2 site, surface chung mỏng (`.font(.title2)`) → **CHƯA đủ để abstract** (luật "không abstract nếu chưa lặp rõ") → ghi ứng viên.
+- **Contrast (đối chiếu M8-6 bất khả xâm phạm):** tính WCAG trên nền #090909 — primary #F4F4F4 = 18.1:1 ✅, secondary #A8A8A8 = 8.4:1 ✅, **tertiary #6D6D6D = 3.85:1 ❌ < AA 4.5:1 cho body text**. Trình bày bằng chứng TRƯỚC code; USER duyệt **nudge tertiary → #7C7C7C (4.77:1, AA)**; 7 token còn lại đúng spec.
+- **Scope (USER chốt):** foundation + card dup nhỏ nhất; **KHÔNG** sweep màu 10 view (rollout để bước M9 sau).
+
+**Thay đổi nhỏ nhất:**
+- `Shared/DesignSystem/`: `OsirisColor.swift` (palette = data, private `Color(hex:)`), `Radius.swift` (`small`/`card`), `OsirisCard.swift` (`.osirisCard(surface:radius:)` — nền + hairline border, `.continuous`). **0 Theme/Style/Component Engine/Manager/Framework/package/singleton.**
+- `project.yml`: +`- Shared` (app target hiện có, không SPM target mới).
+- `App/OsirisApp.swift`: `.preferredColorScheme(.dark)` + `.tint(accent)` + `.background(background)` — dark-only được BẢO ĐẢM ở root.
+- `ProjectResumeView`: thành reference component đủ palette (title/secondary/tertiary text token + `.osirisCard()` cho container & inset deliverable rows dùng `elevated`).
+- `ChatView` bubble: user→`accent.opacity(.15)`, osiris→`card`, radius→`Radius.card`; bỏ `AnyShapeStyle` (2 nhánh nay cùng `Color` — đơn giản hóa nhỏ).
+- **Mọi token đều có ít nhất 1 nơi dùng** (không dead token); mọi accessibilityLabel/semantic font/SecureField giữ nguyên (M8-6 sạch).
+
+**Verify — trung thực:** **0 SPM target chạm** → suite Linux không đổi (kỳ vọng 165 / 2 skip / 0 fail). Arch test text-scan file mới — đã đối chiếu tay **toàn bộ 18 rule**: không tên component cấm, không `youtube|tiktok|shopify`, không `LocalStorage/AIProvider/UserDefaults/ExecutionPlan`, Presentation không thêm `import Osiris*`. **Swift KHÔNG cài được local phiên này** (network policy chặn `download.swift.org` — 403), nên compile SwiftUI + chạy arch/suite giao **CI** (Linux job + macOS job) — đúng cách dự án luôn làm cho UI. AI spend **$0.00**.
+
+**Kết luận: M9-1 code-complete.** Foundation Design System dựng đúng nguyên tắc (data + 1 ViewModifier), áp vào duplication có bằng chứng, dark-only bảo đảm, a11y giữ. Rollout palette rộng + spacing scale = ứng viên M9-2 (chờ USER). **Không ADR mới** (M9 là hướng thực thi, §4t đã ghi "không ADR — chỉ hướng"); không milestone tự mở.
 
 ## 4u. Bug fix — offline placeholder leaked the prompt (preamble + context) (2026-07-05)
 

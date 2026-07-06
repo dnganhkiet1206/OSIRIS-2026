@@ -16,6 +16,7 @@ targets:
     sources:
       - App
       - Presentation
+      - Shared
       - path: Config
         type: folder
         buildPhase: resources

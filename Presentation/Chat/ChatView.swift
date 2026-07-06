@@ -181,9 +181,9 @@ private struct MessageRow: View {
                 .padding(.vertical, 10)
                 .background(
                     message.role == .user
-                        ? AnyShapeStyle(Color.accentColor.opacity(0.15))
-                        : AnyShapeStyle(.quaternary.opacity(0.5)),
-                    in: RoundedRectangle(cornerRadius: 14)
+                        ? OsirisColor.accent.opacity(0.15)
+                        : OsirisColor.card,
+                    in: RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
                 )
                 // Sender is otherwise conveyed only by colour + alignment,
                 // invisible to VoiceOver — name it so the transcript is legible.

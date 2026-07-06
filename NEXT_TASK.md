@@ -20,18 +20,19 @@
 
 - **M9-0 ✅** (Product Experience Architecture Review — §4t): audit 10 câu, KHÔNG code. Design System rỗng · 0 animation · 0 app icon/brand · card/button duplicate · spacing/radius ad-hoc; responsive cấu trúc OK. Giải pháp nhỏ nhất = `Shared/DesignSystem` data + ViewModifier, KHÔNG framework.
 - **BUG FIX ✅ (offline placeholder leak — §4u):** placeholder echo nguyên prompt (preamble+context) → persist→retrieve→echo loop. Fix nhỏ nhất tại nguồn (placeholder trả câu offline cố định, không echo) + regression test. Vòng lặp đứt. **Caveat: rác đã persist trước fix còn tồn — xoá project/store offline để dọn.** 165 test / 2 skip / 0 fail.
+- **M9-1 ✅ (Design System Foundation — §4v):** Design Language V1 (USER): dark-only palette hex. Tạo `Shared/DesignSystem/` (`OsirisColor`+`Radius`+`.osirisCard()` = data + 1 ViewModifier) + `Shared` vào app target (`project.yml`). Áp: dark-only ở root; `ProjectResumeView` reference; chat bubble sang token. Scope tối thiểu (USER chốt): foundation + card dup, KHÔNG sweep 10 view. A11y: tertiary #6D6D6D→#7C7C7C (AA, USER duyệt). Verify = CI (0 SPM target chạm → suite không đổi; macOS compile). Swift.org bị chặn policy → không test Swift local.
 
 ## Current Milestone
 
-**M9 — Product Experience & UI/UX.** M9-0 (Architecture Review) xong. **M9-1 CHỜ USER XÁC NHẬN — KHÔNG tự mở.**
+**M9 — Product Experience & UI/UX.** M9-0 (Review) + M9-1 (Design System Foundation) xong. **M9-2 CHỜ USER XÁC NHẬN — KHÔNG tự mở.**
 
-### Đề xuất M9-1 (bước Consistency #1 — ưu tiên cao nhất)
-1. Tạo `Shared/DesignSystem/` — **hằng số thuần (data)**: `enum Spacing` (scale thay 2/4/6/8/… ad-hoc), `enum Radius` (thống nhất 8 vs 14). KHÔNG Theme/Style/Component Manager.
-2. 1–2 `ViewModifier` extension chuẩn hóa duplication CÓ BẰNG CHỨNG (§4t Q4): `.osirisCard()` (thay `.background(.quaternary.opacity, in: RoundedRectangle)` lặp), có thể `.osirisIconButton`.
-3. Áp dụng vào view hiện có — **KHÔNG redesign, KHÔNG animation** (animation = ưu tiên #5, làm sau), KHÔNG đổi a11y (giữ mọi accessibilityLabel/SecureField/LabeledContent, semantic font).
-4. Ràng buộc: chuẩn hóa qua semantic; zero regression; Presentation là Xcode-only → verify qua CI macOS (không Linux-test được UI).
+### Đề xuất M9-2 (bước Consistency tiếp — chờ USER chọn hướng)
+Hai ứng viên, đều đúng "Consistency over Creativity", chọn 1:
+1. **Rollout palette-màu** sang các view còn lại (Dashboard/Settings/Search/Advanced/Automation/ExecutionStatus/Sidebar) — thay `.secondary`/`.tertiary`/`.quaternary`/`.accentColor` semantic sang `OsirisColor` token. Diff cơ học, đưa toàn app lên palette V1. (M9-1 cố ý chưa sweep — Q2.)
+2. **Spacing scale** — literals 2/4/6/8/12/16 rải rác nhiều view → `enum Spacing` (data) + áp nơi lặp thật. Chuẩn hóa whitespace theo Design Language ("whitespace rộng").
 
-> **Nhắc USER (chưa xong, cần Mac/key):** test lại provider contract key thật (§4r+§4s) · a11y runtime pass (§4q). Không chặn M9-1.
+> **Ràng buộc M9 (giữ):** KHÔNG redesign · KHÔNG animation (ưu tiên #5, milestone riêng) · reusable chỉ khi có bằng chứng duplication · KHÔNG engine/manager/framework · a11y bất khả xâm phạm (M8-6) · Presentation Xcode-only → verify CI macOS.
+> **Nhắc USER (chưa xong, cần Mac/key):** verify M9-1 mắt thường trên iPhone (palette/card/bubble) · test lại provider contract key thật (§4r+§4s) · a11y runtime pass (§4q).
 > **Thứ tự M9 (KHÔNG làm ngược):** Consistency → Clarity → Responsive → Accessibility → Animation → Polish.
 
 > **Nguyên tắc giữ nguyên:** mỗi phiên ĐÚNG MỘT task · Architecture Review trước code · chỉ đổi khi có bằng chứng · test chỉ THÊM/siết · ADR cũ bất biến · không số liệu giả.

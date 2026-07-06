@@ -19,6 +19,12 @@ struct OsirisApp: App {
                 settings: dependencies.settings,
                 automation: dependencies.automation
             )
+            // Design Language V1 (M9-1): OSIRIS is dark only; the accent is the
+            // single near-white tint. Per-surface backgrounds roll out in later
+            // M9 Consistency steps — this sets the base and the guarantee.
+            .tint(OsirisColor.accent)
+            .background(OsirisColor.background)
+            .preferredColorScheme(.dark)
         }
     }
 }

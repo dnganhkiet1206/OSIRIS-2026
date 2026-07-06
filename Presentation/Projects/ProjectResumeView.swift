@@ -12,22 +12,23 @@ struct ProjectResumeView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(overview.name)
                     .font(.headline)
+                    .foregroundStyle(OsirisColor.textPrimary)
                 if let lastGoal = overview.lastGoal {
                     Text("Last goal: \(lastGoal)")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(OsirisColor.textSecondary)
                         .lineLimit(2)
                 }
                 Text("\(overview.completedCount) completed task\(overview.completedCount == 1 ? "" : "s")")
                     .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(OsirisColor.textTertiary)
             }
 
             if !overview.deliverables.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Recent deliverables")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(OsirisColor.textSecondary)
                     ForEach(overview.deliverables) { deliverable in
                         Button {
                             onOpenDeliverable(deliverable.id)
@@ -41,7 +42,7 @@ struct ProjectResumeView: View {
                         }
                         .buttonStyle(.plain)
                         .padding(8)
-                        .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
+                        .osirisCard(OsirisColor.elevated, radius: Radius.small)
                         .accessibilityLabel("Open deliverable: \(deliverable.preview)")
                     }
                 }
@@ -49,6 +50,6 @@ struct ProjectResumeView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.quaternary.opacity(0.25), in: RoundedRectangle(cornerRadius: 14))
+        .osirisCard()
     }
 }
