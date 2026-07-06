@@ -1,0 +1,8 @@
+{
+  "preambleMaxTokens": 400,
+  "maxTokensPerRequest": 8000,
+  "maxCostPerRequestUSD": 0.5,
+  "perRequestMaxOutputTokens": 4000,
+  "contextBudgetTokens": 4000,
+  "maxContextSnippets": 3
+}

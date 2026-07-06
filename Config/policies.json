@@ -1,0 +1,17 @@
+{
+  "storeWriteGate": {
+    "requiresAnyOf": ["reusableLater", "affectsArchitecture", "reducesFutureTokens"]
+  },
+  "approvalRequired": [
+    "publish",
+    "delete",
+    "overwrite",
+    "largeSpend",
+    "permanentSettingsChange",
+    "coreBehaviorChange"
+  ],
+  "workingContextDefaultTTLHours": 24,
+  "aiRetry": {
+    "maxAttempts": 2
+  }
+}

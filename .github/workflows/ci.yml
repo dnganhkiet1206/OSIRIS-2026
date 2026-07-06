@@ -1,0 +1,43 @@
+name: CI
+
+# Automates the two things this repo could not verify locally on Linux:
+#   - the SwiftPM package on a clean toolchain (Core / Infrastructure /
+#     Application / Modules + the whole test suite);
+#   - the iOS app shell (App/ + Presentation/ SwiftUI) COMPILED by Xcode on
+#     macOS — the root of the long-standing "UI never compiled" High debt.
+# The macOS job's first run either compiles clean or surfaces the real
+# accumulated SwiftUI errors; either way the debt becomes CI-visible truth.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  package-linux:
+    name: SwiftPM (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.0.3"
+      - name: Build & test the package
+        run: swift test
+
+  app-macos:
+    name: iOS app shell (Xcode, macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate the Xcode project
+        run: xcodegen generate
+      - name: Build the app (no code signing)
+        run: |
+          xcodebuild build \
+            -project OSIRIS.xcodeproj \
+            -scheme Osiris \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO

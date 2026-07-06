@@ -1,0 +1,18 @@
+{
+  "models": [
+    {
+      "id": "placeholder-local",
+      "provider": "placeholder",
+      "tier": "light",
+      "inputCostPer1MTokens": 0,
+      "outputCostPer1MTokens": 0
+    },
+    {
+      "id": "claude-haiku-4-5-20251001",
+      "provider": "anthropic",
+      "tier": "light",
+      "inputCostPer1MTokens": 1.0,
+      "outputCostPer1MTokens": 5.0
+    }
+  ]
+}

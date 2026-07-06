@@ -1,0 +1,23 @@
+import SwiftUI
+
+/// Calm, unobtrusive activity line (UI contract: activities, never
+/// reasoning; no fake percentages).
+struct ExecutionStatusView: View {
+    let activity: String
+
+    var body: some View {
+        HStack(spacing: Spacing.md) {
+            ProgressView()
+                .controlSize(.small)
+            Text(activity)
+                .font(.subheadline)
+                .foregroundStyle(OsirisColor.textSecondary)
+        }
+        .padding(.vertical, Spacing.xs)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+#Preview {
+    ExecutionStatusView(activity: "Planning…")
+}
