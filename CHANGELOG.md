@@ -2,6 +2,22 @@
 
 ## [Unreleased — M9]
 
+### Fix: breadth signals match whole words, not substrings (PR review)
+
+- A PR review flagged that `ComplexityEstimate` (AD-42) matched breadth signals
+  by substring, so single-word signals like "full"/"complete" fired inside
+  unrelated words ("carefully" contains "full", "autocomplete" contains
+  "complete") — misclassifying simple goals as `.complex` and, once ≥2 models
+  enable tier routing, routing them to a costlier tier. Latent today (single
+  model makes preferredTier a no-op) but a real correctness bug.
+- Verified against the code and the 13 existing M3-2 tests, then fixed:
+  single-word signals now match a whole word (token split on non-letters);
+  multi-word/hyphenated signals ("in-depth", "chi tiết", "toàn diện", "đầy đủ",
+  "chuyên sâu") stay as substring checks (safe — phrases don't occur inside
+  other words). Deterministic and pure (AD-42 intact); all existing assertions
+  still hold. Added a regression test for the false-positives. Core/Kernel only;
+  CI green (6f43ac0 success, Linux suite + macOS compile). $0.00.
+
 ### Fix: evaluate the provider selection once (PR review)
 
 - A PR review flagged that `CompositionRoot.selectedProvider` is a computed
