@@ -7,6 +7,9 @@ import OsirisApplication
 struct SearchResultsView: View {
     @Bindable var model: ChatViewModel
     let onNavigateToChat: () -> Void
+    /// The query that produced the current results (view state only). Lets us
+    /// show a no-results state only after a real search, never while typing.
+    @State private var submittedQuery = ""
 
     var body: some View {
         List {
@@ -14,14 +17,35 @@ struct SearchResultsView: View {
                 TextField("Search projects, deliverables, knowledge…", text: $model.searchQuery)
                     .textFieldStyle(.roundedBorder)
                     .autocorrectionDisabled()
-                    .onSubmit { model.runSearch() }
+                    .onSubmit {
+                        submittedQuery = model.searchQuery
+                        model.runSearch()
+                    }
             }
             section(for: .project, title: "Projects")
             section(for: .deliverable, title: "Deliverables")
             section(for: .knowledge, title: "Knowledge")
             section(for: .workingContext, title: "Working notes")
+            if showsNoResults {
+                // A submitted search that matched nothing — otherwise the area
+                // under the field is blank, which reads as broken/loading.
+                ContentUnavailableView(
+                    "No Results",
+                    systemImage: "magnifyingglass",
+                    description: Text("Nothing matched “\(submittedQuery)”.")
+                )
+                .listRowSeparator(.hidden)
+            }
         }
         .navigationTitle("Search")
+    }
+
+    /// True only when the field still shows the submitted query and it returned
+    /// nothing — so editing the query hides the state until the next search.
+    private var showsNoResults: Bool {
+        !submittedQuery.isEmpty
+            && model.searchQuery == submittedQuery
+            && model.searchResults.isEmpty
     }
 
     @ViewBuilder
