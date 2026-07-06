@@ -56,10 +56,10 @@ struct SearchResultsView: View {
         case .knowledge, .workingContext:
             // M9-2: unified with the reference metadata stack (was 2pt).
             VStack(alignment: .leading, spacing: Spacing.xs) {
-                Text(hit.title).font(.osirisSecondary)
+                Text(hit.title).font(.subheadline)
                 if !hit.snippet.isEmpty {
                     Text(hit.snippet)
-                        .font(.osirisCaption)
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
                 }

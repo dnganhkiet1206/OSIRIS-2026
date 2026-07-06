@@ -39,8 +39,9 @@ struct SettingsView: View {
             if let feedback {
                 Section {
                     Text(feedback)
-                        // M9-3: unified with the caption/quiet-note role (was .footnote).
-                        .font(.osirisCaption)
+                        // M9-3: unified to .caption, the app's standard small-text
+                        // font (was .footnote, used nowhere else).
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }

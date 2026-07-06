@@ -37,8 +37,9 @@ struct DashboardView: View {
                     Section("Recent activity") {
                         ForEach(Array(snapshot.recentActivity.prefix(6).enumerated()), id: \.offset) { _, line in
                             Text(line)
-                                // M9-3: unified with the secondary-text role (was .callout).
-                                .font(.osirisSecondary)
+                                // M9-3: unified to .subheadline like the app's other
+                                // secondary text (was .callout, the only outlier).
+                                .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
                     }
