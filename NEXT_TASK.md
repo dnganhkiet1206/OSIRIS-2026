@@ -25,11 +25,11 @@
 - **M9-2 ✅ (Spacing System — §4w, CI xanh):** `Shared/DesignSystem/Spacing.swift` (`enum Spacing xs/sm/md/lg/xl` = data). Migrate theo LOẠI (mọi `spacing:` + `.padding` container) qua 6 view; thay 1:1 giữ hành vi, trừ 1 unify có bằng chứng (tight metadata-stack 2→4 ở Search/Advanced khớp reference). Giữ literal: 0/40/80/bubble 14·10/badge 6·2. Dashboard/Settings 0 literal → không chạm. Spacing-only, 0 a11y/DynamicType/dark impact. CI run 28766897615 **success** (Linux+macOS).
 
 - **M9-3 ✅ (Clarity & Typography — §4x, USER nghiệm thu):** audit → bất nhất DUY NHẤT = secondary text 3 font. Thử `Typography.swift` rồi **XOÁ sau independent review** (token = alias 1:1 font Apple = ngôn ngữ thứ hai vô ích; typography Apple đã đủ, KHÁC Color/Spacing/Radius lấp gap thật). Cuối cùng: sửa inline bằng font ngữ nghĩa — Dashboard `.callout`→`.subheadline`, Settings `.footnote`→`.caption`. Net = 2 dòng. **+ BLUEPRINT §2/#12 "Never wrap platform semantics".** *(CI bc0e5e0 chưa re-verify — GitHub connector cần re-auth phiên này.)*
-- **M9-4 (Palette Rollout — ĐANG TRIỂN KHAI):** `.secondary`→`OsirisColor.textSecondary` (10 site, AA+ mọi surface). GIỮ Apple: `.tertiary` (flat #7C7C7C rớt AA trên card/list — a11y), `.destructive` (an toàn), `.quaternary` badge (subtle fill). Chờ CI xanh → docs.
+- **M9-4 ✅ (Palette Rollout — §4y, CI xanh):** `.secondary`→`OsirisColor.textSecondary` (11 site, AA+ mọi surface — token nay được dùng). GIỮ Apple (objectively better, có bằng chứng): `.tertiary` (flat #7C7C7C rớt AA trên card 4.25/list 4.08 — a11y), `.destructive` (an toàn), `.quaternary` badge (subtle fill). Màu-only. CI b54931f **success** (Linux+macOS). Minh hoạ #12 (áp palette nơi nền tảng thiếu; giữ Apple nơi tốt hơn).
 
 ## Current Milestone
 
-**M9 — Product Experience & UI/UX.** M9-0/M9-1/M9-2/M9-3 xong. **M9-4 Palette Rollout đang triển khai** (USER mở). **M9-5 CHỜ USER — KHÔNG tự mở.**
+**M9 — Product Experience & UI/UX.** M9-0…M9-4 xong. **M9-5 CHỜ USER — KHÔNG tự mở.**
 
 ### Ứng viên sau M9-4 (chờ USER)
 1. **Surface migration** (nền #090909/elevated qua `.scrollContentBackground(.hidden)` + nền từng view) — áp `background`/`elevated` token còn lại; đây là phần "hoàn tất surface" hoãn từ M9-1 (NavigationSplitView sở hữu nhiều system surface).

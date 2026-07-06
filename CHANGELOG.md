@@ -2,6 +2,30 @@
 
 ## [Unreleased — M9]
 
+### M9-4: Palette Rollout — apply OsirisColor.textSecondary; keep Apple where it's better
+
+- Rolls out the existing Design Language V1 palette (declared in M9-1) to the
+  remaining views. Colour only — no typography, spacing, radius, layout, logic,
+  or accessibility change.
+- Architecture Review with WCAG contrast evidence on the real surfaces. Replaced
+  `.secondary` with `OsirisColor.textSecondary` (#A8A8A8) at all 11 sites: it is
+  AA+ everywhere it appears — base #090909 8.4:1, card #181818 7.5:1, list
+  #1C1C1E 7.2:1 — and it is the brand's pure-neutral gray. This also puts the
+  previously-declared `textSecondary` token to use.
+- Kept Apple's semantic colours where they are objectively better (evidence, not
+  assumption): `.tertiary` stays — the flat brand #7C7C7C FAILS WCAG AA on the
+  surfaces it appears (card 4.25:1, list 4.08:1) while Apple's adaptive tertiary
+  stays legible; `role: .destructive` stays (destructive red is a safety
+  convention a grayscale brand must not override); the capsule badge's
+  `.quaternary` fill stays (a subtle adaptive fill with no brand equivalent).
+  This is principle #12 in practice: only apply the palette where it is a real
+  capability the platform lacks; keep the platform semantic where it wins.
+- Not rolled out (recorded as M9-5 candidates): `textTertiary` (not surface-safe
+  as a flat value), and `textPrimary`/`background`/`elevated` (await the deferred
+  surface migration — NavigationSplitView owns several system surfaces).
+- Presentation only; no SPM target changed. CI green: the run for b54931f
+  concluded success (Linux `swift test` + macOS Xcode compile). $0.00.
+
 ### M9-3: Clarity & Typography — no new abstraction (Typography tokens removed after review)
 
 - Goal was readability/hierarchy via typography. Architecture Review (full grep

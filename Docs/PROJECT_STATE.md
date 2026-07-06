@@ -9,8 +9,8 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M9 — Product Experience & UI/UX: đang triển khai** (M0→M8 nghiệm thu; tag local chờ push). M9-0 Review ✅ (§4t) · **M9-1 Design System Foundation ✅ (§4v)** · **M9-2 Spacing System ✅ (§4w)** · **M9-3 Clarity & Typography ✅ (§4x, USER nghiệm thu — Typography.swift XOÁ sau review)** · **M9-4 Palette Rollout đang triển khai**. KHÔNG mở rộng AI/module/tool — chỉ biến prototype → sản phẩm production |
-| Task hiện tại | **M9-4 — Palette Rollout (đang triển khai)** — áp `OsirisColor` (đã khai báo M9-1) lên các view còn dùng màu semantic Apple. **Architecture Review (bằng chứng contrast WCAG):** thay `.secondary`→`OsirisColor.textSecondary` (#A8A8A8 AA+ mọi surface: base 8.4 / card #181818 7.5 / list #1C1C1E 7.2) qua 10 site. **GIỮ Apple** (platform objectively better): `.tertiary` (flat #7C7C7C **rớt AA** trên card 4.25 / list 4.08 → adaptive Apple thắng), `role:.destructive` (an toàn), badge `.quaternary` (subtle fill micro). `textTertiary`/`textPrimary`/`background`/`elevated` **chưa áp** (tertiary flat không surface-safe; nền = surface-migration hoãn). Tuân BLUEPRINT §2/#11+#12. · kế tiếp: **M9-5 chờ USER** — KHÔNG tự mở |
+| Giai đoạn | **M9 — Product Experience & UI/UX: đang triển khai** (M0→M8 nghiệm thu; tag local chờ push). M9-0 Review ✅ (§4t) · **M9-1 Design System Foundation ✅ (§4v)** · **M9-2 Spacing System ✅ (§4w)** · **M9-3 Clarity & Typography ✅ (§4x, USER nghiệm thu — Typography.swift XOÁ sau review, CI bc0e5e0 xanh)** · **M9-4 Palette Rollout ✅ (§4y, CI xanh)**. KHÔNG mở rộng AI/module/tool — chỉ biến prototype → sản phẩm production |
+| Task hiện tại | **M9-4 — Palette Rollout ✅ (§4y) — CI XANH** (b54931f success: Linux + macOS). Áp `OsirisColor` lên view còn dùng màu semantic Apple. **Architecture Review (contrast WCAG):** `.secondary`→`OsirisColor.textSecondary` (#A8A8A8 AA+ mọi surface: base 8.4 / card #181818 7.5 / list #1C1C1E 7.2) qua **11 site** — token nay được dùng. **GIỮ Apple** (objectively better): `.tertiary` (flat #7C7C7C **rớt AA** card 4.25 / list 4.08), `role:.destructive` (an toàn), badge `.quaternary` (subtle fill). **CHƯA áp:** `textTertiary` (flat không surface-safe), `textPrimary`/`background`/`elevated` (surface-migration hoãn). Màu-only, 0 a11y/DynamicType/dark impact. Tuân #11+#12. · kế tiếp: **M9-5 chờ USER** — KHÔNG tự mở |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **18 Architecture Test (function) chống drift** (cưỡng chế đồ thị phụ thuộc + eliminated-components: EventBus AD-46, automation-engine AD-47) · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 165 test / 2 opt-in skip / 0 fail** (~1.1s offline; +1 test placeholder-no-leak) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · Keychain fix (M8-1) + MessageRow a11y (M8-6) = verify qua CI macOS · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, iPhone 17 Pro sim (iOS 26.2), UI end-to-end (§4i)** |
@@ -130,6 +130,28 @@ User tự chạy toàn bộ stack trên Mac thật (branch `claude/osiris-arch-r
 **Ý nghĩa:** rủi ro lớn nhất của dự án (UI chưa qua compiler Mac, mang từ M0) **đóng lại bằng bằng chứng thật, không phải suy đoán**. M6-2 Automation UI — thứ mới nhất, chưa từng chạy trên UI thật — hoạt động đầy đủ ngay lần đầu. CI macOS giữ để chống regression tự động.
 
 **CHƯA test (có chủ đích, không phải lỗ hổng):** live Anthropic (chưa cấu hình key) → **baseline thật vẫn là nợ Medium đang mở**, và là điều kiện tiên quyết của M7. App vẫn placeholder-local.
+
+## 4y. M9-4 Closeout — Palette Rollout (2026-07-06, CI xanh)
+
+**Task:** áp `OsirisColor` (Design Language V1, khai báo M9-1) lên các view còn dùng màu semantic Apple. KHÔNG màu mới, KHÔNG redesign.
+
+**Architecture Review (bằng chứng contrast WCAG trên nền thật):**
+| Dùng | Site | Quyết định | Bằng chứng |
+|---|---|---|---|
+| `.foregroundStyle(.secondary)` | 11 | **→ `OsirisColor.textSecondary`** | #A8A8A8 AA+ mọi surface: base #090909 8.4:1, card #181818 7.5:1, list #1C1C1E 7.2:1. Xám thuần thương hiệu (Apple secondary hơi lạnh). |
+| `.foregroundStyle(.tertiary)` | 2 | **GIỮ Apple** | flat #7C7C7C **RỚT AA**: card 4.25:1, list 4.08:1 (<4.5). Apple adaptive tertiary vẫn đọc được → objectively better (M8-6). |
+| `.background(.quaternary, Capsule())` | 1 | **GIỮ Apple** | subtle fill micro-badge; thương hiệu không có token "subtle fill". |
+| `role:.destructive` | 2 | **GIỮ Apple** | đỏ destructive = quy ước an toàn/a11y; brand grayscale KHÔNG override. |
+
+**Thay đổi:** chỉ `.secondary`→`textSecondary` (11 site, net 11+/11−). **Màu-only:** 0 typography/spacing/radius/layout/logic/animation; Dynamic Type + dark nguyên; a11y KHÔNG regression (mọi thay đều AA+). **`textSecondary` token nay ĐƯỢC DÙNG** (hết declared-unused).
+
+**CHƯA áp (ghi rõ, có lý do):** `textTertiary` (flat KHÔNG surface-safe — rớt AA trên card/list; cần cách per-surface hoặc bỏ token); `textPrimary`/`background`/`elevated` (chờ **surface migration** hoãn từ M9-1 — NavigationSplitView sở hữu nhiều system surface). → ứng viên M9-5.
+
+**Self/Arch/Quality Review:** 18 arch rule giữ (Presentation chỉ import OsirisApplication); Presentation-only, 0 SPM target → suite Linux không đổi. Tuân BLUEPRINT §2/#11 (không second visual language: `.secondary` đồng loạt về 1 giá trị) + #12 (chỉ áp năng lực nền tảng thiếu = palette thương hiệu; GIỮ Apple nơi ngữ nghĩa nền tảng tốt hơn).
+
+**Verify = CI (xanh):** run cho **b54931f = success** (Linux + macOS). Public GitHub API qua proxy (MCP connector cần re-auth phiên này). AI spend **$0.00**.
+
+**Kết luận: M9-4 code-complete + CI xanh.** Palette rollout an toàn (secondary), GIỮ Apple nơi objectively better (tertiary/destructive/quaternary) — minh hoạ đúng #12. Surface migration + textTertiary rework = M9-5 (chờ USER).
 
 ## 4x. M9-3 Closeout — Clarity & Typography (2026-07-06, USER nghiệm thu sau independent review)
 
