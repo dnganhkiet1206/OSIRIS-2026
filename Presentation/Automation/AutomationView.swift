@@ -14,7 +14,7 @@ struct AutomationView: View {
     var body: some View {
         List {
             Section("New automation") {
-                HStack(spacing: 8) {
+                HStack(spacing: Spacing.md) {
                     TextField("Saved goal…", text: $model.draftGoal, axis: .vertical)
                         .textFieldStyle(.roundedBorder)
                         .lineLimit(1...3)
@@ -64,9 +64,9 @@ private struct AutomationRow: View {
     let delete: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
             Text(rule.goalText).lineLimit(2)
-            HStack(spacing: 16) {
+            HStack(spacing: Spacing.xl) {
                 Button(action: run) {
                     Label(isRunning ? "Running…" : "Run now", systemImage: "play.fill")
                 }
@@ -84,6 +84,6 @@ private struct AutomationRow: View {
             .buttonStyle(.borderless)
             .font(.caption)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xs)
     }
 }

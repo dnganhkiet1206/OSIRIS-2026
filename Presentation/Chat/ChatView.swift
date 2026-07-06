@@ -94,7 +94,7 @@ struct ChatView: View {
 
     private var transcript: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 12) {
+            LazyVStack(alignment: .leading, spacing: Spacing.lg) {
                 if model.messages.isEmpty {
                     if let overview = model.overview, !overview.isEmpty {
                         ProjectResumeView(overview: overview) { path in
@@ -108,7 +108,7 @@ struct ChatView: View {
                     MessageRow(message: message)
                 }
             }
-            .padding()
+            .padding(Spacing.xl)
         }
         .defaultScrollAnchor(.bottom)
         .sheet(item: Binding(
@@ -120,7 +120,7 @@ struct ChatView: View {
                     Text(deliverable.content)
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
+                        .padding(Spacing.xl)
                 }
                 .navigationTitle("Deliverable")
                 .navigationBarTitleDisplayMode(.inline)
@@ -129,7 +129,7 @@ struct ChatView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: Spacing.sm) {
             Text("What do you want to accomplish?")
                 .font(.title3)
                 .fontWeight(.medium)
@@ -146,12 +146,12 @@ struct ChatView: View {
         if case .running(let activity) = model.phase {
             ExecutionStatusView(activity: activity)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal)
+                .padding(.horizontal, Spacing.xl)
         }
     }
 
     private var composer: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Spacing.md) {
             TextField("Describe a goal…", text: $model.draft, axis: .vertical)
                 .textFieldStyle(.roundedBorder)
                 .lineLimit(1...4)
@@ -165,7 +165,7 @@ struct ChatView: View {
             .accessibilityLabel("Send goal")
             .disabled(model.draft.trimmingCharacters(in: .whitespaces).isEmpty || model.isWorking)
         }
-        .padding()
+        .padding(Spacing.xl)
     }
 }
 

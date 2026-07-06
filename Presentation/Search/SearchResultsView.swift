@@ -54,7 +54,8 @@ struct SearchResultsView: View {
                     .lineLimit(1)
             }
         case .knowledge, .workingContext:
-            VStack(alignment: .leading, spacing: 2) {
+            // M9-2: unified with the reference metadata stack (was 2pt).
+            VStack(alignment: .leading, spacing: Spacing.xs) {
                 Text(hit.title).font(.subheadline)
                 if !hit.snippet.isEmpty {
                     Text(hit.snippet)

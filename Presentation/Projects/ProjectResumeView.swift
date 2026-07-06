@@ -8,8 +8,8 @@ struct ProjectResumeView: View {
     let onOpenDeliverable: (String) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: Spacing.lg) {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
                 Text(overview.name)
                     .font(.headline)
                 if let lastGoal = overview.lastGoal {
@@ -24,7 +24,7 @@ struct ProjectResumeView: View {
             }
 
             if !overview.deliverables.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: Spacing.sm) {
                     Text("Recent deliverables")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -40,14 +40,14 @@ struct ProjectResumeView: View {
                             }
                         }
                         .buttonStyle(.plain)
-                        .padding(8)
+                        .padding(Spacing.md)
                         .osirisCard(OsirisColor.elevated, radius: Radius.small)
                         .accessibilityLabel("Open deliverable: \(deliverable.preview)")
                     }
                 }
             }
         }
-        .padding()
+        .padding(Spacing.xl)
         .frame(maxWidth: .infinity, alignment: .leading)
         .osirisCard()
     }

@@ -15,7 +15,8 @@ struct AdvancedView: View {
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(model.skillInfos) { skill in
-                        VStack(alignment: .leading, spacing: 2) {
+                        // M9-2: unified with the reference metadata stack (was 2pt).
+                        VStack(alignment: .leading, spacing: Spacing.xs) {
                             HStack {
                                 Text(skill.id)
                                     .font(.subheadline.monospaced())

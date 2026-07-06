@@ -6,14 +6,14 @@ struct ExecutionStatusView: View {
     let activity: String
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Spacing.md) {
             ProgressView()
                 .controlSize(.small)
             Text(activity)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xs)
         .accessibilityElement(children: .combine)
     }
 }
