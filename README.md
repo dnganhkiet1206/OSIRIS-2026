@@ -9,6 +9,14 @@ execution is the product.
 - Core platform (any OS): `swift build && swift test`
 - iOS app (macOS): `xcodegen generate` then open `OSIRIS.xcodeproj`
 
+## Release
+
+Current version: **0.1.0-alpha** (marketing version `0.1.0`, build `1`; set in
+`project.yml`). Release notes are in `CHANGELOG.md`. To cut the Alpha: verify CI
+is green, then tag the release commit — `git tag v0.1.0-alpha && git push origin
+v0.1.0-alpha` — and archive from Xcode (Release configuration, signed) for
+TestFlight.
+
 ## Documentation
 
 Start with `Docs/PROJECT_STATE.md` (always current), then

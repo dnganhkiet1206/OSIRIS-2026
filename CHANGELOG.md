@@ -1,6 +1,28 @@
 # CHANGELOG
 
-## [Unreleased — M9]
+## [0.1.0-alpha] — 2026-07-06
+
+First Alpha of OSIRIS — a personal AI Executive Operating System for iOS. The
+user states a goal; OSIRIS decides the cheapest correct path (reuse → tool →
+skill/composition → AI) and returns a usable deliverable. This release is the
+platform (Core 6 + Application + 3 modules: YouTube/TikTok/Shopify), a native
+SwiftUI app (dark-only Design Language V1), and offline-first operation (a
+deterministic placeholder when no API key is set; the Anthropic provider plugs
+in when one is). It is feature-complete for Alpha.
+
+- Highlights: goal → deliverable chat flow with live activity; multi-project
+  workspaces with instant resume; global search; operational Dashboard;
+  saved-goal Automation (manual Run now); minimal Settings with Keychain-stored
+  key; read-only Advanced panel.
+- Quality gate: 165 tests / 0 fail, 18 architecture tests, 0 warnings; CI green
+  on Linux (SwiftPM) + macOS (Xcode app). Crash-safe persistence (atomic writes,
+  restart-survival), device-only Keychain, and no AI spend by default ($0.00).
+- Known Alpha limitations (non-blocking, tracked): no app icon yet; scheduled
+  automation firing (iOS background) and MCP/remote tools are deferred; runtime
+  accessibility (VoiceOver/Dynamic Type/contrast) to be verified on-device;
+  provider-side cost/latency optimization pending a standing key.
+
+Detailed changes since the M8 tag follow.
 
 ### UX: disable automation "Run now" while a task is already running (PR review)
 

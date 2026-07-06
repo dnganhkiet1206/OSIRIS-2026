@@ -31,5 +31,9 @@ targets:
         product: OsirisModules
     settings:
       base:
+        # First Alpha (R1). CFBundleShortVersionString is numeric (0.1.0);
+        # the "-alpha" qualifier lives in the git tag and release notes.
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         GENERATE_INFOPLIST_FILE: YES
