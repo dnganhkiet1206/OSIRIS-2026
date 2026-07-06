@@ -33,11 +33,18 @@
 - **M9-RC1 ✅ (Release Blocker Cleanup — §4ab, CI xanh):** strengthen breadth-signal regression (9 assertion word-boundary, test-only; fix ở 6f43ac0). CI 32681d7 **success**.
 - **UX guard (Devin PR #1):** disable automation "Run now" khi app busy (4ff25fc, Presentation-only, CI xanh). Cả 3 Devin finding ĐÓNG.
 - **R0 ✅ (Release Readiness Audit):** audit-only → **READY FOR ALPHA** (mọi blocker category sạch; non-blocking đã phân loại).
-- **R1 ✅ (Versioning & Alpha Release Prep — §4ac, CI xanh):** set `MARKETING_VERSION 0.1.0` + build `1` (`project.yml`), CHANGELOG → `[0.1.0-alpha]` + release notes, README Release section. 0 code/arch/feature. **Decision: YES — READY TO TAG v0.1.0-alpha.** CI 2d64448 **success**.
+- **R1 ✅ (Versioning & Alpha Release Prep — §4ac, CI xanh):** set `MARKETING_VERSION 0.1.0` + build `1`, CHANGELOG → `[0.1.0-alpha]` + release notes, README Release section. CI 2d64448 **success**.
+- **R2 ✅ (Alpha RC Validation — §4ad, audit-only):** verify RC → **YES approve publish**. 0 blocker (aiDryRun:false=online thật; 0 Debug/Release divergence; precondition=wiring guard; iPhone §4i). iPad/macOS universal-build chưa device-verify = **scope decision release owner** (KHÔNG blocker). 0 code change.
 
 ## Current Phase — RELEASE
 
-**v0.1.0-alpha PREPARED — READY TO TAG.** M9 CLOSED. Version/notes set, CI xanh (2d64448). **Tag CHƯA tạo — hành động release owner:** `git tag v0.1.0-alpha <commit> && git push origin v0.1.0-alpha` (quyết định: tag trên branch hay merge PR #1 vào main trước rồi tag merge commit). **KHÔNG tự tag, KHÔNG tự mở R2 — CHỜ USER.**
+**v0.1.0-alpha PREPARED + RC-VALIDATED — READY TO TAG.** M9 CLOSED. R0 (READY FOR ALPHA) + R1 (version 0.1.0/1) + R2 (YES approve publish). CI xanh.
+**Hành động release owner (KHÔNG tự làm):**
+1. Quyết scope device: iPhone-only (validated) hay verify iPad/macOS trước (`TARGETED_DEVICE_FAMILY`).
+2. Merge PR #1 vào main (hoặc tag trên branch).
+3. `git tag v0.1.0-alpha <commit> && git push origin v0.1.0-alpha`.
+4. Archive Release (signed) → TestFlight.
+**KHÔNG tự tag, KHÔNG tự merge, KHÔNG tự mở R3 — CHỜ USER.**
 
 ### Non-blocking mở (đã track — verify on-device / cần điều kiện, KHÔNG chặn Alpha)
 - **M7 provider-side** (token/latency/cost qua Gateway) — cần **standing API key**.
