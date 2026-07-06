@@ -2,6 +2,18 @@
 
 ## [Unreleased — M9]
 
+### Fix: evaluate the provider selection once (PR review)
+
+- A PR review flagged that `CompositionRoot.selectedProvider` is a computed
+  property whose body re-reads the Keychain and returns either the real
+  Anthropic provider + default model ID or the placeholder + offline model ID.
+  Reading `.provider` and `.modelID` in two separate accesses evaluated the body
+  twice; if a Keychain read diverged between them, the gateway could be built
+  with a real provider paired to the offline model ID (or vice versa), causing
+  API failures. Verified against the code and fixed by binding the tuple once
+  into a local, so the pair is always consistent (and the Keychain/config are
+  read once). Composition-root only; CI green (85f7d73 success). $0.00.
+
 ### M9-6: Product Experience Review — one evidenced fix (deliverable-sheet Done button)
 
 - A first-time-user journey review of the whole app. Finding: the journey is
