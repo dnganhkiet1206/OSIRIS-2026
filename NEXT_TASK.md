@@ -30,11 +30,14 @@
 - **M9-5 ✅ (IA & UX Review — §4z, CI xanh):** review first-time-user → 1 fix: `SearchResultsView` no-results → `ContentUnavailableView` nền tảng. CI 19ee897 **success**.
 - **M9-6 ✅ (Product Experience Review — §4aa, CI xanh):** review journey → phần lớn tốt (empty state, feedback tức thì, error message friendly), **1 fix common-path**: sheet Deliverable thiếu dismiss → **toolbar "Done" nền tảng** (0 abstraction/logic). Ghi KHÔNG đổi (architecture): retry-sau-failure, clarification-threading, return-key-send, Dashboard Loading. CI 7b46635 **success**.
 - **PR-review fixes (Devin, PR #1):** (a) provider/model mismatch — `selectedProvider` eval-once (85f7d73); (b) ComplexityEstimate substring false-positive — whole-word match (6f43ac0). Cả 2 CI xanh, ĐÓNG.
-- **M9-RC1 ✅ (Release Blocker Cleanup — §4ab, CI xanh):** strengthen breadth-signal regression (9 assertion word-boundary, test-only; fix ở 6f43ac0). **Re-eval: KHÔNG còn release blocker đã biết cho Alpha → READY FOR RELEASE CANDIDATE.** CI 32681d7 **success**.
+- **M9-RC1 ✅ (Release Blocker Cleanup — §4ab, CI xanh):** strengthen breadth-signal regression (9 assertion word-boundary, test-only; fix ở 6f43ac0). CI 32681d7 **success**.
+- **UX guard (Devin PR #1):** disable automation "Run now" khi app busy (4ff25fc, Presentation-only, CI xanh). Cả 3 Devin finding ĐÓNG.
+- **R0 ✅ (Release Readiness Audit):** audit-only → **READY FOR ALPHA** (mọi blocker category sạch; non-blocking đã phân loại).
+- **R1 ✅ (Versioning & Alpha Release Prep — §4ac, CI xanh):** set `MARKETING_VERSION 0.1.0` + build `1` (`project.yml`), CHANGELOG → `[0.1.0-alpha]` + release notes, README Release section. 0 code/arch/feature. **Decision: YES — READY TO TAG v0.1.0-alpha.** CI 2d64448 **success**.
 
-## Current Milestone
+## Current Phase — RELEASE
 
-**M9 — Product Experience & UI/UX.** M9-0…M9-6 + M9-RC1 xong. **→ READY FOR RELEASE CANDIDATE (Alpha)** — không còn release blocker đã biết; cả 2 Devin finding ĐÓNG. **Design System KHÓA.** **KHÔNG tự mở milestone mới — CHỜ USER.**
+**v0.1.0-alpha PREPARED — READY TO TAG.** M9 CLOSED. Version/notes set, CI xanh (2d64448). **Tag CHƯA tạo — hành động release owner:** `git tag v0.1.0-alpha <commit> && git push origin v0.1.0-alpha` (quyết định: tag trên branch hay merge PR #1 vào main trước rồi tag merge commit). **KHÔNG tự tag, KHÔNG tự mở R2 — CHỜ USER.**
 
 ### Non-blocking mở (đã track — verify on-device / cần điều kiện, KHÔNG chặn Alpha)
 - **M7 provider-side** (token/latency/cost qua Gateway) — cần **standing API key**.
