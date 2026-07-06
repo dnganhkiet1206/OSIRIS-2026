@@ -82,7 +82,7 @@ private struct AutomationRow: View {
                 }
             }
             .buttonStyle(.borderless)
-            .font(.caption)
+            .font(.osirisCaption)
         }
         .padding(.vertical, Spacing.xs)
     }

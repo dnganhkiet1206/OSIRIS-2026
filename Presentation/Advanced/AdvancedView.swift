@@ -19,7 +19,7 @@ struct AdvancedView: View {
                         VStack(alignment: .leading, spacing: Spacing.xs) {
                             HStack {
                                 Text(skill.id)
-                                    .font(.subheadline.monospaced())
+                                    .font(.osirisSecondary.monospaced())
                                 if skill.isComposition {
                                     Text("composition")
                                         .font(.caption2)
@@ -29,11 +29,11 @@ struct AdvancedView: View {
                                 }
                                 Spacer()
                                 Text("v\(skill.version)")
-                                    .font(.caption)
+                                    .font(.osirisCaption)
                                     .foregroundStyle(.tertiary)
                             }
                             Text(skill.purpose)
-                                .font(.caption)
+                                .font(.osirisCaption)
                                 .foregroundStyle(.secondary)
                         }
                     }

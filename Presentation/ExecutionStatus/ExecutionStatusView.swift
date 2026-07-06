@@ -10,7 +10,7 @@ struct ExecutionStatusView: View {
             ProgressView()
                 .controlSize(.small)
             Text(activity)
-                .font(.subheadline)
+                .font(.osirisSecondary)
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, Spacing.xs)

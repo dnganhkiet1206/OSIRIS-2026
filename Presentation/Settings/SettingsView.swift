@@ -39,7 +39,8 @@ struct SettingsView: View {
             if let feedback {
                 Section {
                     Text(feedback)
-                        .font(.footnote)
+                        // M9-3: unified with the caption/quiet-note role (was .footnote).
+                        .font(.osirisCaption)
                         .foregroundStyle(.secondary)
                 }
             }
