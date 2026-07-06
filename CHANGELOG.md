@@ -2,6 +2,22 @@
 
 ## [Unreleased — M9]
 
+### UX: disable automation "Run now" while a task is already running (PR review)
+
+- A PR review noted that the app runs one task at a time (ChatService), so
+  tapping an automation's "Run now" while a chat goal is in flight is rejected
+  with a graceful "a task is already running" message — but the button stayed
+  enabled, so the user could trigger that failure. Confirmed as a UX nicety (not
+  a bug: the failure is graceful and explains itself); addressed on explicit
+  approval.
+- `AutomationView` now takes an `isAppBusy` bool (ChatView passes
+  `model.isWorking`, so it updates reactively), and each row's Run button is
+  disabled when the rule is off, any automation is already running, or a chat
+  goal is in flight. Presentation only — a plain Bool crosses the boundary, so
+  AutomationViewModel, the Automation port and ChatService are untouched and the
+  separate-ViewModel boundary (M6-2) holds. No new type/abstraction, no colour/
+  spacing/typography/logic change. CI green (4ff25fc success). $0.00.
+
 ### M9-RC1: Release Blocker Cleanup — breadth-signal regression hardened; RC-ready
 
 - Release-blocker cleanup ahead of the first Alpha. The latent bug (Devin, PR #1)
