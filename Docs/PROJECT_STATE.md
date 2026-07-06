@@ -10,10 +10,10 @@
 | Hạng mục | Giá trị |
 |---|---|
 | Giai đoạn | **M9 — Product Experience & UI/UX: đang triển khai** (M0→M8 nghiệm thu; tag local chờ push). M9-0 Architecture Review ✅ (§4t). KHÔNG mở rộng AI/module/tool — chỉ biến prototype → sản phẩm production |
-| Task hiện tại | **M9-0 (Architecture Review & Design Audit) ✅ — KHÔNG code (đúng "không viết code trước").** Audit 10 câu bằng bằng chứng (§4t): Design System `Shared/` RỖNG · 0 animation · 0 app icon/brand color · card/button DUPLICATE inconsistent · spacing/radius ad-hoc · responsive cấu trúc OK (NavigationSplitView adaptive, 0 fixed frame) nhưng chưa audit iPhone từng màn. **Giải pháp nhỏ nhất: `Shared/DesignSystem` = hằng số + ViewModifier (data), KHÔNG framework/engine.** kế tiếp: **M9-1 chờ USER xác nhận** (bước Consistency đầu — thứ tự Consistency→Clarity→Responsive→A11y→Animation→Polish) — KHÔNG tự mở |
+| Task hiện tại | **BUG FIX (production, offline mode): placeholder leak ✅** — offline (`PlaceholderAIProvider`) echo NGUYÊN prompt (preamble + retrieved context) làm "câu trả lời" → persist thành Deliverable → retrieval surface vào "Previous results" → echo lại (vòng lặp trong project "default"). Root ở **1 layer = placeholder output**. Fix nhỏ nhất: placeholder trả **câu offline cố định, KHÔNG echo prompt** (§4u) + regression test Gateway-level. Vòng lặp đứt tại nguồn. 0 abstraction. **Caveat: deliverable-rác đã persist trước fix còn tồn (xoá store/project để dọn).** · M9-0 ✅ (§4t) · kế tiếp: **M9-1 chờ USER xác nhận** — KHÔNG tự mở |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **18 Architecture Test (function) chống drift** (cưỡng chế đồ thị phụ thuộc + eliminated-components: EventBus AD-46, automation-engine AD-47) · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
-| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 164 test / 2 opt-in skip / 0 fail** (~1.1s offline; +1 test provider-contract) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · Keychain fix (M8-1) + MessageRow a11y (M8-6) = verify qua CI macOS · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, iPhone 17 Pro sim (iOS 26.2), UI end-to-end (§4i)** |
+| Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 165 test / 2 opt-in skip / 0 fail** (~1.1s offline; +1 test placeholder-no-leak) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · Keychain fix (M8-1) + MessageRow a11y (M8-6) = verify qua CI macOS · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, iPhone 17 Pro sim (iOS 26.2), UI end-to-end (§4i)** |
 
 ## 2. Mục tiêu hiện tại (Current Goal)
 
@@ -129,6 +129,20 @@ User tự chạy toàn bộ stack trên Mac thật (branch `claude/osiris-arch-r
 **Ý nghĩa:** rủi ro lớn nhất của dự án (UI chưa qua compiler Mac, mang từ M0) **đóng lại bằng bằng chứng thật, không phải suy đoán**. M6-2 Automation UI — thứ mới nhất, chưa từng chạy trên UI thật — hoạt động đầy đủ ngay lần đầu. CI macOS giữ để chống regression tự động.
 
 **CHƯA test (có chủ đích, không phải lỗ hổng):** live Anthropic (chưa cấu hình key) → **baseline thật vẫn là nợ Medium đang mở**, và là điều kiện tiên quyết của M7. App vẫn placeholder-local.
+
+## 4u. Bug fix — offline placeholder leaked the prompt (preamble + context) (2026-07-05)
+
+**Bug (USER report, production):** hội thoại mới hỏi "Bạn nói được tiếng Việt không?" → OSIRIS trả về preamble của chính nó trong "Previous results" + marker `[placeholder:placeholder-local]`.
+
+**Architecture Review (bằng chứng, 8 câu — tóm tắt):** offline mode dùng `PlaceholderAIProvider`, `complete` trả `"[placeholder:\(modelID)] \(prompt)"` (echo NGUYÊN prompt). Sau §4s, Gateway gọi `complete(systemPrompt:preamble, userPrompt:context+task)`; placeholder không override → default nối `preamble\n\nuser` rồi echo. Echo đó thành `Deliverable.content` (`DefaultExecutionEngine:125`) → Kernel persist `saveDeliverable` → `retrieveContext` (`DefaultAIGateway:180`) surface deliverable vào "## Relevant context / Previous results" (`:224`) → placeholder echo lại. **Vòng lặp persist→retrieve→echo trong cùng project "default"** (`ChatViewModel:38`) → "hội thoại mới" vẫn thấy rác. **Root: 1 layer = placeholder OUTPUT** (Gateway/Store/Retrieval đúng thiết kế; chỉ lộ ra user vì placeholder echo prompt). §4s đã tách preamble thành system channel để nó KHÔNG là content — placeholder qua default-concat re-leak.
+
+**Fix nhỏ nhất (đúng root, không patch triệu chứng):** `PlaceholderAIProvider.complete` trả **câu offline cố định** ("OSIRIS is running in offline mode — no AI provider is connected. Add an API key in Settings to get real answers."), **bỏ qua `prompt`** — không bao giờ echo preamble/context. Giữ `tokensIn` (metrics/Dashboard không đổi). Vá tại nguồn → 0 nội bộ bị persist → retrieval không resurface → **vòng lặp tự đứt**. 0 abstraction, 0 component, 0 đụng Gateway/Store/Retrieval.
+
+**Regression test (Linux):** `AIGatewayTests.testPlaceholderAnswerNeverEchoesPreambleOrPrompt` — Gateway + placeholder + preamble bí mật → khẳng định `response.text` KHÔNG chứa preamble, KHÔNG chứa task, KHÔNG chứa `[placeholder`. (Trước fix: echo = chứa preamble → đỏ.)
+
+**Phạm vi & caveat:** chỉ xảy ra OFFLINE (provider thật sau §4s nhận preamble ở system channel → câu trả lời sạch). Bug độc lập, KHÔNG phải task M9-1. **Deliverable-rác đã persist TRƯỚC fix vẫn còn** (sẽ được retrieval surface kể cả khi có key thật sau này) → dọn bằng cách xoá project/store offline; KHÔNG làm migration tự động (over-engineering cho prototype). **Phần phụ (không persist/retrieve deliverable offline):** sau fix đã hạ thành noise sạch (không leak) → KHÔNG làm (không đủ bằng chứng cần đổi Store).
+
+**Chất lượng:** 2 file (1 prod placeholder + 1 test) · **165 test / 2 opt-in skip / 0 fail** · release 0 warning · $0.00.
 
 ## 4t. M9-0 Closeout — Product Experience Architecture Review & Design Audit (2026-07-05)
 

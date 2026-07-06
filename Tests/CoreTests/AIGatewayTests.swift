@@ -99,6 +99,24 @@ final class AIGatewayTests: XCTestCase {
         XCTAssertFalse(event!.metadata.values.contains { $0.contains("Hello") })
     }
 
+    // Offline stand-in must NEVER echo the prompt into its answer: that answer
+    // becomes a user-visible deliverable and retrieved "Previous results"
+    // context. Echoing leaked the system preamble + context (production bug).
+    func testPlaceholderAnswerNeverEchoesPreambleOrPrompt() async throws {
+        let preamble = "SYSTEM-CONTRACT You are OSIRIS internal-do-not-leak"
+        let gateway = DefaultAIGateway(
+            provider: PlaceholderAIProvider(),
+            configuration: try makeConfiguration(preamble: preamble),
+            logger: RecordingLogger()
+        )
+
+        let response = try await gateway.complete(AIRequest(task: "draft a unique-marker-goal"))
+
+        XCTAssertFalse(response.text.contains(preamble), "Offline answer must not echo the system preamble")
+        XCTAssertFalse(response.text.contains("unique-marker-goal"), "Offline answer must not echo the prompt")
+        XCTAssertFalse(response.text.contains("[placeholder"), "No internal marker in user-facing content")
+    }
+
     // 2. Cache: identical request served free, provider untouched.
     func testCacheHitSkipsProvider() async throws {
         let counter = CallCounter()

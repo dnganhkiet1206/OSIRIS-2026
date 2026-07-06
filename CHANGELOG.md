@@ -2,6 +2,14 @@
 
 ## [Unreleased — M9]
 
+### Bug fix: offline placeholder leaked the prompt (preamble + context) into answers
+
+- User report (production): a fresh conversation ("Bạn nói được tiếng Việt không?") returned OSIRIS's own preamble inside a "Previous results" section, with the raw `[placeholder:placeholder-local]` marker.
+- Architecture Review (evidence): in offline mode `PlaceholderAIProvider.complete` returned `"[placeholder:model] <prompt>"` — it echoed the whole assembled prompt, which carries the system preamble and the retrieved context. That echo became the Deliverable content, was persisted, and `retrieveContext` later surfaced it as "Previous results", where the placeholder echoed it again — a persist→retrieve→echo loop within the shared "default" project. Root cause is one layer: the placeholder's output (a provider's response must be an answer, never the prompt). Gateway/Store/Retrieval were behaving as designed; the leak was only visible because the placeholder echoes the prompt. §4s had already made the preamble a system channel so it is not content — the placeholder's concatenating default re-leaked it.
+- Smallest root-cause fix: `PlaceholderAIProvider` now returns a fixed offline answer and ignores the prompt, so nothing internal is persisted → retrieval can't resurface it → the loop breaks. `tokensIn` kept, so metrics/Dashboard are unchanged. No new abstraction/component; Gateway/Store/Retrieval untouched. Real providers were never affected (offline-only).
+- Regression test `AIGatewayTests.testPlaceholderAnswerNeverEchoesPreambleOrPrompt` asserts the offline answer contains neither the preamble, the task, nor the `[placeholder` marker.
+- Caveat: deliverables persisted before this fix still contain the old echo (and would be surfaced as context even after a real key is added) — clear the offline project/store to remove them; no automatic migration. 165 tests / 2 opt-in skip / 0 fail; release build 0 warnings.
+
 ### M9-0: Product Experience Architecture Review & Design Audit — no code
 
 - Opened M9 (Product Experience & UI/UX): turn the architecture prototype into a production-quality app across iPhone/iPad/macOS. No AI/module/tool/architecture expansion — experience only.

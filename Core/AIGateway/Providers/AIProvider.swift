@@ -45,13 +45,22 @@ public struct ProviderResponse: Sendable {
 /// provider until the Core is complete — real adapters are integrations and
 /// arrive in a later milestone, after the Gateway is stable.
 public struct PlaceholderAIProvider: AIProvider {
+    /// Fixed offline answer. It must NEVER echo the prompt: the prompt carries
+    /// OSIRIS's system contract (preamble) and the retrieved context, which are
+    /// internal — echoing them made those strings a user-visible answer AND a
+    /// persisted deliverable that retrieval then surfaced as "Previous results".
+    static let offlineAnswer =
+        "OSIRIS is running in offline mode — no AI provider is connected. Add an API key in Settings to get real answers."
+
     public let id = "placeholder"
 
     public init() {}
 
     public func complete(prompt: String, modelID: String) async throws -> ProviderResponse {
+        // `prompt` is intentionally ignored — a stand-in never returns the
+        // prompt. Token count still reflects the input size for metrics.
         ProviderResponse(
-            text: "[placeholder:\(modelID)] \(prompt)",
+            text: Self.offlineAnswer,
             tokensIn: TokenEstimator.estimate(prompt),
             tokensOut: 0
         )

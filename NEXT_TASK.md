@@ -19,6 +19,7 @@
 - **Provider identity/localization ✅ (ĐÓNG kiến trúc)** — 2 lớp: (§4r) CONTENT preamble +2 luật; (§4s) TRANSPORT preamble nay đi qua **system channel** mọi provider (Anthropic `system`…), refactor nhỏ nhất (default method → 21 test double 0 sửa). 0 `if provider==`, 0 component mới. **[USER] test lại key thật** — nếu còn lệch chỉ tinh chỉnh chữ preamble (data), không đổi kiến trúc. 164 test / 2 skip / 0 fail.
 
 - **M9-0 ✅** (Product Experience Architecture Review — §4t): audit 10 câu, KHÔNG code. Design System rỗng · 0 animation · 0 app icon/brand · card/button duplicate · spacing/radius ad-hoc; responsive cấu trúc OK. Giải pháp nhỏ nhất = `Shared/DesignSystem` data + ViewModifier, KHÔNG framework.
+- **BUG FIX ✅ (offline placeholder leak — §4u):** placeholder echo nguyên prompt (preamble+context) → persist→retrieve→echo loop. Fix nhỏ nhất tại nguồn (placeholder trả câu offline cố định, không echo) + regression test. Vòng lặp đứt. **Caveat: rác đã persist trước fix còn tồn — xoá project/store offline để dọn.** 165 test / 2 skip / 0 fail.
 
 ## Current Milestone
 
