@@ -48,6 +48,20 @@ final class SmartPlanningTests: XCTestCase {
         ), .complex, "Three clauses signal a multi-part goal")
     }
 
+    func testBreadthSignalMatchesWholeWordsNotSubstrings() {
+        // A single-word signal must match a whole word, never a substring —
+        // otherwise "full" inside "carefully" (or "complete" inside
+        // "autocomplete") would falsely earn a costlier tier once multi-model
+        // routing is enabled.
+        XCTAssertEqual(ComplexityEstimate.estimate(for: "carefully plan tomorrow"), .simple,
+                       "\"full\" inside \"carefully\" must not signal breadth")
+        XCTAssertEqual(ComplexityEstimate.estimate(for: "autocomplete the form"), .simple,
+                       "\"complete\" inside \"autocomplete\" must not signal breadth")
+        // The real whole-word / phrase signals still classify as complex.
+        XCTAssertEqual(ComplexityEstimate.estimate(for: "write a full plan"), .complex)
+        XCTAssertEqual(ComplexityEstimate.estimate(for: "lập kế hoạch chi tiết"), .complex)
+    }
+
     func testEstimateIsDeterministic() {
         let goal = "Draft a launch plan for the channel and schedule the first video"
         let first = ComplexityEstimate.estimate(for: goal)

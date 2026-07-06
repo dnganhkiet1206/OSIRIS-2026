@@ -20,7 +20,14 @@ public enum ComplexityEstimate: String, Sendable {
     public static func estimate(for objective: String) -> ComplexityEstimate {
         let lowered = objective.lowercased()
         let wordCount = lowered.split(whereSeparator: { $0.isWhitespace }).count
-        let hasBreadthSignal = breadthSignals.contains { lowered.contains($0) }
+        // Match whole words, not substrings: a single-word signal like "full"
+        // must not fire inside "carefully" or "complete" inside "autocomplete".
+        // Multi-word / hyphenated signals ("chi tiết", "in-depth") are safe as
+        // substrings — phrases don't appear inside unrelated words.
+        let words = Set(lowered.split { !$0.isLetter }.map(String.init))
+        let hasBreadthSignal = breadthSignals.contains { signal in
+            signal.allSatisfy(\.isLetter) ? words.contains(signal) : lowered.contains(signal)
+        }
         let clauseCount = 1
             + lowered.filter { $0 == "," || $0 == ";" }.count
             + (lowered.components(separatedBy: " and ").count - 1)
