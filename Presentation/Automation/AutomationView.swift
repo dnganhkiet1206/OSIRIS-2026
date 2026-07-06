@@ -6,9 +6,13 @@ import OsirisApplication
 /// and data model are ready. Manual "Run now" reuses the Kernel (AD-47).
 struct AutomationView: View {
     @State private var model: AutomationViewModel
+    /// The app executes one task at a time (ChatService). When a chat goal is
+    /// in flight, "Run now" would just fail — disable it instead.
+    private let isAppBusy: Bool
 
-    init(automation: Automation) {
+    init(automation: Automation, isAppBusy: Bool) {
         _model = State(initialValue: AutomationViewModel(automation: automation))
+        self.isAppBusy = isAppBusy
     }
 
     var body: some View {
@@ -38,6 +42,10 @@ struct AutomationView: View {
                     AutomationRow(
                         rule: rule,
                         isRunning: model.runningRuleID == rule.id,
+                        // One execution slot: a chat goal (isAppBusy) or any
+                        // automation already running takes it. Disable Run now
+                        // so the tap can't hit "a task is already running".
+                        runDisabled: !rule.enabled || model.runningRuleID != nil || isAppBusy,
                         run: { model.run(rule.id) },
                         toggle: { model.toggle(rule) },
                         delete: { model.delete(rule.id) }
@@ -59,6 +67,7 @@ struct AutomationView: View {
 private struct AutomationRow: View {
     let rule: AutomationRuleSummary
     let isRunning: Bool
+    let runDisabled: Bool
     let run: () -> Void
     let toggle: () -> Void
     let delete: () -> Void
@@ -70,7 +79,7 @@ private struct AutomationRow: View {
                 Button(action: run) {
                     Label(isRunning ? "Running…" : "Run now", systemImage: "play.fill")
                 }
-                .disabled(isRunning || !rule.enabled)
+                .disabled(runDisabled)
                 Button(action: toggle) {
                     Label(
                         rule.enabled ? "Enabled" : "Disabled",

@@ -64,7 +64,7 @@ struct ChatView: View {
             case .dashboard:
                 DashboardView(model: model)
             case .automation:
-                AutomationView(automation: automation)
+                AutomationView(automation: automation, isAppBusy: model.isWorking)
             case .advanced:
                 AdvancedView(model: model)
             default:
