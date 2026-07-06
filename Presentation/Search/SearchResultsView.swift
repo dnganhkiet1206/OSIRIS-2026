@@ -60,7 +60,7 @@ struct SearchResultsView: View {
                 if !hit.snippet.isEmpty {
                     Text(hit.snippet)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(OsirisColor.textSecondary)
                         .lineLimit(2)
                 }
             }

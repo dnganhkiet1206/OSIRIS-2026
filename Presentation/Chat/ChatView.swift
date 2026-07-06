@@ -135,7 +135,7 @@ struct ChatView: View {
                 .fontWeight(.medium)
             Text("Describe a goal. OSIRIS handles the rest.")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(OsirisColor.textSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 80)

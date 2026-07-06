@@ -15,7 +15,7 @@ struct ProjectResumeView: View {
                 if let lastGoal = overview.lastGoal {
                     Text("Last goal: \(lastGoal)")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(OsirisColor.textSecondary)
                         .lineLimit(2)
                 }
                 Text("\(overview.completedCount) completed task\(overview.completedCount == 1 ? "" : "s")")
@@ -27,7 +27,7 @@ struct ProjectResumeView: View {
                 VStack(alignment: .leading, spacing: Spacing.sm) {
                     Text("Recent deliverables")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(OsirisColor.textSecondary)
                     ForEach(overview.deliverables) { deliverable in
                         Button {
                             onOpenDeliverable(deliverable.id)

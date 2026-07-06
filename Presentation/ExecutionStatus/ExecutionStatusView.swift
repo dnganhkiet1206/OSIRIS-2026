@@ -11,7 +11,7 @@ struct ExecutionStatusView: View {
                 .controlSize(.small)
             Text(activity)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(OsirisColor.textSecondary)
         }
         .padding(.vertical, Spacing.xs)
         .accessibilityElement(children: .combine)

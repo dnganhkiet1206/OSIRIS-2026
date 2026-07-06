@@ -12,7 +12,7 @@ struct AdvancedView: View {
             Section("Skills") {
                 if model.skillInfos.isEmpty {
                     Text("No skills registered")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(OsirisColor.textSecondary)
                 } else {
                     ForEach(model.skillInfos) { skill in
                         // M9-2: unified with the reference metadata stack (was 2pt).
@@ -34,7 +34,7 @@ struct AdvancedView: View {
                             }
                             Text(skill.purpose)
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(OsirisColor.textSecondary)
                         }
                     }
                 }

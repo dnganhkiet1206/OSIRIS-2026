@@ -32,7 +32,7 @@ struct AutomationView: View {
             Section("Saved") {
                 if model.rules.isEmpty {
                     Text("No automations yet. Save a goal to run it again with one tap.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(OsirisColor.textSecondary)
                 }
                 ForEach(model.rules) { rule in
                     AutomationRow(

@@ -40,13 +40,13 @@ struct DashboardView: View {
                                 // M9-3: unified to .subheadline like the app's other
                                 // secondary text (was .callout, the only outlier).
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(OsirisColor.textSecondary)
                         }
                     }
                 }
             } else {
                 Text("Loading…")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(OsirisColor.textSecondary)
             }
         }
         .navigationTitle("Dashboard")
