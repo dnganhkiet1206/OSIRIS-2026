@@ -27,16 +27,17 @@
 - **M9-3 ✅ (Clarity & Typography — §4x, USER nghiệm thu):** audit → bất nhất DUY NHẤT = secondary text 3 font. Thử `Typography.swift` rồi **XOÁ sau independent review** (token = alias 1:1 font Apple = ngôn ngữ thứ hai vô ích; typography Apple đã đủ, KHÁC Color/Spacing/Radius lấp gap thật). Cuối cùng: sửa inline bằng font ngữ nghĩa — Dashboard `.callout`→`.subheadline`, Settings `.footnote`→`.caption`. Net = 2 dòng. **+ BLUEPRINT §2/#12 "Never wrap platform semantics".** *(CI bc0e5e0 **success** — xác nhận qua public GitHub API.)*
 - **M9-4 ✅ (Palette Rollout — §4y, CI xanh):** `.secondary`→`OsirisColor.textSecondary` (11 site, AA+ mọi surface — token nay được dùng). GIỮ Apple (objectively better, có bằng chứng): `.tertiary` (flat #7C7C7C rớt AA trên card 4.25/list 4.08 — a11y), `.destructive` (an toàn), `.quaternary` badge (subtle fill). Màu-only. CI b54931f **success** (Linux+macOS). Minh hoạ #12 (áp palette nơi nền tảng thiếu; giữ Apple nơi tốt hơn).
 
-- **M9-5 ✅ (IA & UX Review — §4z, CI xanh):** review first-time-user toàn app → phần lớn tốt, **1 fix demonstrable**: `SearchResultsView` thiếu no-results state (vùng trống dưới field) → **`ContentUnavailableView` nền tảng** (iOS 17, 0 abstraction, tuân #12), `@State submittedQuery` chặn hiện sớm; Presentation-only, 0 màu/spacing/typography/logic. Ghi (KHÔNG đổi, cần kiến trúc): Chat/Projects nav ambiguity + restart-đổi-key friction. "Không đổi" chỗ khác = hợp lệ. CI 19ee897 **success**.
+- **M9-5 ✅ (IA & UX Review — §4z, CI xanh):** review first-time-user → 1 fix: `SearchResultsView` no-results → `ContentUnavailableView` nền tảng. CI 19ee897 **success**.
+- **M9-6 ✅ (Product Experience Review — §4aa, CI xanh):** review journey → phần lớn tốt (empty state, feedback tức thì, error message friendly), **1 fix common-path**: sheet Deliverable thiếu dismiss → **toolbar "Done" nền tảng** (0 abstraction/logic). Ghi KHÔNG đổi (architecture): retry-sau-failure, clarification-threading, return-key-send, Dashboard Loading. CI 7b46635 **success**.
 
 ## Current Milestone
 
-**M9 — Product Experience & UI/UX.** M9-0…M9-5 xong. **Design System KHÓA** (USER: đủ cho giai đoạn — milestone sau CẢI THIỆN TRẢI NGHIỆM, KHÔNG thêm design abstraction). **M9-6 CHỜ USER — KHÔNG tự mở.**
+**M9 — Product Experience & UI/UX.** M9-0…M9-6 xong (M9-5+M9-6 = review, mỗi cái 1 fix platform-native nhỏ; app xác nhận phần lớn tốt). **Design System KHÓA** (USER: đủ — milestone sau CẢI THIỆN TRẢI NGHIỆM, KHÔNG thêm design/UI abstraction/token). **M9-7 CHỜ USER — KHÔNG tự mở.**
 
-### Ứng viên sau M9-5 (chờ USER)
-1. **Surface migration** (nền #090909/elevated qua `.scrollContentBackground(.hidden)` + nền từng view) — áp `background`/`elevated`/`textTertiary`(rework per-surface) token còn lại; phần "hoàn tất surface" hoãn từ M9-1. *(Đây là design-system application, không phải abstraction mới — vẫn OK theo khoá.)*
+### Ứng viên sau M9-6 (chờ USER)
+1. **Surface migration** (nền #090909/elevated qua `.scrollContentBackground(.hidden)` + nền từng view) — áp `background`/`elevated`/`textTertiary`(rework per-surface) token còn lại; phần "hoàn tất surface" hoãn từ M9-1. *(Design-system application, KHÔNG phải abstraction mới — OK theo khoá.)*
 2. **Responsive** (bước M9 kế theo thứ tự): audit iPhone/iPad/macOS adaptive.
-3. **UX (nếu USER muốn giải bằng kiến trúc):** Chat/Projects nav ambiguity (§4z); đổi-key-không-restart (§4z) — cả hai cần đổi kiến trúc nên để USER quyết.
+3. **UX cần kiến trúc (USER quyết):** Chat/Projects nav ambiguity (§4z); retry-sau-failure (§4aa); clarification-context threading (§4aa); đổi-key-không-restart (§4z). Đều cần đổi logic/architecture nên chờ USER.
 
 > **Ràng buộc M9 (giữ):** KHÔNG redesign · KHÔNG animation (ưu tiên #5, milestone riêng) · reusable chỉ khi có bằng chứng duplication · KHÔNG engine/manager/framework · a11y bất khả xâm phạm (M8-6) · Presentation Xcode-only → verify CI macOS · BLUEPRINT §2/#11 (không second visual language trừ khi di trú trọn trong milestone).
 > **Nhắc USER (chưa xong, cần Mac/key):** verify M9-1/M9-2 mắt thường trên iPhone · test lại provider contract key thật (§4r+§4s) · a11y runtime pass (§4q).

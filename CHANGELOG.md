@@ -2,6 +2,33 @@
 
 ## [Unreleased — M9]
 
+### M9-6: Product Experience Review — one evidenced fix (deliverable-sheet Done button)
+
+- A first-time-user journey review of the whole app. Finding: the journey is
+  largely solid — a welcoming first-launch empty state, an immediate user bubble
+  and a live activity spinner on send, and genuinely friendly, actionable error
+  messages (ChatService: "try rephrasing your goal", "check your connection and
+  try again", "stopped before spending anything"). Most of it needs no change,
+  and none was invented.
+- The one demonstrable, common-path friction: the deliverable reader sheet
+  (opened from "Recent deliverables" and from Search) had a title but no
+  explicit dismiss control, so it could only be closed by the swipe-down
+  gesture — a first-time or less-iOS-savvy user can be unsure how to get back.
+- Fixed with the platform-standard toolbar "Done" button (confirmationAction)
+  that clears the existing `openedDeliverable` binding — a platform component,
+  no new abstraction, no logic or ViewModel change, per "platform components
+  preferred."
+- Documented but intentionally not changed (out of scope — architecture or
+  debatable/polish): no retry after a failure (needs new ViewModel state;
+  failures are rare on the offline first-time path), a clarification answer
+  being treated as a new goal (would need conversation-context threading), the
+  vertical composer's return key not sending (the button works), and Dashboard's
+  plain "Loading…" text.
+- Presentation only; no SPM target changed; no colour/spacing/typography change;
+  accessibility, Dynamic Type, and dark mode handled by the standard button. CI
+  green: the run for 7b46635 concluded success (Linux `swift test` + macOS
+  Xcode compile). $0.00.
+
 ### M9-5: Information Architecture & UX Review — one evidenced fix (Search no-results)
 
 - A first-time-user review of the whole app. Finding: it is largely sound —
