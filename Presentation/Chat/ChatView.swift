@@ -124,6 +124,13 @@ struct ChatView: View {
                 }
                 .navigationTitle("Deliverable")
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    // A modal needs an explicit way out — swipe-to-dismiss alone
+                    // leaves a first-time user unsure how to get back.
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") { model.openedDeliverable = nil }
+                    }
+                }
             }
         }
     }
