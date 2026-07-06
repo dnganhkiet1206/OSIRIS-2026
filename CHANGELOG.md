@@ -2,6 +2,29 @@
 
 ## [Unreleased — M9]
 
+### M9-5: Information Architecture & UX Review — one evidenced fix (Search no-results)
+
+- A first-time-user review of the whole app. Finding: it is largely sound —
+  opens straight into Chat with a welcoming empty state, Advanced is hidden
+  behind a toggle, Settings is minimal, Automation explains itself — so most
+  dimensions need no change and none was invented.
+- The one demonstrable gap: `SearchResultsView` rendered a section only when a
+  kind had hits, with no else, so a submitted query that matched nothing left a
+  blank area under the field — indistinguishable from broken or still-loading.
+- Fixed with the platform's own empty-state component, `ContentUnavailableView`
+  (iOS 17) — no new abstraction, per "never wrap platform semantics." A
+  view-only `@State submittedQuery` gates it to appear only after a real search
+  returned nothing, and to hide while the query is being edited (no false
+  empty-state while typing). Presentation-only; no ViewModel, logic, colour,
+  spacing, or typography change; accessibility, Dynamic Type, and dark mode are
+  handled by the platform component.
+- Documented but intentionally not changed (out of scope — would need
+  architecture/redesign): the "Chat" vs "Projects" navigation ambiguity (a
+  `.project` selection falls through to the same transcript as the Chat item),
+  and the app-restart-to-apply-key friction (rooted in composition-root wiring).
+- No SPM target changed. CI green: the run for 19ee897 concluded success (Linux
+  `swift test` + macOS Xcode compile). $0.00.
+
 ### M9-4: Palette Rollout — apply OsirisColor.textSecondary; keep Apple where it's better
 
 - Rolls out the existing Design Language V1 palette (declared in M9-1) to the

@@ -9,8 +9,8 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M9 — Product Experience & UI/UX: đang triển khai** (M0→M8 nghiệm thu; tag local chờ push). M9-0 Review ✅ (§4t) · **M9-1 Design System Foundation ✅ (§4v)** · **M9-2 Spacing System ✅ (§4w)** · **M9-3 Clarity & Typography ✅ (§4x, USER nghiệm thu — Typography.swift XOÁ sau review, CI bc0e5e0 xanh)** · **M9-4 Palette Rollout ✅ (§4y, CI xanh)**. KHÔNG mở rộng AI/module/tool — chỉ biến prototype → sản phẩm production |
-| Task hiện tại | **M9-4 — Palette Rollout ✅ (§4y) — CI XANH** (b54931f success: Linux + macOS). Áp `OsirisColor` lên view còn dùng màu semantic Apple. **Architecture Review (contrast WCAG):** `.secondary`→`OsirisColor.textSecondary` (#A8A8A8 AA+ mọi surface: base 8.4 / card #181818 7.5 / list #1C1C1E 7.2) qua **11 site** — token nay được dùng. **GIỮ Apple** (objectively better): `.tertiary` (flat #7C7C7C **rớt AA** card 4.25 / list 4.08), `role:.destructive` (an toàn), badge `.quaternary` (subtle fill). **CHƯA áp:** `textTertiary` (flat không surface-safe), `textPrimary`/`background`/`elevated` (surface-migration hoãn). Màu-only, 0 a11y/DynamicType/dark impact. Tuân #11+#12. · kế tiếp: **M9-5 chờ USER** — KHÔNG tự mở |
+| Giai đoạn | **M9 — Product Experience & UI/UX: đang triển khai** (M0→M8 nghiệm thu; tag local chờ push). M9-0 Review ✅ (§4t) · **M9-1 Design System Foundation ✅ (§4v)** · **M9-2 Spacing System ✅ (§4w)** · **M9-3 Clarity & Typography ✅ (§4x, USER nghiệm thu — Typography.swift XOÁ sau review, CI bc0e5e0 xanh)** · **M9-4 Palette Rollout ✅ (§4y, CI xanh)** · **M9-5 IA & UX Review ✅ (§4z, CI xanh — 1 fix: Search no-results state)**. **Design System KHÓA (USER: đủ cho giai đoạn — milestone sau cải thiện trải nghiệm, KHÔNG thêm design abstraction).** KHÔNG mở rộng AI/module/tool — chỉ biến prototype → sản phẩm production |
+| Task hiện tại | **M9-5 — IA & UX Review ✅ (§4z) — CI XANH** (19ee897 success). Review UX toàn app first-time-user; app phần lớn tốt → **1 fix demonstrable**: `SearchResultsView` thiếu no-results state (vùng trống dưới field trông như hỏng) → **`ContentUnavailableView` nền tảng** (iOS 17, 0 abstraction, tuân #12), `@State` chặn hiện sớm; 0 màu/spacing/typography/logic. Ghi (KHÔNG đổi, cần kiến trúc): Chat/Projects nav ambiguity, restart-đổi-key friction. "Không đổi" chỗ khác = hợp lệ (không ép việc). Trước đó: **M9-4 Palette Rollout ✅** (b54931f success: `.secondary`→`OsirisColor.textSecondary` 11 site AA+; GIỮ Apple tertiary/destructive/quaternary). Áp `OsirisColor` lên view còn dùng màu semantic Apple. **Architecture Review (contrast WCAG):** `.secondary`→`OsirisColor.textSecondary` (#A8A8A8 AA+ mọi surface: base 8.4 / card #181818 7.5 / list #1C1C1E 7.2) qua **11 site** — token nay được dùng. **GIỮ Apple** (objectively better): `.tertiary` (flat #7C7C7C **rớt AA** card 4.25 / list 4.08), `role:.destructive` (an toàn), badge `.quaternary` (subtle fill). **CHƯA áp:** `textTertiary` (flat không surface-safe), `textPrimary`/`background`/`elevated` (surface-migration hoãn). Màu-only, 0 a11y/DynamicType/dark impact. Tuân #11+#12. · kế tiếp: **M9-5 chờ USER** — KHÔNG tự mở |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **18 Architecture Test (function) chống drift** (cưỡng chế đồ thị phụ thuộc + eliminated-components: EventBus AD-46, automation-engine AD-47) · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 165 test / 2 opt-in skip / 0 fail** (~1.1s offline; +1 test placeholder-no-leak) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · Keychain fix (M8-1) + MessageRow a11y (M8-6) = verify qua CI macOS · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, iPhone 17 Pro sim (iOS 26.2), UI end-to-end (§4i)** |
@@ -130,6 +130,26 @@ User tự chạy toàn bộ stack trên Mac thật (branch `claude/osiris-arch-r
 **Ý nghĩa:** rủi ro lớn nhất của dự án (UI chưa qua compiler Mac, mang từ M0) **đóng lại bằng bằng chứng thật, không phải suy đoán**. M6-2 Automation UI — thứ mới nhất, chưa từng chạy trên UI thật — hoạt động đầy đủ ngay lần đầu. CI macOS giữ để chống regression tự động.
 
 **CHƯA test (có chủ đích, không phải lỗ hổng):** live Anthropic (chưa cấu hình key) → **baseline thật vẫn là nợ Medium đang mở**, và là điều kiện tiên quyết của M7. App vẫn placeholder-local.
+
+## 4z. M9-5 Closeout — Information Architecture & UX Review (2026-07-06, CI xanh)
+
+**Task:** review UX toàn app từ góc nhìn first-time user. KHÔNG màu/spacing/typography/animation/redesign. "Không đổi" là kết quả hợp lệ — KHÔNG ép việc.
+
+**Architecture Review (audit, bằng chứng code):** app **phần lớn tốt** — mở thẳng Chat + empty state chào ("What do you want to accomplish?"), Advanced ẩn sau toggle (AD-40), Settings tối giản, Automation tự giải thích. Đa số hạng mục (nav/hierarchy/density/disclosure/sidebar/settings/automation) → **KHÔNG cần đổi**.
+
+**Lỗ hổng DEMONSTRABLE duy nhất (sửa, không kiến trúc/redesign):** `SearchResultsView` chỉ render section khi kind có hit (`if !hits.isEmpty`), **không có else** → query submit không khớp gì để lại **vùng trống dưới field** = trông như hỏng/đang tải. Sửa bằng **component nền tảng `ContentUnavailableView`** (iOS 17) — 0 abstraction (tuân #12), Presentation-only, `@State submittedQuery` chặn hiện sớm (chỉ hiện sau search thật, ẩn khi đang gõ). 0 màu/spacing/typography/logic/VM change.
+
+**Demonstrable nhưng NGOÀI phạm vi (ghi nhận, KHÔNG đổi — cần kiến trúc/redesign):**
+- **"Chat" vs "Projects" nav ambiguity:** chọn project (`.project(id)`) rơi vào cùng `default` transcript như item "Chat" → quan hệ không rõ. Sửa = restructure nav = redesign.
+- **Đổi API key cần restart app** (`SettingsView` footer): friction thật, nhưng gốc ở composition-root-wire-once (AD-35). Sửa = đổi kiến trúc.
+
+**Xét, KHÔNG đổi (không ép việc):** main empty state (tốt), Automation/Advanced empty (đủ), Dashboard "Loading…" (resolve nhanh), sidebar/Settings (tối giản rõ), progressive disclosure (Advanced ẩn — tốt).
+
+**Self/Arch/Quality Review:** 18 arch rule giữ (Presentation chỉ import OsirisApplication); 0 type/manager/engine/framework mới (chỉ view-state + component nền tảng); a11y/Dynamic Type/dark do `ContentUnavailableView` lo sẵn; 0 SPM target → suite Linux không đổi.
+
+**Verify = CI (xanh):** run **19ee897 = success** (Linux + macOS compile `ContentUnavailableView`). AI spend **$0.00**.
+
+**Kết luận: M9-5 code-complete + CI xanh.** UX review đúng kỷ luật "evidence before work" — 1 lỗ hổng thật được sửa bằng component nền tảng, phần còn lại hoặc đã tốt hoặc ngoài phạm vi (ghi rõ). Ứng viên M9-6 (chờ USER): surface migration (§4y), Responsive audit, hoặc 2 observation trên nếu USER muốn giải bằng kiến trúc.
 
 ## 4y. M9-4 Closeout — Palette Rollout (2026-07-06, CI xanh)
 
