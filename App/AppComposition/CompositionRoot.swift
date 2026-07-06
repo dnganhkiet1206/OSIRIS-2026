@@ -43,9 +43,16 @@ enum CompositionRoot {
             stateFor: { try await store.projectState(for: ProjectID($0)) },
             providerConnected: { settings.currentStatus() == .connected }
         )
+        // Evaluate the provider selection once. `selectedProvider` is a
+        // computed property that re-reads the Keychain on each access, so
+        // reading `.provider` and `.modelID` separately could pair a real
+        // provider with the offline model ID (or vice versa) if a Keychain
+        // read diverged between the two — one evaluation keeps the pair
+        // consistent (and avoids a redundant Keychain/config read).
+        let selected = selectedProvider
         let gateway = DefaultAIGateway(
-            provider: selectedProvider.provider,
-            configuration: makeGatewayConfiguration(defaultModelID: selectedProvider.modelID),
+            provider: selected.provider,
+            configuration: makeGatewayConfiguration(defaultModelID: selected.modelID),
             store: store,
             logger: logger,
             onMetrics: { dashboard.recordMetrics($0) }
