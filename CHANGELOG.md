@@ -2,6 +2,29 @@
 
 ## [Unreleased — M9]
 
+### M9-RC1: Release Blocker Cleanup — breadth-signal regression hardened; RC-ready
+
+- Release-blocker cleanup ahead of the first Alpha. The latent bug (Devin, PR #1)
+  — `ComplexityEstimate` matched breadth signals by substring, so "carefully"
+  matched "full" — was already fixed (whole-word matching, commit 6f43ac0, CI
+  green): no NLP, no regex-heavy parsing, no architecture change, heuristic
+  unchanged, smallest correct change.
+- This milestone broadens the regression proof (test-only, no production change):
+  word-boundary edge cases that were all `.complex` under the old substring
+  match are now `.simple` ("full" in carefully/fully; "complete" in
+  autocomplete/completely/incomplete), and valid whole-word/phrase signals still
+  classify `.complex` ("full", "complete", "comprehensive", "chi tiết").
+- Release-blocker re-evaluation (Alpha): both of Devin's correctness findings are
+  now closed (provider/model mismatch + breadth substring); no known
+  correctness or stability blockers remain. Open items are non-blocking and
+  already tracked — provider-side cost/latency optimization (needs a standing
+  key), runtime accessibility verification (needs a device; source-level is
+  clean), scheduled BGTask + MCP (deferred features), the M9 surface migration
+  and textTertiary rework (UI polish), and two UX items that would need
+  architecture. The codebase is ready for a Release Candidate, with those
+  non-blocking items to verify on-device before wider release.
+- CI green (32681d7 success, Linux suite + macOS compile). $0.00.
+
 ### Fix: breadth signals match whole words, not substrings (PR review)
 
 - A PR review flagged that `ComplexityEstimate` (AD-42) matched breadth signals

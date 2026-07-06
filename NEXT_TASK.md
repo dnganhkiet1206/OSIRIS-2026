@@ -29,12 +29,19 @@
 
 - **M9-5 ✅ (IA & UX Review — §4z, CI xanh):** review first-time-user → 1 fix: `SearchResultsView` no-results → `ContentUnavailableView` nền tảng. CI 19ee897 **success**.
 - **M9-6 ✅ (Product Experience Review — §4aa, CI xanh):** review journey → phần lớn tốt (empty state, feedback tức thì, error message friendly), **1 fix common-path**: sheet Deliverable thiếu dismiss → **toolbar "Done" nền tảng** (0 abstraction/logic). Ghi KHÔNG đổi (architecture): retry-sau-failure, clarification-threading, return-key-send, Dashboard Loading. CI 7b46635 **success**.
+- **PR-review fixes (Devin, PR #1):** (a) provider/model mismatch — `selectedProvider` eval-once (85f7d73); (b) ComplexityEstimate substring false-positive — whole-word match (6f43ac0). Cả 2 CI xanh, ĐÓNG.
+- **M9-RC1 ✅ (Release Blocker Cleanup — §4ab, CI xanh):** strengthen breadth-signal regression (9 assertion word-boundary, test-only; fix ở 6f43ac0). **Re-eval: KHÔNG còn release blocker đã biết cho Alpha → READY FOR RELEASE CANDIDATE.** CI 32681d7 **success**.
 
 ## Current Milestone
 
-**M9 — Product Experience & UI/UX.** M9-0…M9-6 xong (M9-5+M9-6 = review, mỗi cái 1 fix platform-native nhỏ; app xác nhận phần lớn tốt). **Design System KHÓA** (USER: đủ — milestone sau CẢI THIỆN TRẢI NGHIỆM, KHÔNG thêm design/UI abstraction/token). **M9-7 CHỜ USER — KHÔNG tự mở.**
+**M9 — Product Experience & UI/UX.** M9-0…M9-6 + M9-RC1 xong. **→ READY FOR RELEASE CANDIDATE (Alpha)** — không còn release blocker đã biết; cả 2 Devin finding ĐÓNG. **Design System KHÓA.** **KHÔNG tự mở milestone mới — CHỜ USER.**
 
-### Ứng viên sau M9-6 (chờ USER)
+### Non-blocking mở (đã track — verify on-device / cần điều kiện, KHÔNG chặn Alpha)
+- **M7 provider-side** (token/latency/cost qua Gateway) — cần **standing API key**.
+- **A11y runtime pass** (VoiceOver/Dynamic Type/contrast) — cần **device** (source-level sạch M8-6).
+- **Scheduled BGTask + MCP** — feature hoãn có điều kiện (AD-45/47).
+
+### Ứng viên milestone sau (chờ USER — KHÔNG tự mở)
 1. **Surface migration** (nền #090909/elevated qua `.scrollContentBackground(.hidden)` + nền từng view) — áp `background`/`elevated`/`textTertiary`(rework per-surface) token còn lại; phần "hoàn tất surface" hoãn từ M9-1. *(Design-system application, KHÔNG phải abstraction mới — OK theo khoá.)*
 2. **Responsive** (bước M9 kế theo thứ tự): audit iPhone/iPad/macOS adaptive.
 3. **UX cần kiến trúc (USER quyết):** Chat/Projects nav ambiguity (§4z); retry-sau-failure (§4aa); clarification-context threading (§4aa); đổi-key-không-restart (§4z). Đều cần đổi logic/architecture nên chờ USER.
