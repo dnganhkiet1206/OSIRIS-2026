@@ -53,12 +53,25 @@ final class SmartPlanningTests: XCTestCase {
         // otherwise "full" inside "carefully" (or "complete" inside
         // "autocomplete") would falsely earn a costlier tier once multi-model
         // routing is enabled.
+        // "full" inside other words (all were .complex under the old substring
+        // match; each is a short single-clause goal, so breadth is the only
+        // factor that could push it off .simple).
         XCTAssertEqual(ComplexityEstimate.estimate(for: "carefully plan tomorrow"), .simple,
                        "\"full\" inside \"carefully\" must not signal breadth")
+        XCTAssertEqual(ComplexityEstimate.estimate(for: "fully edit the intro"), .simple,
+                       "\"full\" inside \"fully\" must not signal breadth")
+        // "complete" inside other words.
         XCTAssertEqual(ComplexityEstimate.estimate(for: "autocomplete the form"), .simple,
                        "\"complete\" inside \"autocomplete\" must not signal breadth")
-        // The real whole-word / phrase signals still classify as complex.
+        XCTAssertEqual(ComplexityEstimate.estimate(for: "completely rewrite this"), .simple,
+                       "\"complete\" inside \"completely\" must not signal breadth")
+        XCTAssertEqual(ComplexityEstimate.estimate(for: "an incomplete draft"), .simple,
+                       "\"complete\" inside \"incomplete\" must not signal breadth")
+
+        // Valid signals as whole words / phrases still classify as complex.
         XCTAssertEqual(ComplexityEstimate.estimate(for: "write a full plan"), .complex)
+        XCTAssertEqual(ComplexityEstimate.estimate(for: "write a complete plan"), .complex)
+        XCTAssertEqual(ComplexityEstimate.estimate(for: "a comprehensive guide"), .complex)
         XCTAssertEqual(ComplexityEstimate.estimate(for: "lập kế hoạch chi tiết"), .complex)
     }
 
