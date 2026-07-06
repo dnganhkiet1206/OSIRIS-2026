@@ -2,6 +2,35 @@
 
 ## [Unreleased — M9]
 
+### M9-3: Clarity & Typography — no new abstraction (Typography tokens removed after review)
+
+- Goal was readability/hierarchy via typography. Architecture Review (full grep
+  of Presentation): navigation titles, section headers, and LabeledContent are
+  already uniform via system styling and metadata is already `.caption`; the one
+  real inconsistency was secondary supporting text using three fonts for the
+  same role — `.subheadline`, `.callout` (Dashboard), `.footnote` (Settings).
+- A first pass added `Shared/DesignSystem/Typography.swift` (osirisTitle/
+  osirisSecondary/osirisCaption). An independent design review then rejected it:
+  the tokens were exact 1:1 aliases of Apple's semantic fonts, so it was
+  renaming, not de-duplicating. Unlike Color/Radius/Spacing — which fill a real
+  platform gap — SwiftUI already provides a complete Dynamic-Type typography
+  system, so the tokens were a redundant second vocabulary (the smell showed as
+  `osirisSecondary.monospaced()`). Removed Typography.swift and reverted every
+  alias back to the semantic font.
+- Final M9-3: no new design-system file. The one real inconsistency is fixed
+  inline with semantic fonts — Dashboard recent-activity `.callout` →
+  `.subheadline` (matches the app's other secondary text), Settings feedback
+  `.footnote` → `.caption` (the standard small-text font). Each folds a
+  once-used outlier font into an established one; net change vs pre-M9-3 is two
+  font lines; visually identical to the token version.
+- New permanent architecture principle — "Never wrap platform semantics"
+  (PROJECT_BLUEPRINT.md §2, #12): only tokenize capabilities the platform does
+  not provide; never wrap what it already expresses semantically. Color/Radius/
+  Spacing are valid (no platform dark-only palette / spacing / radius scale);
+  typography is not.
+- Presentation only, no SPM target changed; no colour/spacing/layout/logic
+  change; Dynamic Type and dark mode unaffected. $0.00.
+
 ### M9-2: Spacing System (Consistency #2)
 
 - Groups the spacing literals that recur across the views into one scale

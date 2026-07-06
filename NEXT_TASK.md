@@ -24,15 +24,17 @@
 
 - **M9-2 ✅ (Spacing System — §4w, CI xanh):** `Shared/DesignSystem/Spacing.swift` (`enum Spacing xs/sm/md/lg/xl` = data). Migrate theo LOẠI (mọi `spacing:` + `.padding` container) qua 6 view; thay 1:1 giữ hành vi, trừ 1 unify có bằng chứng (tight metadata-stack 2→4 ở Search/Advanced khớp reference). Giữ literal: 0/40/80/bubble 14·10/badge 6·2. Dashboard/Settings 0 literal → không chạm. Spacing-only, 0 a11y/DynamicType/dark impact. CI run 28766897615 **success** (Linux+macOS).
 
+- **M9-3 ✅ (Clarity & Typography — §4x, USER nghiệm thu):** audit → bất nhất DUY NHẤT = secondary text 3 font. Thử `Typography.swift` rồi **XOÁ sau independent review** (token = alias 1:1 font Apple = ngôn ngữ thứ hai vô ích; typography Apple đã đủ, KHÁC Color/Spacing/Radius lấp gap thật). Cuối cùng: sửa inline bằng font ngữ nghĩa — Dashboard `.callout`→`.subheadline`, Settings `.footnote`→`.caption`. Net = 2 dòng. **+ BLUEPRINT §2/#12 "Never wrap platform semantics".** *(CI bc0e5e0 chưa re-verify — GitHub connector cần re-auth phiên này.)*
+- **M9-4 (Palette Rollout — ĐANG TRIỂN KHAI):** `.secondary`→`OsirisColor.textSecondary` (10 site, AA+ mọi surface). GIỮ Apple: `.tertiary` (flat #7C7C7C rớt AA trên card/list — a11y), `.destructive` (an toàn), `.quaternary` badge (subtle fill). Chờ CI xanh → docs.
+
 ## Current Milestone
 
-**M9 — Product Experience & UI/UX.** M9-0 (Review) + M9-1 (Design System) + M9-2 (Spacing System) xong. **M9-3 CHỜ USER XÁC NHẬN — KHÔNG tự mở.**
+**M9 — Product Experience & UI/UX.** M9-0/M9-1/M9-2/M9-3 xong. **M9-4 Palette Rollout đang triển khai** (USER mở). **M9-5 CHỜ USER — KHÔNG tự mở.**
 
-### Đề xuất M9-3 (bước tiếp — chờ USER chọn hướng)
-Ứng viên (đều "Consistency over Creativity"), chọn 1:
-1. **Rollout palette-màu** sang các view còn lại (Dashboard/Settings/Search/Advanced/Automation/ExecutionStatus/Sidebar) — thay `.secondary`/`.tertiary`/`.quaternary`/`.accentColor` semantic → `OsirisColor` token (`textSecondary`/`textTertiary`/`background`/`elevated` đang khai báo, chờ áp). Đưa toàn app lên palette V1. (Consistency, app-wide — không second-language vì làm trọn.)
-2. **Rationalize spacing scale (đổi giá trị — CẦN duyệt):** off-grid 2/6 → 4-grid (4/8/12/16) cho rhythm đều hơn. KHÁC M9-2 (chỉ tokenize): đây đổi giá trị thật = mini-restyle → cần USER duyệt từng đổi.
-3. **Clarity — type scale:** role→font/weight cố ý (hiện font semantic ad-hoc) + empty/loading states. Bước "Clarity" theo thứ tự M9.
+### Ứng viên sau M9-4 (chờ USER)
+1. **Surface migration** (nền #090909/elevated qua `.scrollContentBackground(.hidden)` + nền từng view) — áp `background`/`elevated` token còn lại; đây là phần "hoàn tất surface" hoãn từ M9-1 (NavigationSplitView sở hữu nhiều system surface).
+2. **Responsive** (bước M9 kế theo thứ tự): audit iPhone/iPad/macOS adaptive.
+3. `textTertiary` token: hiện KHÔNG surface-safe (flat rớt AA trên card) → cần cách per-surface hoặc bỏ token; xử khi làm surface migration.
 
 > **Ràng buộc M9 (giữ):** KHÔNG redesign · KHÔNG animation (ưu tiên #5, milestone riêng) · reusable chỉ khi có bằng chứng duplication · KHÔNG engine/manager/framework · a11y bất khả xâm phạm (M8-6) · Presentation Xcode-only → verify CI macOS · BLUEPRINT §2/#11 (không second visual language trừ khi di trú trọn trong milestone).
 > **Nhắc USER (chưa xong, cần Mac/key):** verify M9-1/M9-2 mắt thường trên iPhone · test lại provider contract key thật (§4r+§4s) · a11y runtime pass (§4q).

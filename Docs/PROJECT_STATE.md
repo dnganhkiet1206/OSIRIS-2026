@@ -9,8 +9,8 @@
 
 | Hạng mục | Giá trị |
 |---|---|
-| Giai đoạn | **M9 — Product Experience & UI/UX: đang triển khai** (M0→M8 nghiệm thu; tag local chờ push). M9-0 Review ✅ (§4t) · **M9-1 Design System Foundation ✅ (§4v)** · **M9-2 Spacing System ✅ (§4w, CI xanh)**. KHÔNG mở rộng AI/module/tool — chỉ biến prototype → sản phẩm production |
-| Task hiện tại | **M9-2 — Spacing System (Consistency #2) ✅ (§4w) — CI XANH** (run 28766897615 success: Linux `swift test` + macOS compile). Tạo `Shared/DesignSystem/Spacing.swift` (`enum Spacing { xs=4, sm=6, md=8, lg=12, xl=16 }` — CGFloat data, các giá trị đang dùng gom lại; KHÔNG engine/manager/framework, KHÔNG SPM target mới). **Migrate theo LOẠI** (mọi `spacing:` của VStack/HStack + mọi `.padding` container) qua 6 view có literal; thay 1:1 giữ nguyên hành vi, **trừ 1 sửa nhất quán có bằng chứng:** tight metadata-stack 2pt ở `SearchResults`+`Advanced` → `xs` (4) khớp reference `ProjectResumeView` = **thay đổi thị giác DUY NHẤT**. Giữ literal có chủ đích (positional/component-internal): `spacing:0` (no-gap), bubble padding 14/10, `Spacer(40)`, empty-state 80, badge micro-pad 6/2. `Dashboard`/`Settings` = 0 literal (List/Form spacing hệ thống — đã nhất quán) → KHÔNG chạm. **Spacing-only:** 0 màu/typography/layout-structure/icon/animation/a11y; Dynamic Type + dark nguyên. Tuân BLUEPRINT §2/#11 (không ngôn ngữ thị giác thứ hai; unify GIẢM bất nhất). · kế tiếp: **M9-3 chờ USER** — KHÔNG tự mở |
+| Giai đoạn | **M9 — Product Experience & UI/UX: đang triển khai** (M0→M8 nghiệm thu; tag local chờ push). M9-0 Review ✅ (§4t) · **M9-1 Design System Foundation ✅ (§4v)** · **M9-2 Spacing System ✅ (§4w)** · **M9-3 Clarity & Typography ✅ (§4x, USER nghiệm thu — Typography.swift XOÁ sau review)** · **M9-4 Palette Rollout đang triển khai**. KHÔNG mở rộng AI/module/tool — chỉ biến prototype → sản phẩm production |
+| Task hiện tại | **M9-4 — Palette Rollout (đang triển khai)** — áp `OsirisColor` (đã khai báo M9-1) lên các view còn dùng màu semantic Apple. **Architecture Review (bằng chứng contrast WCAG):** thay `.secondary`→`OsirisColor.textSecondary` (#A8A8A8 AA+ mọi surface: base 8.4 / card #181818 7.5 / list #1C1C1E 7.2) qua 10 site. **GIỮ Apple** (platform objectively better): `.tertiary` (flat #7C7C7C **rớt AA** trên card 4.25 / list 4.08 → adaptive Apple thắng), `role:.destructive` (an toàn), badge `.quaternary` (subtle fill micro). `textTertiary`/`textPrimary`/`background`/`elevated` **chưa áp** (tertiary flat không surface-safe; nền = surface-migration hoãn). Tuân BLUEPRINT §2/#11+#12. · kế tiếp: **M9-5 chờ USER** — KHÔNG tự mở |
 | Nền tảng | iOS (iPhone), SwiftUI · Core/Application = SwiftPM build được mọi nền tảng (AD-30/35) |
 | Trạng thái kiến trúc | ✅ v1.1 — Core **6 thành phần** + Application + **3 module** (YouTube, TikTok, Shopify) qua Contract v1 (AD-44) · **18 Architecture Test (function) chống drift** (cưỡng chế đồ thị phụ thuộc + eliminated-components: EventBus AD-46, automation-engine AD-47) · resource order Decide ĐẦY ĐỦ: reuse → tool → skill/composition → AI |
 | Trạng thái codebase | ✅ **0 error / 0 warning (debug + release), 165 test / 2 opt-in skip / 0 fail** (~1.1s offline; +1 test placeholder-no-leak) (Swift 6.0.3 CI · đo/test trên 6.3.3 Linux) · Keychain fix (M8-1) + MessageRow a11y (M8-6) = verify qua CI macOS · **XÁC THỰC MAC THẬT 2026-07-05: App/Presentation compile 0 lỗi, iPhone 17 Pro sim (iOS 26.2), UI end-to-end (§4i)** |
@@ -130,6 +130,20 @@ User tự chạy toàn bộ stack trên Mac thật (branch `claude/osiris-arch-r
 **Ý nghĩa:** rủi ro lớn nhất của dự án (UI chưa qua compiler Mac, mang từ M0) **đóng lại bằng bằng chứng thật, không phải suy đoán**. M6-2 Automation UI — thứ mới nhất, chưa từng chạy trên UI thật — hoạt động đầy đủ ngay lần đầu. CI macOS giữ để chống regression tự động.
 
 **CHƯA test (có chủ đích, không phải lỗ hổng):** live Anthropic (chưa cấu hình key) → **baseline thật vẫn là nợ Medium đang mở**, và là điều kiện tiên quyết của M7. App vẫn placeholder-local.
+
+## 4x. M9-3 Closeout — Clarity & Typography (2026-07-06, USER nghiệm thu sau independent review)
+
+**Task:** tăng readability/hierarchy bằng typography. Audit toàn bộ Presentation.
+
+**Architecture Review (bằng chứng):** nav title / Section header / `LabeledContent` = system-styled, đã đồng nhất → KHÔNG chạm; metadata đã đồng nhất `.caption`. **Bất nhất thật DUY NHẤT:** secondary supporting text dùng 3 font khác nhau cùng vai — `.subheadline` (ProjectResume/Chat/ExecStatus/Search), `.callout` (Dashboard), `.footnote` (Settings).
+
+**Bước 1 (đã làm, rồi ROLLBACK sau review):** tạo `Typography.swift` (osirisTitle/Secondary/Caption). **Independent Design Review (USER yêu cầu, 5 câu):** các token là **alias 1:1** của font ngữ nghĩa Apple → chỉ đổi tên, không giảm trùng lặp; **KHÁC Color/Radius/Spacing** (những cái đó lấp năng lực nền tảng thiếu) — typography Apple ĐÃ có đầy đủ (Dynamic-Type). Wrap lại = **ngôn ngữ thứ hai vô ích** (đã lộ smell `osirisSecondary.monospaced()`). Vi phạm "smallest abstraction with evidence". **Kết luận: XOÁ Typography.swift.**
+
+**M9-3 cuối cùng (bc0e5e0):** 0 file design-system mới; giữ nguyên font ngữ nghĩa SwiftUI; sửa đúng bất nhất bằng font ngữ nghĩa inline — Dashboard `.callout`→`.subheadline`, Settings `.footnote`→`.caption` (mỗi cái gộp 1 font dùng-một-lần vào font đã có sẵn → app dùng ít font riêng hơn). **Net vs pre-M9-3 = 2 dòng font.** Visual y hệt bản token.
+
+**Nguyên tắc vĩnh viễn mới (USER chốt):** **BLUEPRINT §2/#12 "Never wrap platform semantics"** — chỉ tokenize năng lực nền tảng KHÔNG cung cấp; không bọc lại ngữ nghĩa nền tảng đã có.
+
+**Verify:** Presentation-only, 0 SPM target chạm → suite Linux không đổi; 0 màu/spacing/layout/logic; Dynamic Type + dark nguyên. **USER nghiệm thu** sau review. *(CI cho bc0e5e0 KHÔNG re-verify được phiên này — connector GitHub cần re-auth; thay đổi là 2 dòng semantic-font swap, M9-2 macOS job đã compile Presentation.)* $0.00.
 
 ## 4w. M9-2 Closeout — Spacing System (Consistency #2) (2026-07-06, CI xanh)
 
